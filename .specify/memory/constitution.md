@@ -1,26 +1,22 @@
 <!--
 SYNC IMPACT REPORT
 ==================
-Version change: (none) → 1.0.0 (initial ratification)
+Version change: 1.1.0 → 1.2.0 (approved tech stack locked as NON-NEGOTIABLE)
 
-Modified principles: N/A (first version)
+Modified principles: None
 
 Added sections:
-  - Core Principles (5 principles)
-  - Technology Standards
-  - Development Workflow
-  - Governance
+  - Technology Standards: "Approved Tech Stack (NON-NEGOTIABLE)" subsection listing all mandated libraries
 
-Removed sections: N/A
+Removed sections: None
 
 Templates reviewed:
-  - .specify/templates/plan-template.md       ✅ aligned (Constitution Check gate present)
-  - .specify/templates/spec-template.md       ✅ aligned (user stories + acceptance criteria)
-  - .specify/templates/tasks-template.md      ✅ aligned (TDD task ordering, phase structure)
-  - .specify/templates/agent-file-template.md ✅ aligned (generic project guidance)
+  - .specify/templates/plan-template.md       ✅ aligned (Technical Context section captures lang/framework — planners must now match approved stack)
+  - .specify/templates/spec-template.md       ✅ aligned (technology-agnostic; no conflicts)
+  - .specify/templates/tasks-template.md      ✅ aligned (task examples are illustrative; no stack-specific conflicts)
+  - .specify/templates/agent-file-template.md ✅ aligned (generic guidance, no conflicts)
 
-Deferred TODOs:
-  - None. All fields resolved from project name and app domain.
+Follow-up TODOs: None. All fields resolved.
 -->
 
 # Budgeting App Constitution
@@ -33,29 +29,35 @@ Financial data MUST be accurate, consistent, and auditable at all times.
 
 - All monetary values MUST use fixed-point arithmetic or a dedicated currency type;
   floating-point (`float`/`double`) is PROHIBITED for financial calculations.
-- Every mutation to budget, transaction, or balance data MUST be logged with a timestamp
-  and actor identifier to support audit trails.
-- Database migrations MUST be reversible (down migrations provided) or explicitly
-  justified as irreversible in the Complexity Tracking table.
+- Every mutation to budget, transaction, or balance data MUST be recorded with a
+  timestamp so the user can inspect or reconstruct their financial history.
+- localStorage data schemas MUST be versioned; when a schema change is introduced,
+  a migration function MUST be provided that upgrades existing stored data without
+  data loss.
 - No financial figure may be derived without a traceable source record.
 
-**Rationale**: Rounding errors and silent data loss in financial software erode user trust
-immediately and permanently. An audit trail is required for debugging and user support.
+**Rationale**: Rounding errors and silent data loss in financial software erode user
+trust immediately and permanently. Schema versioning protects users who return to
+the app after an update from silent data corruption caused by a changed data shape.
 
 ### II. Security & Privacy
 
 User financial data MUST be protected against unauthorized access and leakage.
 
-- Authentication MUST be enforced on every endpoint that reads or writes user data.
-- Secrets (API keys, credentials, tokens) MUST NOT appear in source code or be committed
-  to version control; environment variables or a secrets manager MUST be used.
-- Sensitive fields (account numbers, full transaction details) MUST NOT be logged in plain
-  text at any log level.
-- Dependencies MUST be reviewed for known CVEs before introduction; `npm audit` / equivalent
-  MUST pass with zero high/critical findings before any release.
+- No secrets, API keys, or credentials MUST appear in source code or be committed
+  to version control.
+- Sensitive fields (account numbers, full transaction details) MUST NOT be written
+  to `console.log` or any third-party analytics endpoint.
+- localStorage data is accessible to all JavaScript on the same origin; third-party
+  scripts MUST be reviewed and minimized to reduce the attack surface on stored
+  financial data.
+- Dependencies MUST be reviewed for known CVEs before introduction; `npm audit` /
+  equivalent MUST pass with zero high/critical findings before any release.
 
 **Rationale**: Budgeting apps hold sensitive personal financial information. A single
-exposure incident can cause irreparable reputational damage.
+exposure incident can cause irreparable reputational damage. In a client-side app the
+primary risk vector is malicious or compromised third-party scripts accessing
+localStorage.
 
 ### III. Test-Driven Development (NON-NEGOTIABLE)
 
@@ -101,18 +103,35 @@ makes audits harder. Simple code is easier to verify and maintain.
 
 ## Technology Standards
 
-Language, framework, and tooling choices MUST be documented in each feature's `plan.md`
-before implementation begins.
+**Architecture Constraint (NON-NEGOTIABLE)**: This is a client-side only application.
+There is NO backend server, NO API endpoints, and NO database. `localStorage` is the
+sole persistence mechanism. Any proposal to introduce a backend or remote data store
+MUST go through the full amendment procedure before any implementation work begins.
 
-- **Consistency**: Once a language/framework is chosen for the core application, it MUST
-  be used for all subsequent features unless a migration plan is approved via the amendment
-  process.
-- **Dependency management**: A lock file (e.g., `package-lock.json`, `poetry.lock`) MUST
-  be committed and kept up-to-date.
-- **Formatting**: A project-wide formatter MUST be configured and enforced via CI. Formatting
-  diffs MUST NOT appear in feature PRs.
-- **Environment parity**: Development, staging, and production environments MUST use the
-  same dependency versions. Docker Compose or equivalent SHOULD be provided for local setup.
+**Approved Tech Stack (NON-NEGOTIABLE)**: The following libraries and tools MUST be
+used for all features. Substitutions or additions MUST go through the full amendment
+procedure before any implementation work begins.
+
+| Concern | Approved Choice | Version |
+|---|---|---|
+| UI framework | React | 18.x |
+| Language | TypeScript | latest stable |
+| Bundler | Vite | latest stable |
+| Styling | Tailwind CSS | latest stable |
+| Data visualisation | Recharts | latest stable |
+| Testing | Vitest | latest stable |
+
+Language, framework, and tooling choices MUST be documented in each feature's `plan.md`
+before implementation begins. The Technical Context section of every `plan.md` MUST
+reflect the approved stack above — "NEEDS CLARIFICATION" is not acceptable for fields
+covered by this table.
+
+- **Dependency management**: A lock file (`package-lock.json`) MUST be committed
+  and kept up-to-date.
+- **Formatting**: A project-wide formatter MUST be configured and enforced via CI.
+  Formatting diffs MUST NOT appear in feature PRs.
+- **Build parity**: The local development build and the production build MUST use the same
+  dependency versions and produce functionally identical output.
 
 ## Development Workflow
 
@@ -121,7 +140,7 @@ All feature development MUST follow the speckit workflow:
 1. **Specify** (`/speckit.specify`): Draft or update the feature spec with user stories
    and acceptance scenarios.
 2. **Plan** (`/speckit.plan`): Produce `plan.md`, `data-model.md`, `research.md`, and
-   API contracts. Constitution Check gate MUST pass.
+   UI/component contracts. Constitution Check gate MUST pass.
 3. **Tasks** (`/speckit.tasks`): Generate `tasks.md` with dependency-ordered, independently
    testable increments.
 4. **Implement** (`/speckit.implement`): Execute tasks in dependency order; each checkpoint
@@ -152,4 +171,4 @@ This constitution supersedes all other development practices and informal agreem
 does not violate Principles I–V. Violations MUST be recorded in the Complexity Tracking
 table of the relevant `plan.md` with explicit justification.
 
-**Version**: 1.0.0 | **Ratified**: 2026-03-18 | **Last Amended**: 2026-03-18
+**Version**: 1.2.0 | **Ratified**: 2026-03-18 | **Last Amended**: 2026-03-18
