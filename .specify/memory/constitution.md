@@ -1,24 +1,34 @@
 <!--
 SYNC IMPACT REPORT
 ==================
-Version change: 1.2.0 → 1.3.0 (generic CSV parsing added as NON-NEGOTIABLE principle)
+Version change: 1.3.0 → 1.4.0 (persistence architecture updated to File System Access API)
 
-Modified principles: None
+Modified principles:
+  - Principle I "Data Integrity": third bullet updated to reflect CSV ledger as
+    source of truth and localStorage demoted to temporary session storage.
+  - Architecture Constraint: replaced "localStorage is the sole persistence mechanism"
+    with two-tier model — File System Access API (primary, master ledger CSV) +
+    localStorage (temporary session storage, current import only). Added browser
+    support caveat: Chrome and Edge only; Firefox and Safari NOT supported.
 
-Added sections:
-  - Principle VI: "Generic CSV Parsing (NON-NEGOTIABLE)" — mandates auto-detecting,
-    data-driven, extensible CSV parsing; prohibits hardcoded bank-specific logic.
+Added sections: None
 
 Removed sections: None
 
 Templates reviewed:
-  - .specify/templates/plan-template.md       ✅ aligned (Constitution Check gate is dynamic;
-                                                 planners will now include Principle VI checks)
-  - .specify/templates/spec-template.md       ✅ aligned (technology-agnostic; no conflicts)
-  - .specify/templates/tasks-template.md      ✅ aligned (illustrative tasks; no conflicts)
-  - .specify/templates/agent-file-template.md ✅ aligned (generic guidance; no conflicts)
+  - .specify/templates/plan-template.md       ✅ aligned (Constitution Check gate is
+                                                dynamic; Storage field in Technical
+                                                Context will capture FSA API details)
+  - .specify/templates/spec-template.md       ✅ aligned (technology-agnostic; no
+                                                conflicts)
+  - .specify/templates/tasks-template.md      ✅ aligned (illustrative tasks; no
+                                                conflicts)
+  - .specify/templates/agent-file-template.md ✅ aligned (generic guidance; no
+                                                conflicts)
 
-Governance update: Compliance Review reference updated from "Principles I–V" to "Principles I–VI".
+Approved Tech Stack table: File System Access API row added.
+
+Governance update: Compliance Review reference unchanged (Principles I–VI).
 
 Follow-up TODOs: None. All fields resolved.
 -->
@@ -35,14 +45,21 @@ Financial data MUST be accurate, consistent, and auditable at all times.
   floating-point (`float`/`double`) is PROHIBITED for financial calculations.
 - Every mutation to budget, transaction, or balance data MUST be recorded with a
   timestamp so the user can inspect or reconstruct their financial history.
-- localStorage data schemas MUST be versioned; when a schema change is introduced,
-  a migration function MUST be provided that upgrades existing stored data without
-  data loss.
+- The master ledger CSV file is the sole source of truth for all historical
+  transaction data. Its format MUST be documented and versioned; when the format
+  changes, a migration utility MUST be provided to upgrade existing ledger files
+  without data loss.
+- `localStorage` is temporary session storage scoped to the current import session
+  only. Its schema MUST still be versioned, and a migration function MUST be
+  provided for any schema change; however, `localStorage` data MUST NOT be treated
+  as durable or authoritative beyond the active session.
 - No financial figure may be derived without a traceable source record.
 
 **Rationale**: Rounding errors and silent data loss in financial software erode user
-trust immediately and permanently. Schema versioning protects users who return to
-the app after an update from silent data corruption caused by a changed data shape.
+trust immediately and permanently. Anchoring the source of truth to the master ledger
+CSV file — persisted on the user's own filesystem — ensures historical data survives
+browser storage resets. Schema versioning for both the CSV format and localStorage
+protects users from silent data corruption caused by changed data shapes.
 
 ### II. Security & Privacy
 
@@ -133,9 +150,15 @@ principle is non-negotiable because violations directly undermine Data Integrity
 ## Technology Standards
 
 **Architecture Constraint (NON-NEGOTIABLE)**: This is a client-side only application.
-There is NO backend server, NO API endpoints, and NO database. `localStorage` is the
-sole persistence mechanism. Any proposal to introduce a backend or remote data store
-MUST go through the full amendment procedure before any implementation work begins.
+There is NO backend server, NO API endpoints, and NO database. The File System Access
+API is used to read and write a master ledger CSV file on the user's local filesystem;
+this is the primary persistence mechanism and sole source of truth for all historical
+transaction data. `localStorage` is retained as temporary session storage only, scoped
+to the current import session, and MUST NOT be relied upon for durable data. The File
+System Access API is supported in Chrome and Edge only; Firefox and Safari are NOT
+supported target browsers. Any proposal to introduce a backend, remote data store, or
+additional persistence mechanism MUST go through the full amendment procedure before
+any implementation work begins.
 
 **Approved Tech Stack (NON-NEGOTIABLE)**: The following libraries and tools MUST be
 used for all features. Substitutions or additions MUST go through the full amendment
@@ -149,6 +172,7 @@ procedure before any implementation work begins.
 | Styling | Tailwind CSS | latest stable |
 | Data visualisation | Recharts | latest stable |
 | Testing | Vitest | latest stable |
+| File handling | File System Access API | Browser built-in (Chrome / Edge only; Firefox and Safari not supported) |
 
 Language, framework, and tooling choices MUST be documented in each feature's `plan.md`
 before implementation begins. The Technical Context section of every `plan.md` MUST
@@ -200,4 +224,4 @@ This constitution supersedes all other development practices and informal agreem
 does not violate Principles I–VI. Violations MUST be recorded in the Complexity Tracking
 table of the relevant `plan.md` with explicit justification.
 
-**Version**: 1.3.0 | **Ratified**: 2026-03-18 | **Last Amended**: 2026-03-18
+**Version**: 1.4.0 | **Ratified**: 2026-03-18 | **Last Amended**: 2026-03-18
