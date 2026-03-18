@@ -1,20 +1,24 @@
 <!--
 SYNC IMPACT REPORT
 ==================
-Version change: 1.1.0 → 1.2.0 (approved tech stack locked as NON-NEGOTIABLE)
+Version change: 1.2.0 → 1.3.0 (generic CSV parsing added as NON-NEGOTIABLE principle)
 
 Modified principles: None
 
 Added sections:
-  - Technology Standards: "Approved Tech Stack (NON-NEGOTIABLE)" subsection listing all mandated libraries
+  - Principle VI: "Generic CSV Parsing (NON-NEGOTIABLE)" — mandates auto-detecting,
+    data-driven, extensible CSV parsing; prohibits hardcoded bank-specific logic.
 
 Removed sections: None
 
 Templates reviewed:
-  - .specify/templates/plan-template.md       ✅ aligned (Technical Context section captures lang/framework — planners must now match approved stack)
+  - .specify/templates/plan-template.md       ✅ aligned (Constitution Check gate is dynamic;
+                                                 planners will now include Principle VI checks)
   - .specify/templates/spec-template.md       ✅ aligned (technology-agnostic; no conflicts)
-  - .specify/templates/tasks-template.md      ✅ aligned (task examples are illustrative; no stack-specific conflicts)
-  - .specify/templates/agent-file-template.md ✅ aligned (generic guidance, no conflicts)
+  - .specify/templates/tasks-template.md      ✅ aligned (illustrative tasks; no conflicts)
+  - .specify/templates/agent-file-template.md ✅ aligned (generic guidance; no conflicts)
+
+Governance update: Compliance Review reference updated from "Principles I–V" to "Principles I–VI".
 
 Follow-up TODOs: None. All fields resolved.
 -->
@@ -101,6 +105,31 @@ The simplest solution that satisfies requirements MUST be preferred.
 **Rationale**: Premature complexity in financial code is a source of subtle bugs and
 makes audits harder. Simple code is easier to verify and maintain.
 
+### VI. Generic CSV Parsing (NON-NEGOTIABLE)
+
+CSV parsing MUST be generic, auto-detecting, and data-driven. No bank-specific logic
+MAY be hardcoded anywhere in the application.
+
+- The CSV parser MUST auto-detect column semantics (date, amount, description, balance,
+  etc.) from header names and data patterns, without prior knowledge of the source bank.
+- Bank-specific parsing rules MUST NOT be encoded in application logic. All format
+  variations MUST be expressed as configuration or data (e.g., a mapping registry or
+  declarative rule set).
+- The parsing rule system MUST be extensible: adding support for a new bank statement
+  format MUST require only a data or configuration change — never a code change.
+- The parser MUST handle common UK bank CSV conventions (varying column orders, date
+  formats such as DD/MM/YYYY, credit/debit split columns, running balance columns)
+  without branching on bank identity.
+- When column mapping is ambiguous, the parser MUST surface a structured error or
+  prompt for user clarification rather than silently misclassifying fields.
+
+**Rationale**: UK banks export statements in dozens of incompatible CSV layouts.
+Hardcoding per-bank logic creates a fragile maintenance burden: every new bank or
+format change requires a code release. A generic, data-driven approach keeps the
+parser resilient, auditable, and extensible without touching business logic. This
+principle is non-negotiable because violations directly undermine Data Integrity
+(Principle I) and Simplicity (Principle V).
+
 ## Technology Standards
 
 **Architecture Constraint (NON-NEGOTIABLE)**: This is a client-side only application.
@@ -168,7 +197,7 @@ This constitution supersedes all other development practices and informal agreem
 - **PATCH**: Clarifications, wording fixes, non-semantic refinements.
 
 **Compliance Review**: Every PR and code review MUST verify that the implementation
-does not violate Principles I–V. Violations MUST be recorded in the Complexity Tracking
+does not violate Principles I–VI. Violations MUST be recorded in the Complexity Tracking
 table of the relevant `plan.md` with explicit justification.
 
-**Version**: 1.2.0 | **Ratified**: 2026-03-18 | **Last Amended**: 2026-03-18
+**Version**: 1.3.0 | **Ratified**: 2026-03-18 | **Last Amended**: 2026-03-18
