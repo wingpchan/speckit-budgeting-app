@@ -176,12 +176,12 @@ The following profiles are seeded into every new ledger at initialisation. They 
   "columnMappings": [
     { "sourceHeader": "Date",        "canonicalField": "date",        "transform": "parseUKDate" },
     { "sourceHeader": "Description", "canonicalField": "description"  },
-    { "sourceHeader": "Amount",      "canonicalField": "amount",      "transform": "negateAmount" }
+    { "sourceHeader": "Amount",      "canonicalField": "amount" }
   ]
 }
 ```
 
-*Note*: NewDay uses a signed amount where negative = expense. `negateAmount` is applied so the canonical `amount` follows the convention: negative = expense, positive = income — matching the master ledger storage convention.
+*Note*: NewDay uses a signed amount where negative = expense, which already matches the canonical convention (`amount`: negative = expense, positive = income). No transform is required.
 
 ---
 
