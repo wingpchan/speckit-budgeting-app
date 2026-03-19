@@ -177,6 +177,7 @@ interface FormatProfileRecord {
 interface PersonRecord {
   type: 'person';
   name: string;
+  isDefault: boolean;      // true only for the built-in "Household" person; false for all user-created persons
   createdDate: string;     // ISO 8601
   status: 'active' | 'inactive';
 }
@@ -188,7 +189,7 @@ interface PersonRecord {
 - Deactivation/reactivation appends a new record; the most recent record for a name is authoritative
 - No delete operation exists
 
-**Household invariant**: On ledger initialisation, a `PersonRecord` with `name: "Household"`, `isDefault: true` (conceptual), `status: "active"` is written first. The app enforces immutability in code (no UI action can modify it).
+**Household invariant**: On ledger initialisation, a `PersonRecord` with `name: "Household"`, `isDefault: true`, `status: "active"` is written first. The app enforces immutability in code (no UI action can modify it); `isDefault: true` is the persisted marker that distinguishes it from all user-created persons.
 
 ### AccountPersonMappingRecord
 
@@ -318,7 +319,7 @@ Hardcoded at build time (v1). Keyword matching is case-insensitive substring. Fi
 | GYM, FITNESS, PUREGYM, DAVID LLOYD, NUFFIELD | Health & Fitness |
 | BOOTS, SUPERDRUG, PHARMACY, DENTIST | Personal Care |
 | NHS, HOSPITAL, DOCTOR, BUPA | Health & Fitness |
-| MORTGAGE, RENT, COUNCIL TAX, GROUND RENT | Housing |
+| MORTGAGE, RENT, GROUND RENT | Housing |
 | GAS, ELECTRIC, WATER, BROADBAND, BT, VIRGIN MEDIA, EDF, BRITISH GAS | Utilities |
 | DIRECT LINE, AVIVA, LV=, ADMIRAL, AXA | Insurance |
 | HMRC, COUNCIL TAX REFUND, TAX | Taxes |
