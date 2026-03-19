@@ -1,32 +1,32 @@
 <!--
 SYNC IMPACT REPORT
 ==================
-Version change: 1.4.0 → 1.5.0 (master ledger record types expanded from four to six)
+Version change: 1.5.0 → 1.5.1 (transaction record table corrected to include personName)
 
 Modified principles: None
 
-Added sections:
-  - Architecture Constraint: enumerated all six master ledger record types with their
-    fields (person and accountPersonMapping added to the existing four).
+Added sections: None
 
 Removed sections: None
 
+Changed fields:
+  - Technology Standards / record types table: `transaction` row — added `personName`
+    field to match FR-033 in spec.md v1.6.0. Field was present in spec but absent from
+    the constitution table; this amendment closes the discrepancy noted in plan.md.
+
 Templates reviewed:
-  - .specify/templates/plan-template.md       ✅ aligned (Constitution Check gate is
-                                                dynamic; Storage field in Technical
-                                                Context will capture record type details)
+  - .specify/templates/plan-template.md       ✅ aligned (no transaction field names
+                                                referenced; no changes needed)
   - .specify/templates/spec-template.md       ✅ aligned (technology-agnostic; no
                                                 conflicts)
-  - .specify/templates/tasks-template.md      ✅ aligned (illustrative tasks; no
-                                                conflicts)
+  - .specify/templates/tasks-template.md      ✅ aligned (no transaction field names
+                                                referenced; no changes needed)
   - .specify/templates/agent-file-template.md ✅ aligned (generic guidance; no
                                                 conflicts)
 
 Dependent artifacts updated:
-  - specs/001-csv-budget-tracker/spec.md      ✅ FR-032 updated (four → six record types,
-                                                person and accountPersonMapping added);
-                                                Key Entities section updated with two
-                                                new entity definitions.
+  - specs/001-csv-budget-tracker/plan.md      ✅ discrepancy note removed (was flagged
+                                                in Constitution Check section; now resolved)
 
 Governance update: Compliance Review reference unchanged (Principles I–VI).
 
@@ -164,7 +164,7 @@ The master ledger stores exactly **six record types**, each identified by a `typ
 
 | Record type | Fields |
 |---|---|
-| `transaction` | type, date, description, amount (pence), transactionType, category, account, sourceFile, importedDate, contentHash |
+| `transaction` | type, date, description, amount (pence), transactionType, category, account, sourceFile, importedDate, contentHash, personName |
 | `budget` | type, month (YYYY-MM), category, amount (pence), setDate, reason |
 | `category` | type, name, isDefault, createdDate, status |
 | `formatProfile` | type, profileName, columnMappings, detectionHints, createdDate |
@@ -238,4 +238,4 @@ This constitution supersedes all other development practices and informal agreem
 does not violate Principles I–VI. Violations MUST be recorded in the Complexity Tracking
 table of the relevant `plan.md` with explicit justification.
 
-**Version**: 1.5.0 | **Ratified**: 2026-03-18 | **Last Amended**: 2026-03-19
+**Version**: 1.5.1 | **Ratified**: 2026-03-18 | **Last Amended**: 2026-03-19
