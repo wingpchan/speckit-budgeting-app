@@ -1,24 +1,20 @@
 <!--
 SYNC IMPACT REPORT
 ==================
-Version change: 1.3.0 → 1.4.0 (persistence architecture updated to File System Access API)
+Version change: 1.4.0 → 1.5.0 (master ledger record types expanded from four to six)
 
-Modified principles:
-  - Principle I "Data Integrity": third bullet updated to reflect CSV ledger as
-    source of truth and localStorage demoted to temporary session storage.
-  - Architecture Constraint: replaced "localStorage is the sole persistence mechanism"
-    with two-tier model — File System Access API (primary, master ledger CSV) +
-    localStorage (temporary session storage, current import only). Added browser
-    support caveat: Chrome and Edge only; Firefox and Safari NOT supported.
+Modified principles: None
 
-Added sections: None
+Added sections:
+  - Architecture Constraint: enumerated all six master ledger record types with their
+    fields (person and accountPersonMapping added to the existing four).
 
 Removed sections: None
 
 Templates reviewed:
   - .specify/templates/plan-template.md       ✅ aligned (Constitution Check gate is
                                                 dynamic; Storage field in Technical
-                                                Context will capture FSA API details)
+                                                Context will capture record type details)
   - .specify/templates/spec-template.md       ✅ aligned (technology-agnostic; no
                                                 conflicts)
   - .specify/templates/tasks-template.md      ✅ aligned (illustrative tasks; no
@@ -26,7 +22,11 @@ Templates reviewed:
   - .specify/templates/agent-file-template.md ✅ aligned (generic guidance; no
                                                 conflicts)
 
-Approved Tech Stack table: File System Access API row added.
+Dependent artifacts updated:
+  - specs/001-csv-budget-tracker/spec.md      ✅ FR-032 updated (four → six record types,
+                                                person and accountPersonMapping added);
+                                                Key Entities section updated with two
+                                                new entity definitions.
 
 Governance update: Compliance Review reference unchanged (Principles I–VI).
 
@@ -160,6 +160,20 @@ supported target browsers. Any proposal to introduce a backend, remote data stor
 additional persistence mechanism MUST go through the full amendment procedure before
 any implementation work begins.
 
+The master ledger stores exactly **six record types**, each identified by a `type` field:
+
+| Record type | Fields |
+|---|---|
+| `transaction` | type, date, description, amount (pence), transactionType, category, account, sourceFile, importedDate, contentHash |
+| `budget` | type, month (YYYY-MM), category, amount (pence), setDate, reason |
+| `category` | type, name, isDefault, createdDate, status |
+| `formatProfile` | type, profileName, columnMappings, detectionHints, createdDate |
+| `person` | type, name, createdDate, status |
+| `accountPersonMapping` | type, accountName, personName, effectiveDate |
+
+Any proposal to add, remove, or structurally change a record type MUST go through the
+full amendment procedure before any implementation work begins.
+
 **Approved Tech Stack (NON-NEGOTIABLE)**: The following libraries and tools MUST be
 used for all features. Substitutions or additions MUST go through the full amendment
 procedure before any implementation work begins.
@@ -224,4 +238,4 @@ This constitution supersedes all other development practices and informal agreem
 does not violate Principles I–VI. Violations MUST be recorded in the Complexity Tracking
 table of the relevant `plan.md` with explicit justification.
 
-**Version**: 1.4.0 | **Ratified**: 2026-03-18 | **Last Amended**: 2026-03-18
+**Version**: 1.5.0 | **Ratified**: 2026-03-18 | **Last Amended**: 2026-03-19

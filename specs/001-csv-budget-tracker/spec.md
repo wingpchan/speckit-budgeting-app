@@ -81,7 +81,7 @@ Users can create custom categories, deactivate categories they no longer use, an
 
 ### User Story 5 - Monthly Budget Setting and Tracking (Priority: P2)
 
-Users set a monthly budget per category. The app displays actual spend vs budget with overspend highlighted in red and underspend in green. Editing budgets for past months requires an explicit warning, confirmation, and a mandatory reason. Budgets default to the previous month's values when not set for the current month.
+Users set a monthly budget per category. The app displays actual spend vs budget with overspend highlighted in red, underspend in green, and exact budget match shown in a neutral visual treatment distinct from both states. Editing budgets for past months requires an explicit warning, confirmation, and a mandatory reason. Budgets default to the previous month's values when not set for the current month.
 
 **Why this priority**: Budget tracking is the core financial discipline feature. Summaries without budgets are informational only; budgets make the app actionable.
 
@@ -96,7 +96,8 @@ Users set a monthly budget per category. The app displays actual spend vs budget
 5. **Given** the user confirms a past-month budget change with a reason, **When** saved, **Then** the new record is appended to the master ledger with the reason field populated.
 6. **Given** actual spend exceeds budget for a category, **When** the monthly summary is viewed, **Then** the difference is highlighted in red.
 7. **Given** actual spend is below budget for a category, **When** the monthly summary is viewed, **Then** the difference is highlighted in green.
-8. **Given** the monthly overview is viewed, **When** multiple categories have budgets, **Then** an overall budget health progress indicator is shown reflecting aggregate spend vs aggregate budget.
+8. **Given** actual spend exactly equals the budget for a category, **When** the monthly summary is viewed, **Then** the category row is displayed with a neutral visual treatment that is visually distinct from both the red overspend and green underspend states (e.g. a muted or grey palette with no directional indicator).
+9. **Given** the monthly overview is viewed, **When** multiple categories have budgets, **Then** an overall budget health progress indicator is shown reflecting aggregate spend vs aggregate budget.
 
 ---
 
@@ -169,17 +170,20 @@ Users can export a filtered, searched transaction list as a CSV file. The export
 
 ### User Story 10 - Ledger Versioning and Migration (Priority: P3)
 
-When the app opens an existing ledger, it checks the format version. If an older version is detected, it offers an automatic migration with no data loss.
+When the app opens an existing ledger, it checks the format version. If an older version is detected, it offers an automatic migration: it renames the existing file with a version-stamped backup suffix, creates a fresh ledger file with the new format version, migrates all records across, and confirms success only when every record has transferred without error. The backup file is retained permanently. If migration fails, the original file is restored and the user is informed.
 
 **Why this priority**: Future-proofing; ensures upgrades don't break existing data.
 
-**Independent Test**: Open a ledger created with a previous version of the format; verify the migration prompt appears; confirm; verify all prior records are intact and the version header is updated.
+**Independent Test**: Open a ledger created with a previous version of the format; verify the migration prompt appears; confirm; verify the original file has been renamed to a version-stamped backup (e.g. `budget-ledger.backup-v1-YYYYMMDD.csv`) and is present in the same folder; verify the new ledger file contains all prior records with the updated version header; then simulate a mid-migration failure and verify the original file is restored and an error message is shown.
 
 **Acceptance Scenarios**:
 
-1. **Given** an existing ledger with an older format version is opened, **When** the app detects the version mismatch, **Then** it prompts the user to migrate automatically.
-2. **Given** the user confirms migration, **When** migration completes, **Then** all existing records are intact and the ledger version is updated.
-3. **Given** the user declines migration, **Then** the app informs them that the ledger cannot be used until migration is performed.
+1. **Given** an existing ledger with an older format version is opened, **When** the app detects the version mismatch, **Then** it prompts the user to migrate automatically, explaining that the original file will be backed up before any changes are made.
+2. **Given** the user confirms migration, **When** migration begins, **Then** the app renames the existing ledger file in the same folder with the suffix `.backup-v{N}-{YYYYMMDD}` (where N is the old version number and the date is the migration date), before writing any new data.
+3. **Given** the backup has been created, **When** the app creates the new ledger file and migrates records, **Then** every record from the backup must be written to the new file before migration is considered complete; a record-count check MUST confirm the totals match.
+4. **Given** all records have transferred without error, **When** migration is confirmed, **Then** the app opens the new ledger normally; the backup file remains in the folder and is never deleted by the app.
+5. **Given** any error occurs during migration (file write failure, record count mismatch, or any unhandled exception), **When** the error is detected, **Then** the app deletes the partially written new ledger file, renames the backup file back to the original ledger filename, and displays a clear error message informing the user that migration failed and the original file has been restored.
+6. **Given** the user declines migration, **Then** the app informs them that the ledger cannot be used until migration is performed and closes the ledger without modifying any file.
 
 ---
 
@@ -190,6 +194,9 @@ When the app opens an existing ledger, it checks the format version. If an older
 - What happens when an amount field contains non-numeric characters other than the £ symbol?
 - How does the app behave when the selected folder becomes inaccessible mid-session (e.g. USB drive removed)?
 - What happens if the master ledger CSV file is manually edited or corrupted externally?
+- What happens if the version-stamped backup file already exists in the folder when migration is attempted (e.g. a previous failed migration left a file with the same name)?
+- What happens if the folder containing the ledger has insufficient write permissions to create the backup file or the new ledger file during migration?
+- What happens if the app is closed or the browser tab is killed partway through migration, leaving a partially written new ledger file alongside the backup?
 - What happens when an imported file's account name cannot be determined (e.g. no metadata rows and no profile match)?
 - What happens when a custom category name conflicts with an existing default category name?
 - What happens when a budget reason field is submitted with only whitespace?
@@ -242,15 +249,15 @@ When the app opens an existing ledger, it checks the format version. If an older
 - **FR-026**: When the current month has no budget entry for a category, the app MUST default to the previous month's most recent budget for that category.
 - **FR-027**: Editing a budget for a past month MUST display the advisory: "You are editing the budget for [Month Year], not your current budget. This will update the historical record for that period."
 - **FR-028**: Saving a past-month budget change MUST require explicit user confirmation and a non-empty reason field.
-- **FR-029**: All summary views MUST display actual spend vs budget per category, with overspend highlighted in red and underspend in green.
+- **FR-029**: All summary views MUST display actual spend vs budget per category using three mutually exclusive visual states: overspend MUST be highlighted in red; underspend MUST be highlighted in green; exact budget match (actual spend equals budget amount) MUST use a neutral visual treatment that is visually distinct from both red and green.
 - **FR-030**: The monthly overview MUST include an overall budget health progress indicator reflecting aggregate spend vs aggregate budget.
 
 **Master Ledger**
 
 - **FR-031**: On first use, the app MUST prompt the user to select a local folder and create a master ledger CSV file in that folder using the File System Access API.
-- **FR-032**: The master ledger MUST store four record types identified by a type field: transaction, budget, category, formatProfile.
+- **FR-032**: The master ledger MUST store six record types identified by a type field: transaction, budget, category, formatProfile, person, and accountPersonMapping.
 - **FR-033**: Transaction records MUST include fields: type, date, description, amount (pence), transactionType, category, account, sourceFile, importedDate, contentHash.
-- **FR-034**: The master ledger format MUST be versioned; if an older version is detected on open, the app MUST offer an automatic migration with no data loss.
+- **FR-034**: The master ledger format MUST be versioned; if an older version is detected on open, the app MUST offer an automatic migration following this sequence: (1) rename the existing ledger file in the same folder with a `.backup-v{N}-{YYYYMMDD}` suffix before writing any new data; (2) create a fresh ledger file with the current format version; (3) migrate all records from the backup to the new file; (4) verify the migrated record count matches the source record count before declaring success. The backup file MUST be retained permanently and MUST NOT be deleted or overwritten by the app under any circumstance. If any step fails, the app MUST delete the partially written new file, restore the backup file to the original ledger filename, and display an error message stating that migration failed and the original file has been restored.
 - **FR-035**: New records MUST always be appended to the master ledger; existing records MUST never be modified or deleted.
 
 **Summaries & Visualisations**
@@ -283,7 +290,9 @@ When the app opens an existing ledger, it checks the format version. If an older
 - **Budget**: A point-in-time record of a monthly spending limit for a category. Attributes: month (YYYY-MM), category, amount (pence), setDate, reason. Multiple budget records can exist for the same month/category; only the most recent is active.
 - **Category**: A classification label for transactions. Attributes: name, isDefault, createdDate, status (active/inactive). Cannot be deleted.
 - **FormatProfile**: A saved column mapping for a specific bank CSV format. Attributes: profileName, columnMappings (structured mapping), detectionHints, createdDate.
-- **MasterLedger**: The single append-only CSV file on the user's local filesystem storing all record types, identified by a type field and a format version header.
+- **Person**: A named individual who can be associated with one or more bank accounts. Attributes: name, createdDate, status (active/inactive). Cannot be deleted; only deactivated.
+- **AccountPersonMapping**: A point-in-time record linking a bank account to a person. Attributes: accountName, personName, effectiveDate. Multiple mappings can exist for the same account; the most recent effective record is authoritative.
+- **MasterLedger**: The single append-only CSV file on the user's local filesystem storing all six record types, identified by a type field and a format version header.
 
 ## Success Criteria *(mandatory)*
 
