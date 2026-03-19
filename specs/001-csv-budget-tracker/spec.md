@@ -1,7 +1,7 @@
 # Feature Specification: UK Bank CSV Budget Tracker
 
 **Feature Branch**: `001-csv-budget-tracker`
-**Version**: 1.2.0
+**Version**: 1.4.0
 **Created**: 2026-03-19
 **Status**: Draft
 **Input**: User description: "Build a React budgeting application that imports UK bank and credit card statement CSV files, automatically categorises transactions, and displays financial summaries with historical comparison capability."
@@ -25,6 +25,8 @@ A new user opens the app, selects a folder on their local filesystem where the m
 5. **Given** a CSV from an unrecognised bank is selected, **When** the parser cannot confidently map columns, **Then** it presents a manual column mapping UI where the user can assign source columns to canonical fields.
 6. **Given** the user completes manual column mapping, **When** they choose to save the mapping, **Then** the format is stored as a named profile in the master ledger and applied automatically on future imports of the same format.
 7. **Given** the user reviews the staged transaction list, **When** they confirm the import, **Then** the transactions are appended to the master ledger with importedDate and contentHash populated.
+8. **Given** the user selects a file for import that is not a CSV file (e.g. a PDF, Excel file, or image), **When** the file is loaded, **Then** the app rejects it immediately with a clear error message stating that only CSV files are supported, and returns the user to the file selection screen without writing anything to the master ledger.
+9. **Given** the user selects a CSV file that contains no recognisable financial data (e.g. a CSV with completely unrelated column headers or no data rows), **When** the parser attempts to analyse it, **Then** the app displays a clear error message explaining that the file does not appear to be a bank statement, and offers the user the option to either try manual column mapping or cancel and return to file selection.
 
 ---
 
@@ -250,6 +252,7 @@ All summary and transaction views default to the household aggregate view. A per
 - What happens when two accountPersonMapping records for the same account share an identical effectiveDate?
 - What happens when the user attempts to add a person whose name is identical to an existing person (case-insensitive)?
 - What happens when a person is deactivated while an import session is in progress and that person is assigned to the account being imported?
+- What happens when the user selects a non-CSV file type (PDF, XLSX, image) from the file picker — is this prevented at the OS file picker level, at file read time, or at parse time, and what error is shown?
 
 ## Requirements *(mandatory)*
 
@@ -258,6 +261,8 @@ All summary and transaction views default to the household aggregate view. A per
 **CSV Import & Parsing**
 
 - **FR-001**: The app MUST accept one or more CSV files per import session from any UK bank or credit card provider.
+- **FR-001a**: The app MUST restrict the file picker to CSV files only (.csv extension); if a non-CSV file is somehow submitted, the app MUST reject it at read time with a clear error message and must not attempt to parse it.
+- **FR-001b**: The app MUST detect when a selected CSV file contains no parseable financial data and display a clear error message; the user MUST be offered the option to attempt manual column mapping or cancel.
 - **FR-002**: The parser MUST automatically detect and support Nationwide current account format (quoted fields, 3 metadata rows before header, split Paid out/Paid in columns, £ symbol in amounts, "DD Mon YYYY" dates, Balance column).
 - **FR-003**: The parser MUST automatically detect and support Nationwide credit card format (same as current account but with Location column and no Balance column).
 - **FR-004**: The parser MUST automatically detect and support NewDay credit card format (no metadata rows, single signed amount column where negative = expense, DD/MM/YYYY dates, no £ symbol).
@@ -395,3 +400,6 @@ All summary and transaction views default to the household aggregate view. A per
 - The "Household" person is the catch-all for accounts not assigned to a specific individual (e.g. joint accounts) and for any transaction whose account has no covering accountPersonMapping record at the transaction date.
 - Person names are treated case-sensitively when stored; the uniqueness check at creation is case-insensitive to prevent accidental duplicates.
 - Category names are treated case-sensitively when stored; the uniqueness check at creation is case-insensitive to prevent accidental duplicates. A custom category name that matches an existing default or custom category name (case-insensitive) is rejected with a clear error message.
+- The primary deployment target for v1 is GitHub Pages (or equivalent static hosting such as Netlify or Vercel); the app is built as a static site using Vite and requires no server-side hosting. The app must be fully functional when served from a static host and accessed in a Chromium-based browser (Chrome or Edge).
+- The sourceFile field on transaction records stores the original filename only (e.g. nationwide-march-2026.csv); full filesystem paths are not stored. The original bank statement CSV files are not copied or moved by the app — only their data is absorbed into the master ledger.
+- A future Electron-based desktop distribution is a known v2 consideration but is out of scope for this version.
