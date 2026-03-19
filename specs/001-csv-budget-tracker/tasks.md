@@ -17,13 +17,13 @@
 
 **Purpose**: Initialise the Vite + React + TypeScript project and install all approved dependencies
 
-- [ ] T001 Initialise Vite React TypeScript project at repository root: `npm create vite@latest . -- --template react-ts`
-- [ ] T002 [P] Install production dependencies (recharts, papaparse) and verify in package.json
-- [ ] T003 [P] Install dev dependencies (tailwindcss, postcss, autoprefixer, @types/papaparse, vitest, @testing-library/react, @testing-library/jest-dom, jsdom) and verify in package.json
-- [ ] T004 [P] Initialise Tailwind CSS: run `npx tailwindcss init -p`, set content paths in tailwind.config.js, add `@tailwind base/components/utilities` directives to src/index.css
-- [ ] T005 [P] Configure Vitest in vitest.config.ts with `environment: 'jsdom'`, `setupFiles` pointing to a jest-dom setup file at tests/setup.ts, and coverage enabled
-- [ ] T006 [P] Enable TypeScript strict mode in tsconfig.json; configure ESLint with TypeScript rules in .eslintrc.cjs; add npm scripts: `"test": "vitest"`, `"test:run": "vitest run"`, `"test:coverage": "vitest run --coverage"`, `"lint": "eslint src --ext ts,tsx"`
-- [ ] T007 Configure Vite base path for GitHub Pages in vite.config.ts (`base: '/speckit-budgeting-app/'`); add `"preview": "vite preview"` npm script
+- [X] T001 Initialise Vite React TypeScript project at repository root: `npm create vite@latest . -- --template react-ts`
+- [X] T002 [P] Install production dependencies (recharts, papaparse) and verify in package.json
+- [X] T003 [P] Install dev dependencies (tailwindcss, postcss, autoprefixer, @types/papaparse, vitest, @testing-library/react, @testing-library/jest-dom, jsdom) and verify in package.json
+- [X] T004 [P] Initialise Tailwind CSS: run `npx tailwindcss init -p`, set content paths in tailwind.config.js, add `@tailwind base/components/utilities` directives to src/index.css
+- [X] T005 [P] Configure Vitest in vitest.config.ts with `environment: 'jsdom'`, `setupFiles` pointing to a jest-dom setup file at tests/setup.ts, and coverage enabled
+- [X] T006 [P] Enable TypeScript strict mode in tsconfig.json; configure ESLint with TypeScript rules in .eslintrc.cjs; add npm scripts: `"test": "vitest"`, `"test:run": "vitest run"`, `"test:coverage": "vitest run --coverage"`, `"lint": "eslint src --ext ts,tsx"`
+- [X] T007 Configure Vite base path for GitHub Pages in vite.config.ts (`base: '/speckit-budgeting-app/'`); add `"preview": "vite preview"` npm script
 
 **Checkpoint**: `npm run dev` starts without errors; `npm test` executes (no tests yet); `npm run lint` exits clean
 
