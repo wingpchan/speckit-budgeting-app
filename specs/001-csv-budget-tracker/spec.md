@@ -1,7 +1,7 @@
 # Feature Specification: UK Bank CSV Budget Tracker
 
 **Feature Branch**: `001-csv-budget-tracker`
-**Version**: 1.5.0
+**Version**: 1.6.0
 **Created**: 2026-03-19
 **Status**: Draft
 **Input**: User description: "Build a React budgeting application that imports UK bank and credit card statement CSV files, automatically categorises transactions, and displays financial summaries with historical comparison capability."
@@ -403,3 +403,4 @@ All summary and transaction views default to the household aggregate view. A per
 - The primary deployment target for v1 is GitHub Pages (or equivalent static hosting such as Netlify or Vercel); the app is built as a static site using Vite and requires no server-side hosting. The app must be fully functional when served from a static host and accessed in a Chromium-based browser (Chrome or Edge).
 - The sourceFile field on transaction records stores the original filename only (e.g. nationwide-march-2026.csv); full filesystem paths are not stored. The original bank statement CSV files are not copied or moved by the app — only their data is absorbed into the master ledger.
 - A future Electron-based desktop distribution is a known v2 consideration but is out of scope for this version.
+- Full ledger sharing between household members (e.g. sending the master ledger file directly) is achievable outside the app by copying the `budget-ledger.csv` file. A "seed export" feature — exporting household structure (categories, people, account mappings) without transaction history, to bootstrap a new instance — is a known v2 candidate and is explicitly out of scope for v1.
