@@ -90,6 +90,7 @@ All other columns: empty.
 |---|---|---|
 | type | string | always `person` |
 | name | string | display name |
+| isDefault | boolean | `true` only for the built-in Household person |
 | createdDate | string | ISO 8601 |
 | status | string | `active` or `inactive` |
 
