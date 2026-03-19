@@ -1,6 +1,7 @@
 # Feature Specification: UK Bank CSV Budget Tracker
 
 **Feature Branch**: `001-csv-budget-tracker`
+**Version**: 1.2.0
 **Created**: 2026-03-19
 **Status**: Draft
 **Input**: User description: "Build a React budgeting application that imports UK bank and credit card statement CSV files, automatically categorises transactions, and displays financial summaries with historical comparison capability."
@@ -147,24 +148,26 @@ Users can search transactions by description keyword across the entire master le
 **Acceptance Scenarios**:
 
 1. **Given** a keyword is entered in the search field, **When** the search runs, **Then** all transactions whose description contains the keyword (case-insensitive) are returned.
-2. **Given** search results are displayed, **Then** each result shows date, amount, category, account, and source file.
+2. **Given** search results are displayed, **Then** each result shows date, amount, category, account, source file, and person.
 3. **Given** an active date range filter and a search keyword, **When** search runs, **Then** only transactions within the filtered range matching the keyword are returned.
 
 ---
 
 ### User Story 9 - CSV Export (Priority: P3)
 
-Users can export a filtered, searched transaction list as a CSV file. The export includes a budget summary section showing the active budget for each category during the exported period, including any mid-period budget changes with effective dates and reasons. Export does not modify the master ledger.
+Users can export a filtered, searched transaction list as a CSV file. The export includes a budget summary section showing the active budget for each category during the exported period, including any mid-period budget changes with effective dates and reasons. Optionally, the export includes a person breakdown section showing spending totals per person per category. Export does not modify the master ledger.
 
 **Why this priority**: Export is useful for accountants or personal records but does not affect core app functionality.
 
-**Independent Test**: Apply a date filter, run a search, click Export, open the downloaded file, and verify transaction rows and a separate budget summary section with mid-period changes are both present.
+**Independent Test**: Apply a date filter, run a search, click Export, open the downloaded file, and verify transaction rows and a separate budget summary section with mid-period changes are both present. Re-export with the person breakdown option enabled and verify a person-per-category totals section is appended.
 
 **Acceptance Scenarios**:
 
-1. **Given** the user clicks Export, **When** the file downloads, **Then** it contains columns: date, description, amount, category, type, account, sourceFile for each matching transaction.
+1. **Given** the user clicks Export, **When** the file downloads, **Then** it contains columns: date, description, amount, category, type, account, sourceFile, person for each matching transaction.
 2. **Given** the exported period contains budget changes, **When** the file is downloaded, **Then** a separate budget summary section lists each category with the budget amount(s) active during the period, including effective date and reason for any changes.
 3. **Given** the export completes, **Then** the master ledger is unchanged.
+4. **Given** the user enables the person breakdown option before exporting, **When** the file downloads, **Then** it includes an additional section showing total spending per person per category for the exported period.
+5. **Given** the person breakdown option is not enabled, **When** the file downloads, **Then** no person breakdown section is included and the file format is otherwise identical.
 
 ---
 
@@ -187,6 +190,46 @@ When the app opens an existing ledger, it checks the format version. If an older
 
 ---
 
+### User Story 11 - People and Accounts Management (Priority: P2)
+
+The app supports multiple household members. Each person owns one or more bank accounts. A built-in "Household" person exists for joint or shared accounts. People can be added, deactivated, and reactivated but never deleted. When a new account is encountered during import for the first time, the user must assign it to a person before the import can proceed. Account-to-person assignments record an effective date; reassigning an account creates a new mapping record rather than modifying an existing one. Budgets remain household-wide and are not split by person.
+
+**Why this priority**: Without person tracking, summaries cannot distinguish individual spending from household spending, making the app inadequate for multi-member households. This is a core data modelling feature that all subsequent person-level views depend on.
+
+**Independent Test**: Open the People screen, add "Alice" and "Bob". Import a Nationwide CSV for a new account; verify the assignment prompt appears; assign to Alice. Import a second CSV for a different account; assign to Bob. Navigate to the transaction list and verify each transaction shows the correct person. Deactivate "Bob"; verify Bob is no longer available for new assignments but Bob's historic transactions still display his name correctly.
+
+**Acceptance Scenarios**:
+
+1. **Given** the app is initialised, **When** the People screen is opened, **Then** a built-in "Household" person is present and cannot be deactivated or deleted.
+2. **Given** the user adds a new person, **When** they save, **Then** the person record is written to the master ledger with a createdDate and status=active, and the person is immediately available for account assignments.
+3. **Given** the user deactivates a person, **When** viewing the People screen, **Then** the person is shown as inactive and is no longer selectable for new account assignments; their historic transactions continue to display their name.
+4. **Given** the user reactivates a deactivated person, **Then** they become selectable again for account assignments.
+5. **Given** the UI is presented with a person, **Then** no delete option is available; deactivation is the only removal action.
+6. **Given** a new account (one never seen before in the ledger) is encountered during import, **When** the user reaches the staging screen, **Then** they are required to assign that account to a person before confirmation is allowed; the prompt pre-selects "Household" as the default.
+7. **Given** the user assigns an account to a person with a given effectiveDate, **When** they save, **Then** an accountPersonMapping record is appended to the master ledger with the account name, person name, and effective date.
+8. **Given** the user reassigns an account to a different person, **When** they save, **Then** a new accountPersonMapping record is appended; the prior mapping record is unchanged; the most recent effective record is used for new transactions.
+9. **Given** a transaction is imported, **When** the import is committed, **Then** the personName field on the transaction record is derived from the accountPersonMapping with the most recent effectiveDate on or before the transaction date; if no mapping exists for the account, personName defaults to "Household".
+
+---
+
+### User Story 12 - Person Filter on Summary and Transaction Views (Priority: P2)
+
+All summary and transaction views default to the household aggregate view. A person filter is available as a drill-down, enabling the user to view data scoped to a single household member. The person filter is independent of but composable with the date range filter.
+
+**Why this priority**: Without a person filter, per-person spending visibility — the primary value of tracking people — cannot be accessed from any view.
+
+**Independent Test**: Import transactions assigned to Alice and Bob. Open the monthly summary; verify it shows household totals. Select "Alice" in the person filter; verify only Alice's transactions contribute to the displayed figures and charts. Apply a date range filter simultaneously; verify both filters are applied together. Switch to "All (Household)" and verify totals return to the full household view.
+
+**Acceptance Scenarios**:
+
+1. **Given** the user opens any summary or transaction view, **When** no person filter is active, **Then** the view shows household aggregate figures (all persons combined).
+2. **Given** the user selects a specific person in the person filter, **When** any summary or transaction view loads, **Then** only transactions where personName matches the selected person are included.
+3. **Given** both a person filter and a date range filter are active, **When** any view loads, **Then** both filters are applied together; only transactions matching both criteria are shown.
+4. **Given** the user clears the person filter, **When** any view loads, **Then** the household aggregate view is restored.
+5. **Given** a deactivated person has historic transactions, **When** the person filter list is shown, **Then** the deactivated person is still available as a filter option so their historical data remains accessible.
+
+---
+
 ### Edge Cases
 
 - What happens when a CSV file is empty or contains only headers with no data rows?
@@ -198,10 +241,15 @@ When the app opens an existing ledger, it checks the format version. If an older
 - What happens if the folder containing the ledger has insufficient write permissions to create the backup file or the new ledger file during migration?
 - What happens if the app is closed or the browser tab is killed partway through migration, leaving a partially written new ledger file alongside the backup?
 - What happens when an imported file's account name cannot be determined (e.g. no metadata rows and no profile match)?
-- What happens when a custom category name conflicts with an existing default category name?
+- A custom category name that matches an existing default or custom category name (case-insensitive) is rejected with a clear error message; the conflicting name is not saved.
 - What happens when a budget reason field is submitted with only whitespace?
 - What happens when the ledger contains transactions for a category that has since been deactivated?
 - What happens when a format profile saved in the ledger no longer matches any columns in the uploaded file?
+- What happens when a new account is imported and all existing people are deactivated (leaving only "Household" available for assignment)?
+- What happens when an accountPersonMapping effectiveDate is later than all transactions for that account (no mapping covers any transaction date)?
+- What happens when two accountPersonMapping records for the same account share an identical effectiveDate?
+- What happens when the user attempts to add a person whose name is identical to an existing person (case-insensitive)?
+- What happens when a person is deactivated while an import session is in progress and that person is assigned to the account being imported?
 
 ## Requirements *(mandatory)*
 
@@ -256,7 +304,7 @@ When the app opens an existing ledger, it checks the format version. If an older
 
 - **FR-031**: On first use, the app MUST prompt the user to select a local folder and create a master ledger CSV file in that folder using the File System Access API.
 - **FR-032**: The master ledger MUST store six record types identified by a type field: transaction, budget, category, formatProfile, person, and accountPersonMapping.
-- **FR-033**: Transaction records MUST include fields: type, date, description, amount (pence), transactionType, category, account, sourceFile, importedDate, contentHash.
+- **FR-033**: Transaction records MUST include fields: type, date, description, amount (pence), transactionType, category, account, sourceFile, importedDate, contentHash, personName.
 - **FR-034**: The master ledger format MUST be versioned; if an older version is detected on open, the app MUST offer an automatic migration following this sequence: (1) rename the existing ledger file in the same folder with a `.backup-v{N}-{YYYYMMDD}` suffix before writing any new data; (2) create a fresh ledger file with the current format version; (3) migrate all records from the backup to the new file; (4) verify the migrated record count matches the source record count before declaring success. The backup file MUST be retained permanently and MUST NOT be deleted or overwritten by the app under any circumstance. If any step fails, the app MUST delete the partially written new file, restore the backup file to the original ledger filename, and display an error message stating that migration failed and the original file has been restored.
 - **FR-035**: New records MUST always be appended to the master ledger; existing records MUST never be modified or deleted.
 
@@ -276,22 +324,40 @@ When the app opens an existing ledger, it checks the format version. If an older
 **Transaction Search**
 
 - **FR-043**: Users MUST be able to search transactions by description keyword across all ledger data.
-- **FR-044**: Search results MUST display: date, amount, category, account, and source file for each matching transaction.
+- **FR-044**: Search results MUST display: date, amount, category, account, source file, and person for each matching transaction.
 
 **Export**
 
-- **FR-045**: Users MUST be able to export a CSV file containing the currently filtered and searched transactions with columns: date, description, amount, category, type, account, sourceFile.
+- **FR-045**: Users MUST be able to export a CSV file containing the currently filtered and searched transactions with columns: date, description, amount, category, type, account, sourceFile, person.
 - **FR-046**: The export MUST include a separate budget summary section showing the budget amount active for each category during the exported period, including effective date and reason for any mid-period changes.
-- **FR-047**: Export MUST NOT modify the master ledger.
+- **FR-061**: When the user enables the person breakdown option, the export MUST include an additional section listing total spending per person per category for the exported period; this section MUST be omitted when the option is not enabled.
+- **FR-062**: Export MUST NOT modify the master ledger.
+
+**People and Accounts**
+
+- **FR-063**: The master ledger MUST contain a built-in "Household" person record present from initialisation; this person MUST NOT be deactivatable, deletable, or renameable.
+- **FR-064**: Users MUST be able to add new person records at any time; each person MUST be stored in the master ledger with fields: type, name, createdDate, status (active/inactive).
+- **FR-065**: Person records MUST support deactivation and reactivation; deactivated persons MUST NOT appear in account assignment dropdowns for new imports but MUST remain selectable in person filters for accessing historical data.
+- **FR-066**: Person deletion MUST be prohibited; the UI MUST NOT provide a delete action for any person.
+- **FR-067**: A dedicated people management screen MUST display all persons (active and inactive) with the ability to activate or deactivate each (except "Household").
+- **FR-068**: When an import session encounters an account name that has no existing accountPersonMapping record in the ledger, the app MUST require the user to assign that account to a person before the import can be confirmed; the assignment prompt MUST pre-select "Household" as the default.
+- **FR-069**: For CSV formats where the account name cannot be determined from file metadata, the app MUST prompt the user to provide an account label before proceeding to the staging screen; this prompt MUST appear before duplicate detection and person assignment.
+- **FR-070**: AccountPersonMapping records MUST be stored in the master ledger with fields: type, accountName, personName, effectiveDate; multiple records may exist for the same account; the record with the most recent effectiveDate on or before a transaction's date is authoritative.
+- **FR-071**: When a transaction is committed to the master ledger, the app MUST derive its personName from the accountPersonMapping with the most recent effectiveDate on or before the transaction date; if no mapping covers the transaction date, personName MUST default to "Household".
+- **FR-072**: Reassigning an account to a different person MUST append a new accountPersonMapping record with the new person and effectiveDate; existing mapping records MUST NOT be modified or deleted.
+- **FR-073**: All summary and transaction views MUST provide a person filter control; the default state MUST show household aggregate data (all persons combined).
+- **FR-074**: When a person filter is active, all summary figures, category breakdowns, charts, and transaction lists MUST reflect only transactions where personName matches the selected person.
+- **FR-075**: The person filter MUST be composable with the date range filter; both MUST be applied simultaneously when active.
+- **FR-076**: Budgets are household-wide only; person-level budget setting is NOT supported.
 
 ### Key Entities
 
-- **Transaction**: A single financial movement normalised from a bank CSV. Attributes: date, description, amount (pence), transactionType (expense/income), category, account, sourceFile, importedDate, contentHash. Linked to one Category.
-- **Budget**: A point-in-time record of a monthly spending limit for a category. Attributes: month (YYYY-MM), category, amount (pence), setDate, reason. Multiple budget records can exist for the same month/category; only the most recent is active.
+- **Transaction**: A single financial movement normalised from a bank CSV. Attributes: date, description, amount (pence), transactionType (expense/income), category, account, sourceFile, importedDate, contentHash, personName. Linked to one Category and one Person (via personName derived at import time).
+- **Budget**: A point-in-time record of a monthly spending limit for a category. Attributes: month (YYYY-MM), category, amount (pence), setDate, reason. Multiple budget records can exist for the same month/category; only the most recent is active. Budgets are household-wide; no person-level budgets.
 - **Category**: A classification label for transactions. Attributes: name, isDefault, createdDate, status (active/inactive). Cannot be deleted.
 - **FormatProfile**: A saved column mapping for a specific bank CSV format. Attributes: profileName, columnMappings (structured mapping), detectionHints, createdDate.
-- **Person**: A named individual who can be associated with one or more bank accounts. Attributes: name, createdDate, status (active/inactive). Cannot be deleted; only deactivated.
-- **AccountPersonMapping**: A point-in-time record linking a bank account to a person. Attributes: accountName, personName, effectiveDate. Multiple mappings can exist for the same account; the most recent effective record is authoritative.
+- **Person**: A named household member who owns one or more bank accounts. Attributes: name, createdDate, status (active/inactive). A built-in "Household" person always exists and cannot be deactivated or deleted. All other persons can be deactivated and reactivated but never deleted. Deactivated persons remain valid for historic transaction display and person-filter access.
+- **AccountPersonMapping**: A point-in-time record linking a bank account to a person, with an effective date. Attributes: accountName, personName, effectiveDate. Multiple records may exist for the same account (one per assignment event); the record with the most recent effectiveDate on or before a given transaction date is authoritative. Records are append-only and never modified. Required for every account before its first import is committed.
 - **MasterLedger**: The single append-only CSV file on the user's local filesystem storing all six record types, identified by a type field and a format version header.
 
 ## Success Criteria *(mandatory)*
@@ -308,12 +374,16 @@ When the app opens an existing ledger, it checks the format version. If an older
 - **SC-008**: Exported CSV files open correctly in standard spreadsheet applications and contain both the transaction rows and the budget summary section with no missing fields.
 - **SC-009**: Opening a master ledger created with an older format version results in a migration prompt; after confirmation all prior records are intact and the ledger is usable without manual intervention.
 - **SC-010**: A category deactivated after transactions are assigned to it continues to display correctly in all historic summaries and transaction views without errors.
+- **SC-011**: A new account encountered during import cannot be committed until the user assigns it to a person; the assignment prompt requires no more than two interactions to complete (select person, confirm).
+- **SC-012**: Selecting a person filter updates all visible summary figures, charts, and transaction lists to reflect only that person's transactions; switching back to household aggregate restores full totals with no page reload required.
+- **SC-013**: Every transaction in the master ledger carries a personName field populated at import time; no transaction record is stored without a personName value.
+- **SC-014**: Exported CSV files produced with the person breakdown option contain a correctly aggregated per-person per-category section that matches the figures shown on-screen for the same filtered period.
 
 ## Assumptions
 
 - The app runs entirely in the browser (client-side only) with no server component; all data resides in the user-selected local folder via the File System Access API.
 - The File System Access API is available in the target browser; Chromium-based browsers are the primary target.
-- "Account name" for Nationwide formats is derived from the file metadata rows; for NewDay format it is derived from a user-supplied label at import time or falls back to the filename.
+- "Account name" for Nationwide formats is derived from the file metadata rows; for any format where the account name cannot be determined from file metadata (such as NewDay), the user MUST provide a mandatory account label before the import staging screen is shown. Filename-derived account names are not acceptable; they produce poor account identifiers in the ledger and summaries.
 - Keyword matching for auto-categorisation is case-insensitive and checks if the keyword appears as a substring of the description.
 - The default keyword-to-category mapping is hardcoded in v1; users influence categorisation only through manual overrides and custom categories.
 - All monetary amounts are stored as integers in pence; the UI displays values in pounds with two decimal places (e.g. £12.50).
@@ -321,3 +391,7 @@ When the app opens an existing ledger, it checks the format version. If an older
 - Format profile auto-detection uses a heuristic based on column header names and presence of metadata rows; the confidence threshold is a design-time constant.
 - Recharts is the approved and only visualisation library.
 - The master ledger CSV uses UTF-8 encoding with RFC 4180-compliant quoting.
+- Budgets are household-wide; splitting budgets by person is out of scope for this feature.
+- The "Household" person is the catch-all for accounts not assigned to a specific individual (e.g. joint accounts) and for any transaction whose account has no covering accountPersonMapping record at the transaction date.
+- Person names are treated case-sensitively when stored; the uniqueness check at creation is case-insensitive to prevent accidental duplicates.
+- Category names are treated case-sensitively when stored; the uniqueness check at creation is case-insensitive to prevent accidental duplicates. A custom category name that matches an existing default or custom category name (case-insensitive) is rejected with a clear error message.
