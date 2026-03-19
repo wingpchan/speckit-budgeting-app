@@ -1,7 +1,7 @@
 # Feature Specification: UK Bank CSV Budget Tracker
 
 **Feature Branch**: `001-csv-budget-tracker`
-**Version**: 1.4.0
+**Version**: 1.5.0
 **Created**: 2026-03-19
 **Status**: Draft
 **Input**: User description: "Build a React budgeting application that imports UK bank and credit card statement CSV files, automatically categorises transactions, and displays financial summaries with historical comparison capability."
@@ -53,11 +53,11 @@ Imported transactions are automatically categorised using keyword matching again
 
 **Why this priority**: Categorisation is the primary analytical value of the app; without it, summaries are meaningless. Manual overrides are essential for correctness.
 
-**Independent Test**: Import a CSV containing a "TESCO" transaction; verify it is categorised as "Food & Drink". Then manually re-categorise it as "Shopping" and reload the ledger; verify "Shopping" is shown.
+**Independent Test**: Import a CSV containing a "TESCO" transaction; verify it is categorised as "Groceries". Then manually re-categorise it as "Shopping" and reload the ledger; verify "Shopping" is shown.
 
 **Acceptance Scenarios**:
 
-1. **Given** a transaction with description containing "TESCO", **When** automatic categorisation runs, **Then** it is assigned to "Food & Drink".
+1. **Given** a transaction with description containing "TESCO", **When** automatic categorisation runs, **Then** it is assigned to "Groceries".
 2. **Given** a transaction with no matching keyword, **When** automatic categorisation runs, **Then** it is assigned "Uncategorised".
 3. **Given** the user selects a transaction and changes its category, **When** they save the override, **Then** the updated category is persisted in the master ledger as part of the transaction record.
 4. **Given** a category has been deactivated, **When** automatic categorisation runs, **Then** it is not assigned to any new transaction; existing assignments remain valid.
@@ -88,7 +88,7 @@ Users set a monthly budget per category. The app displays actual spend vs budget
 
 **Why this priority**: Budget tracking is the core financial discipline feature. Summaries without budgets are informational only; budgets make the app actionable.
 
-**Independent Test**: Set a £200 budget for "Food & Drink" in February; view March with no budget set and verify it defaults to £200; set £250 for March and verify the override persists. Spend £220 in March "Food & Drink" and verify a red overspend indicator is shown.
+**Independent Test**: Set a £200 budget for "Groceries" in February; view March with no budget set and verify it defaults to £200; set £250 for March and verify the override persists. Spend £220 in March "Groceries" and verify a red overspend indicator is shown.
 
 **Acceptance Scenarios**:
 
@@ -281,7 +281,7 @@ All summary and transaction views default to the household aggregate view. A per
 
 **Categorisation**
 
-- **FR-014**: The app MUST automatically categorise transactions using description keyword matching against the following default categories: Housing, Food & Drink, Transport, Entertainment, Utilities, Health & Fitness, Shopping, Personal Care, Eating Out, Travel, Income, Internal Transfer, Uncategorised.
+- **FR-014**: The app MUST automatically categorise transactions using description keyword matching against the following default categories: Housing, Groceries, Transport, Entertainment, Utilities, Health & Fitness, Shopping, Personal Care, Eating Out, Travel, Holidays, Subscriptions, Insurance, Savings & Investments, Fuel, Taxes, Income, Internal Transfer, Uncategorised.
 - **FR-015**: Transactions with no matching keyword MUST be assigned to "Uncategorised".
 - **FR-016**: The user MUST be able to manually override the category of any transaction; the override MUST be persisted in the master ledger.
 
