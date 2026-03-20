@@ -105,3 +105,101 @@ describe('detectProfile', () => {
     }
   });
 });
+
+// Helper: find a mapping by sourceHeader within suggestedMappings
+function findMapping(
+  result: ReturnType<typeof detectProfile>,
+  header: string,
+) {
+  if (result.status !== 'unrecognised') return undefined;
+  return result.suggestedMappings.find(
+    (m) => m.sourceHeader?.toLowerCase() === header.toLowerCase(),
+  );
+}
+
+describe('Format 4: Date, Description, Money In, Money Out', () => {
+  const headers = ['Date', 'Description', 'Money In', 'Money Out'];
+
+  it('auto-detects paidIn for "Money In"', () => {
+    const result = detectProfile(headers, []);
+    expect(result.status).toBe('unrecognised');
+    expect(findMapping(result, 'Money In')?.canonicalField).toBe('paidIn');
+  });
+
+  it('auto-detects paidOut for "Money Out"', () => {
+    const result = detectProfile(headers, []);
+    expect(result.status).toBe('unrecognised');
+    expect(findMapping(result, 'Money Out')?.canonicalField).toBe('paidOut');
+  });
+
+  it('auto-detects date and description', () => {
+    const result = detectProfile(headers, []);
+    expect(result.status).toBe('unrecognised');
+    expect(findMapping(result, 'Date')?.canonicalField).toBe('date');
+    expect(findMapping(result, 'Description')?.canonicalField).toBe('description');
+  });
+});
+
+describe('Format 5: Transaction Date, Posted Date, Description, Debit, Credit, Balance', () => {
+  const headers = ['Transaction Date', 'Posted Date', 'Description', 'Debit', 'Credit', 'Balance'];
+
+  it('maps Transaction Date → date and Posted Date → ignore', () => {
+    const result = detectProfile(headers, []);
+    expect(result.status).toBe('unrecognised');
+    expect(findMapping(result, 'Transaction Date')?.canonicalField).toBe('date');
+    expect(findMapping(result, 'Posted Date')?.canonicalField).toBe('ignore');
+  });
+
+  it('maps Debit → paidOut and Credit → paidIn', () => {
+    const result = detectProfile(headers, []);
+    expect(result.status).toBe('unrecognised');
+    expect(findMapping(result, 'Debit')?.canonicalField).toBe('paidOut');
+    expect(findMapping(result, 'Credit')?.canonicalField).toBe('paidIn');
+  });
+
+  it('maps Balance → balance', () => {
+    const result = detectProfile(headers, []);
+    expect(result.status).toBe('unrecognised');
+    expect(findMapping(result, 'Balance')?.canonicalField).toBe('balance');
+  });
+
+  it('coexistence rule applies even when Posted Date appears before Transaction Date', () => {
+    const reversed = ['Posted Date', 'Transaction Date', 'Description', 'Debit', 'Credit', 'Balance'];
+    const result = detectProfile(reversed, []);
+    expect(result.status).toBe('unrecognised');
+    expect(findMapping(result, 'Transaction Date')?.canonicalField).toBe('date');
+    expect(findMapping(result, 'Posted Date')?.canonicalField).toBe('ignore');
+  });
+});
+
+describe('Format 6: Monzo-style — Date, Name, Type, Category, Amount, Currency', () => {
+  const headers = ['Date', 'Name', 'Type', 'Category', 'Amount', 'Currency'];
+  const dataRows = [['2026-03-15', 'TESCO METRO', 'Payment', 'Groceries', '-5.50', 'GBP']];
+
+  it('maps Name → description', () => {
+    const result = detectProfile(headers, [], dataRows);
+    expect(result.status).toBe('unrecognised');
+    expect(findMapping(result, 'Name')?.canonicalField).toBe('description');
+  });
+
+  it('maps Type, Category, Currency → ignore', () => {
+    const result = detectProfile(headers, [], dataRows);
+    expect(result.status).toBe('unrecognised');
+    expect(findMapping(result, 'Type')?.canonicalField).toBe('ignore');
+    expect(findMapping(result, 'Category')?.canonicalField).toBe('ignore');
+    expect(findMapping(result, 'Currency')?.canonicalField).toBe('ignore');
+  });
+
+  it('maps Amount → amount', () => {
+    const result = detectProfile(headers, [], dataRows);
+    expect(result.status).toBe('unrecognised');
+    expect(findMapping(result, 'Amount')?.canonicalField).toBe('amount');
+  });
+
+  it('assigns parseISODate transform when date data matches YYYY-MM-DD', () => {
+    const result = detectProfile(headers, [], dataRows);
+    expect(result.status).toBe('unrecognised');
+    expect(findMapping(result, 'Date')?.canonicalField).toBe('date');
+    expect(findMapping(result, 'Date')?.transform).toBe('parseISODate');
+  });
+});

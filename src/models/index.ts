@@ -58,7 +58,8 @@ export type ColumnTransform =
   | 'negateAmount'
   | 'absAmount'
   | 'parseDDMonYYYY'
-  | 'parseUKDate';
+  | 'parseUKDate'
+  | 'parseISODate';
 
 export interface ColumnMapping {
   sourceHeader: string;

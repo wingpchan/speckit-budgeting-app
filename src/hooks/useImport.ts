@@ -1,4 +1,4 @@
-import { useCallback, useReducer } from 'react';
+import { useCallback, useReducer, useRef } from 'react';
 import type {
   AccountPersonMappingRecord,
   CategoryRecord,
@@ -140,6 +140,7 @@ interface UseImportOptions {
 export function useImport(options: UseImportOptions) {
   const { profiles, categories, dirHandle, onCommitted } = options;
   const [state, dispatch] = useReducer(importReducer, initialState);
+  const pendingCategoryOverridesRef = useRef<Record<number, string>>({});
 
   // ── Internal: parse and advance to the right next step ──────────────────
 
@@ -274,8 +275,9 @@ export function useImport(options: UseImportOptions) {
         ? [...options.accountMappings, pendingAccountMapping]
         : options.accountMappings;
 
-      const records = parseResult.rows.map((row: ParsedRow) => {
-        const category = categorise(row.description, keywordIndex);
+      const overrides = pendingCategoryOverridesRef.current;
+      const records = parseResult.rows.map((row: ParsedRow, index: number) => {
+        const category = overrides[index] ?? categorise(row.description, keywordIndex);
         const personName = _resolvePersonName(row.date, account, allMappings);
         return buildTransactionRecord(row, {
           account,
@@ -299,7 +301,8 @@ export function useImport(options: UseImportOptions) {
   }, [state, dirHandle, categories, options.accountMappings, onCommitted]);
 
   /** Builds and commits all TransactionRecords to the ledger. */
-  const confirmImport = useCallback(async () => {
+  const confirmImport = useCallback(async (categoryOverrides: Record<number, string> = {}) => {
+    pendingCategoryOverridesRef.current = categoryOverrides;
     const { parseResult, account, contentHash, file } = state;
     if (!parseResult || !account || !contentHash || !file || !dirHandle) return;
 

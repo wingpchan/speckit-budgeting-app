@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { formatPence } from '../../utils/pence';
 import type { ParsedRow } from '../../services/csv-parser/types';
 import type { CategoryRecord } from '../../models/index';
@@ -9,7 +10,7 @@ interface StagingViewProps {
   account: string;
   detectedProfile: string | null;
   categories: CategoryRecord[];
-  onConfirm: () => void;
+  onConfirm: (categoryOverrides: Record<number, string>) => void;
   onCancel: () => void;
   isConfirming: boolean;
 }
@@ -23,7 +24,10 @@ export function StagingView({
   onCancel,
   isConfirming,
 }: StagingViewProps) {
+  const [categoryOverrides, setCategoryOverrides] = useState<Record<number, string>>({});
+
   const keywordIndex = buildKeywordIndex(categories, DEFAULT_KEYWORD_MAP);
+  const activeCategories = categories.filter((c) => c.status === 'active');
 
   const categorisedRows = rows.map((row) => ({
     ...row,
@@ -70,7 +74,21 @@ export function StagingView({
                 >
                   {formatPence(row.amount)}
                 </td>
-                <td className="px-3 py-2 text-gray-500">{row.category}</td>
+                <td className="px-3 py-2">
+                  <select
+                    value={categoryOverrides[i] ?? row.category}
+                    onChange={(e) =>
+                      setCategoryOverrides((prev) => ({ ...prev, [i]: e.target.value }))
+                    }
+                    className="text-sm text-gray-700 border border-gray-200 rounded px-1 py-0.5 bg-white focus:outline-none focus:ring-1 focus:ring-indigo-400"
+                  >
+                    {activeCategories.map((cat) => (
+                      <option key={cat.name} value={cat.name}>
+                        {cat.name}
+                      </option>
+                    ))}
+                  </select>
+                </td>
               </tr>
             ))}
           </tbody>
@@ -79,7 +97,7 @@ export function StagingView({
 
       <div className="flex gap-3">
         <button
-          onClick={onConfirm}
+          onClick={() => onConfirm(categoryOverrides)}
           disabled={isConfirming || rows.length === 0}
           className="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed"
         >

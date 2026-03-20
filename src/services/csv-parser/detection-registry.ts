@@ -1,4 +1,4 @@
-import type { CanonicalField, ColumnMapping, FormatProfileRecord } from '../../models/index';
+import type { CanonicalField, ColumnMapping, ColumnTransform, FormatProfileRecord } from '../../models/index';
 import type { DetectionResult } from './types';
 
 /**
@@ -6,24 +6,54 @@ import type { DetectionResult } from './types';
  * A source header that normalises to one of these gets score 1.0.
  */
 const FIELD_SYNONYMS: Partial<Record<CanonicalField, string[]>> = {
-  date: ['date', 'transaction date', 'trans date', 'posting date', 'value date', 'trade date'],
+  date: [
+    'date',
+    'transaction date',
+    'trans date',
+    'trans. date',
+    'posting date',
+    'posted date',
+    'value date',
+    'entry date',
+    'booking date',
+    'trade date',
+  ],
   description: [
     'description',
     'transactions',
     'narrative',
     'memo',
-    'reference',
     'details',
     'payee',
     'merchant',
+    'name',
+    'counterparty',
+    'particulars',
+    'transaction description',
+    'trans description',
+    'payment details',
     'details of transactions',
     'transaction details',
   ],
-  amount: ['amount', 'value', 'amt', 'net amount', 'transaction amount'],
-  paidOut: ['paid out', 'debit', 'withdrawals', 'withdrawal', 'debit amount', 'money out', 'out'],
-  paidIn: ['paid in', 'credit', 'deposits', 'deposit', 'credit amount', 'money in', 'in'],
+  amount: ['amount', 'value', 'amt', 'net amount', 'transaction amount', 'transaction value'],
+  paidOut: ['paid out', 'debit', 'withdrawals', 'withdrawal', 'debit amount', 'amount debit', 'money out', 'out', 'dr'],
+  paidIn: ['paid in', 'credit', 'deposits', 'deposit', 'credit amount', 'amount credit', 'money in', 'in', 'cr'],
   balance: ['balance', 'running balance', 'available balance', 'account balance'],
-  transactionType: ['type', 'transaction type', 'trans type'],
+  transactionType: ['trans type'],
+  ignore: [
+    'reference',
+    'ref',
+    'transaction reference',
+    'transaction id',
+    'transaction no',
+    'sort code',
+    'account number',
+    'posted date',
+    'type',
+    'category',
+    'currency',
+    'transaction type',
+  ],
 };
 
 /**
@@ -65,10 +95,13 @@ export function scoreHeaderMapping(
   canonicalField: CanonicalField,
   columnData?: string[],
 ): number {
-  if (canonicalField === 'ignore') return 0.0;
-
   const normalized = sourceHeader.trim().toLowerCase();
   const synonyms = FIELD_SYNONYMS[canonicalField] ?? [];
+
+  // ignore field: exact synonym match only (no keyword or data-pattern scoring)
+  if (canonicalField === 'ignore') {
+    return synonyms.includes(normalized) ? 1.0 : 0.0;
+  }
 
   // Score 1.0 — exact synonym match
   if (synonyms.includes(normalized)) return 1.0;
@@ -135,9 +168,13 @@ export function detectProfile(
     'paidIn',
     'balance',
     'transactionType',
+    'ignore', // checked last; multiple headers may map to ignore
   ];
   const assigned = new Set<CanonicalField>();
   const suggestedMappings: Partial<ColumnMapping>[] = [];
+
+  // ISO date pattern for transform inference
+  const ISO_DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
 
   for (let hi = 0; hi < headers.length; hi++) {
     const header = headers[hi];
@@ -147,7 +184,8 @@ export function detectProfile(
     let bestScore = 0;
 
     for (const field of candidateFields) {
-      if (assigned.has(field)) continue;
+      // Multiple headers may map to ignore; all other fields can only be assigned once
+      if (field !== 'ignore' && assigned.has(field)) continue;
       const score = scoreHeaderMapping(header, field, colData);
       if (score > bestScore) {
         bestScore = score;
@@ -156,10 +194,40 @@ export function detectProfile(
     }
 
     if (bestField && bestScore > 0) {
-      assigned.add(bestField);
-      suggestedMappings.push({ sourceHeader: header, canonicalField: bestField });
+      if (bestField !== 'ignore') assigned.add(bestField);
+
+      // Infer date transform from sampled column data
+      let transform: ColumnTransform | undefined;
+      if (bestField === 'date' && colData) {
+        const nonEmpty = colData.filter((v) => v.trim() !== '');
+        if (nonEmpty.length > 0) {
+          const isoFraction =
+            nonEmpty.filter((v) => ISO_DATE_PATTERN.test(v.trim())).length / nonEmpty.length;
+          if (isoFraction >= DATA_PATTERN_THRESHOLD) transform = 'parseISODate';
+        }
+      }
+
+      suggestedMappings.push({
+        sourceHeader: header,
+        canonicalField: bestField,
+        ...(transform ? { transform } : {}),
+      });
     } else {
       suggestedMappings.push({ sourceHeader: header });
+    }
+  }
+
+  // Coexistence rule: when both "transaction date" and "posted date" appear,
+  // ensure "transaction date" → date and "posted date" → ignore regardless of header order.
+  const normalizedHdrs = headers.map((h) => h.trim().toLowerCase());
+  if (normalizedHdrs.includes('transaction date') && normalizedHdrs.includes('posted date')) {
+    for (const m of suggestedMappings) {
+      const norm = (m.sourceHeader ?? '').trim().toLowerCase();
+      if (norm === 'transaction date') m.canonicalField = 'date';
+      if (norm === 'posted date') {
+        m.canonicalField = 'ignore';
+        delete m.transform;
+      }
     }
   }
 

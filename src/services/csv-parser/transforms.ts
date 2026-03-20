@@ -30,6 +30,21 @@ export function parseDDMonYYYYTransform(s: string): string {
   return result;
 }
 
+/**
+ * Validates a "YYYY-MM-DD" ISO date and returns it as-is.
+ * Throws if the value is not a valid ISO date.
+ */
+export function parseISODate(s: string): string {
+  const trimmed = s.trim();
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(trimmed)) throw new Error(`Cannot parse date: "${s}"`);
+  const [year, month, day] = trimmed.split('-').map(Number);
+  const d = new Date(year, month - 1, day);
+  if (d.getFullYear() !== year || d.getMonth() + 1 !== month || d.getDate() !== day) {
+    throw new Error(`Cannot parse date: "${s}"`);
+  }
+  return trimmed;
+}
+
 /** Parses "15/03/2026" → "2026-03-15". Throws on invalid input. */
 export function parseUKDateTransform(s: string): string {
   const result = parseUKDate(s);
@@ -70,6 +85,8 @@ export function applyTransform(value: string, transform: ColumnTransform): strin
       return parseDDMonYYYYTransform(value);
     case 'parseUKDate':
       return parseUKDateTransform(value);
+    case 'parseISODate':
+      return parseISODate(value);
     case 'absAmount':
       return absAmount(value);
     case 'negateAmount':

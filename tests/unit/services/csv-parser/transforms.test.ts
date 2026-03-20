@@ -3,6 +3,7 @@ import {
   stripPound,
   parseDDMonYYYYTransform,
   parseUKDateTransform,
+  parseISODate,
   absAmount,
   negateAmount,
   mergeAmountColumns,
@@ -87,6 +88,32 @@ describe('parseDDMonYYYYTransform', () => {
 
   it('throws for empty string', () => {
     expect(() => parseDDMonYYYYTransform('')).toThrow();
+  });
+});
+
+describe('parseISODate', () => {
+  it('returns "2026-03-15" as-is', () => {
+    expect(parseISODate('2026-03-15')).toBe('2026-03-15');
+  });
+
+  it('returns "2024-01-01" as-is', () => {
+    expect(parseISODate('2024-01-01')).toBe('2024-01-01');
+  });
+
+  it('trims surrounding whitespace before validating', () => {
+    expect(parseISODate(' 2026-03-15 ')).toBe('2026-03-15');
+  });
+
+  it('throws for non-ISO format (DD/MM/YYYY)', () => {
+    expect(() => parseISODate('15/03/2026')).toThrow();
+  });
+
+  it('throws for an invalid calendar date', () => {
+    expect(() => parseISODate('2026-02-30')).toThrow();
+  });
+
+  it('throws for empty string', () => {
+    expect(() => parseISODate('')).toThrow();
   });
 });
 
