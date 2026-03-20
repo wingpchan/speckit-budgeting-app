@@ -6,11 +6,13 @@ import type {
   DetectionHints,
   FormatProfileRecord,
   PersonRecord,
+  TransactionRecord,
 } from '../models/index';
 import { csvParserService } from '../services/csv-parser/csv-parser.service';
 import { extractAccountName } from '../services/csv-parser/account-extractor';
 import { buildKeywordIndex, categorise } from '../services/categoriser/categoriser.service';
 import { buildTransactionRecord, commitImport } from '../services/ledger/transaction-committer';
+import { detectExactDuplicate, detectDateRangeOverlap } from '../services/duplicate/duplicate.service';
 import { DEFAULT_KEYWORD_MAP } from '../models/constants';
 import { toISODate } from '../utils/dates';
 import type { DetectionResult, ParsedRow, ParseResult } from '../services/csv-parser/types';
@@ -24,9 +26,14 @@ export type ImportStep =
   | 'account_labelling' // account could not be extracted from metadata; show AccountLabelPrompt
   | 'person_assignment' // account has no existing person mapping; show PersonAssignmentPrompt
   | 'staging'          // show StagingView (Confirm / Cancel)
+  | 'duplicate_warning' // duplicate detected; show DuplicateWarningModal
   | 'confirming'       // writing to ledger
   | 'committed'
   | 'error';
+
+export type DuplicateWarning =
+  | { kind: 'exact'; priorImportDate: string }
+  | { kind: 'dateRange'; overlapRange: { start: string; end: string } };
 
 export interface ImportState {
   step: ImportStep;
@@ -38,6 +45,8 @@ export interface ImportState {
   account: string | null;
   parseResult: ParseResult | null;
   contentHash: string | null;
+  pendingAccountMapping: AccountPersonMappingRecord | null;
+  duplicateWarning: DuplicateWarning | null;
   errorMessage: string | null;
 }
 
@@ -55,8 +64,10 @@ type ImportAction =
       nextStep: ImportStep;
     }
   | { type: 'ACCOUNT_SET'; account: string; nextStep: ImportStep }
-  | { type: 'PERSON_ASSIGNED' }
+  | { type: 'PERSON_ASSIGNED'; mapping: AccountPersonMappingRecord }
   | { type: 'CONFIRM_IMPORT' }
+  | { type: 'DUPLICATE_DETECTED'; warning: DuplicateWarning }
+  | { type: 'DUPLICATE_OVERRIDE' }
   | { type: 'COMMITTED' }
   | { type: 'CANCEL' }
   | { type: 'ERROR'; message: string };
@@ -71,6 +82,8 @@ const initialState: ImportState = {
   account: null,
   parseResult: null,
   contentHash: null,
+  pendingAccountMapping: null,
+  duplicateWarning: null,
   errorMessage: null,
 };
 
@@ -94,9 +107,13 @@ function importReducer(state: ImportState, action: ImportAction): ImportState {
     case 'ACCOUNT_SET':
       return { ...state, step: action.nextStep, account: action.account };
     case 'PERSON_ASSIGNED':
-      return { ...state, step: 'staging' };
+      return { ...state, step: 'staging', pendingAccountMapping: action.mapping };
     case 'CONFIRM_IMPORT':
       return { ...state, step: 'confirming' };
+    case 'DUPLICATE_DETECTED':
+      return { ...state, step: 'duplicate_warning', duplicateWarning: action.warning };
+    case 'DUPLICATE_OVERRIDE':
+      return { ...state, step: 'confirming', duplicateWarning: null };
     case 'COMMITTED':
       return { ...state, step: 'committed' };
     case 'CANCEL':
@@ -115,6 +132,7 @@ interface UseImportOptions {
   categories: CategoryRecord[];
   people: PersonRecord[];
   accountMappings: AccountPersonMappingRecord[];
+  existingTransactions: TransactionRecord[];
   dirHandle: FileSystemDirectoryHandle | null;
   onCommitted?: () => void;
 }
@@ -233,14 +251,14 @@ export function useImport(options: UseImportOptions) {
     [options.accountMappings],
   );
 
-  /** Called after the PersonAssignmentPrompt appends an AccountPersonMappingRecord. */
-  const personAssigned = useCallback(() => {
-    dispatch({ type: 'PERSON_ASSIGNED' });
+  /** Called after the PersonAssignmentPrompt; holds the mapping in state until final confirm. */
+  const personAssigned = useCallback((mapping: AccountPersonMappingRecord) => {
+    dispatch({ type: 'PERSON_ASSIGNED', mapping });
   }, []);
 
-  /** Builds and commits all TransactionRecords to the ledger. */
-  const confirmImport = useCallback(async () => {
-    const { parseResult, account, contentHash, file } = state;
+  /** Internal: perform the actual ledger write (shared by confirmImport and overrideDuplicate). */
+  const _doCommit = useCallback(async () => {
+    const { parseResult, account, contentHash, file, pendingAccountMapping } = state;
     if (!parseResult || !account || !contentHash || !file || !dirHandle) return;
 
     dispatch({ type: 'CONFIRM_IMPORT' });
@@ -248,9 +266,15 @@ export function useImport(options: UseImportOptions) {
     try {
       const keywordIndex = buildKeywordIndex(categories, DEFAULT_KEYWORD_MAP);
 
+      // Include the pending mapping (if any) when resolving person names so that
+      // transactions in this batch are correctly attributed before it is persisted.
+      const allMappings = pendingAccountMapping
+        ? [...options.accountMappings, pendingAccountMapping]
+        : options.accountMappings;
+
       const records = parseResult.rows.map((row: ParsedRow) => {
         const category = categorise(row.description, keywordIndex);
-        const personName = _resolvePersonName(row.date, account, options.accountMappings);
+        const personName = _resolvePersonName(row.date, account, allMappings);
         return buildTransactionRecord(row, {
           account,
           sourceFile: file.name,
@@ -261,7 +285,7 @@ export function useImport(options: UseImportOptions) {
         });
       });
 
-      await commitImport(records, dirHandle);
+      await commitImport(records, dirHandle, pendingAccountMapping);
       dispatch({ type: 'COMMITTED' });
       onCommitted?.();
     } catch (err) {
@@ -272,6 +296,48 @@ export function useImport(options: UseImportOptions) {
     }
   }, [state, dirHandle, categories, options.accountMappings, onCommitted]);
 
+  /** Builds and commits all TransactionRecords to the ledger. */
+  const confirmImport = useCallback(async () => {
+    const { parseResult, account, contentHash, file } = state;
+    if (!parseResult || !account || !contentHash || !file || !dirHandle) return;
+
+    // Run duplicate checks before committing
+    const exactResult = detectExactDuplicate(contentHash, options.existingTransactions);
+    if (exactResult.isDuplicate) {
+      dispatch({
+        type: 'DUPLICATE_DETECTED',
+        warning: { kind: 'exact', priorImportDate: exactResult.priorImportDate! },
+      });
+      return;
+    }
+
+    const rangeResult = detectDateRangeOverlap(
+      parseResult.rows,
+      account,
+      options.existingTransactions,
+    );
+    if (rangeResult.hasOverlap) {
+      dispatch({
+        type: 'DUPLICATE_DETECTED',
+        warning: { kind: 'dateRange', overlapRange: rangeResult.overlapRange! },
+      });
+      return;
+    }
+
+    await _doCommit();
+  }, [_doCommit, state, dirHandle, options.existingTransactions]);
+
+  /** User explicitly chose to proceed past the duplicate warning. */
+  const overrideDuplicate = useCallback(async () => {
+    dispatch({ type: 'DUPLICATE_OVERRIDE' });
+    await _doCommit();
+  }, [_doCommit]);
+
+  /** Cancel duplicate warning — return to staging without writing. */
+  const cancelDuplicate = useCallback(() => {
+    dispatch({ type: 'PERSON_ASSIGNED' }); // returns to 'staging'
+  }, []);
+
   const cancel = useCallback(() => dispatch({ type: 'CANCEL' }), []);
 
   return {
@@ -281,6 +347,8 @@ export function useImport(options: UseImportOptions) {
     setAccount,
     personAssigned,
     confirmImport,
+    overrideDuplicate,
+    cancelDuplicate,
     cancel,
   };
 }

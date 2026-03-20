@@ -2,10 +2,25 @@ import { parsePenceFromString } from '../../utils/pence';
 import { parseDDMonYYYY, parseUKDate } from '../../utils/dates';
 import type { ColumnTransform } from '../../models/index';
 
-/** Strips £ and parses to pence. Empty string → 0. */
+/**
+ * Strips £ and parses to pence. Returns 0 for empty or unparseable input.
+ * Handles:
+ *  - Proper UTF-8 £ (U+00A3)
+ *  - Windows-1252 £ decoded as replacement character (U+FFFD)
+ *  - Surrounding quotes PapaParse may not have fully stripped
+ *  - Comma thousands separators
+ */
 export function stripPound(s: string): number {
-  if (!s || s.trim() === '') return 0;
-  return parsePenceFromString(s);
+  if (!s) return 0;
+  // Strip surrounding quotes
+  const unquoted = s.trim().replace(/^["']|["']$/g, '').trim();
+  if (!unquoted) return 0;
+  // Strip £ (U+00A3), U+FFFD (Windows-1252 £ mis-decoded as UTF-8), commas, whitespace
+  const cleaned = unquoted.replace(/[£\uFFFD,\s]/g, '');
+  if (!cleaned || cleaned === '-') return 0;
+  const value = parseFloat(cleaned);
+  if (isNaN(value)) return 0;
+  return Math.round(value * 100);
 }
 
 /** Parses "15 Mar 2026" → "2026-03-15". Throws on invalid input. */

@@ -28,6 +28,12 @@ export const DEFAULT_CATEGORIES: string[] = [
   'Uncategorised',
 ];
 
+/**
+ * Descriptions matching this list (case-insensitive, exact match) are
+ * non-transactional ledger markers and MUST be silently excluded from import.
+ */
+export const SKIP_LIST: string[] = ['OPENING BALANCE', 'CLOSING BALANCE'];
+
 /** Ordered keyword → category mappings; first match wins (case-insensitive substring) */
 export const DEFAULT_KEYWORD_MAP: Array<{ keyword: string; category: string }> = [
   // Groceries
@@ -146,6 +152,11 @@ export const DEFAULT_KEYWORD_MAP: Array<{ keyword: string; category: string }> =
   { keyword: 'TRANSFER TO', category: 'Internal Transfer' },
   { keyword: 'TRANSFER FROM', category: 'Internal Transfer' },
   { keyword: 'SAVINGS TRANSFER', category: 'Internal Transfer' },
+  { keyword: 'PAYMENT RECEIVED', category: 'Internal Transfer' },
+  { keyword: 'PAYMENT THANK YOU', category: 'Internal Transfer' },
+  { keyword: 'BALANCE TRANSFER', category: 'Internal Transfer' },
+  { keyword: 'DIRECT DEBIT PAYMENT', category: 'Internal Transfer' },
+  { keyword: 'CREDIT CARD PAYMENT', category: 'Internal Transfer' },
 ];
 
 export const REFERENCE_FORMAT_PROFILES: Omit<FormatProfileRecord, 'createdDate'>[] = [

@@ -1,10 +1,13 @@
 import Papa from 'papaparse';
 import type { ColumnMapping, DetectionHints, FormatProfileRecord } from '../../models/index';
+import { SKIP_LIST } from '../../models/constants';
 import { parsePenceFromString } from '../../utils/pence';
 import { detectProfile } from './detection-registry';
 import { applyTransform, mergeAmountColumns } from './transforms';
 import { ParseError } from './types';
 import type { DetectionResult, ParsedRow, ParseResult, ParseWarning } from './types';
+
+const SKIP_LIST_UPPER = SKIP_LIST.map((s) => s.toUpperCase());
 
 /** Splits a raw CSV line into fields (handles basic quoting). */
 function splitCsvLine(line: string): string[] {
@@ -50,6 +53,20 @@ function extractDataRows(text: string, metadataRowCount: number): string[][] {
     .map((l) => splitCsvLine(l));
 }
 
+/**
+ * Reads a File as text using Windows-1252 decoding.
+ *
+ * `File.text()` always decodes as UTF-8, which turns the Windows-1252 £ byte
+ * (0xA3) into U+FFFD (replacement character) rather than U+00A3 (£). UK bank
+ * CSVs — including all Nationwide formats — are Windows-1252 encoded.
+ * Decoding explicitly as Windows-1252 produces the correct £ sign, allowing
+ * stripPound and the rest of the parse pipeline to work without workarounds.
+ */
+async function readFileText(file: File): Promise<string> {
+  const buffer = await file.arrayBuffer();
+  return new TextDecoder('windows-1252').decode(buffer);
+}
+
 export const csvParserService = {
   /**
    * Detect which profile matches the CSV file headers, without parsing data rows.
@@ -58,7 +75,7 @@ export const csvParserService = {
   async detect(file: File, profiles: FormatProfileRecord[]): Promise<DetectionResult> {
     let text: string;
     try {
-      text = await file.text();
+      text = await readFileText(file);
     } catch {
       throw new ParseError('NOT_CSV', 'Cannot read file as text');
     }
@@ -127,7 +144,7 @@ export const csvParserService = {
   ): Promise<ParseResult> {
     let text: string;
     try {
-      text = await file.text();
+      text = await readFileText(file);
     } catch {
       throw new ParseError('NOT_CSV', 'Cannot read file as text');
     }
@@ -211,6 +228,14 @@ export const csvParserService = {
         let transactionType: 'expense' | 'income';
 
         if (hasPaidOut || hasPaidIn) {
+          if (paidOut === 0 && paidIn === 0) {
+            warnings.push({
+              rowIndex: i,
+              field: 'amount',
+              message: 'Both paidOut and paidIn are empty — row skipped',
+            });
+            continue;
+          }
           const merged = mergeAmountColumns({ paidOut, paidIn });
           finalAmount = merged.amount;
           transactionType = merged.transactionType;
@@ -250,6 +275,10 @@ export const csvParserService = {
       throw new ParseError('NO_FINANCIAL_DATA', 'No valid financial rows found in file');
     }
 
-    return { rows, detectedProfile: null, warnings };
+    const filteredRows = rows.filter(
+      (row) => !SKIP_LIST_UPPER.includes(row.description.toUpperCase()),
+    );
+
+    return { rows: filteredRows, detectedProfile: null, warnings };
   },
 };

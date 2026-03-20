@@ -1,7 +1,7 @@
 # Feature Specification: UK Bank CSV Budget Tracker
 
 **Feature Branch**: `001-csv-budget-tracker`
-**Version**: 1.6.0
+**Version**: 1.7.0
 **Created**: 2026-03-19
 **Status**: Draft
 **Input**: User description: "Build a React budgeting application that imports UK bank and credit card statement CSV files, automatically categorises transactions, and displays financial summaries with historical comparison capability."
@@ -253,6 +253,8 @@ All summary and transaction views default to the household aggregate view. A per
 - What happens when the user attempts to add a person whose name is identical to an existing person (case-insensitive)?
 - What happens when a person is deactivated while an import session is in progress and that person is assigned to the account being imported?
 - What happens when the user selects a non-CSV file type (PDF, XLSX, image) from the file picker — is this prevented at the OS file picker level, at file read time, or at parse time, and what error is shown?
+- What happens when a CSV row contains a description that matches the skip list (e.g. "OPENING BALANCE") — it must be silently excluded from the staged transaction list and never written to the master ledger.
+- What happens when both a current account and credit card statement are imported and both contain matching internal transfer entries (e.g. a payment appearing as debit on one and credit on the other) — these are categorised as Internal Transfer and the user is advised to be aware of potential double-counting in summaries.
 
 ## Requirements *(mandatory)*
 
@@ -283,6 +285,8 @@ All summary and transaction views default to the household aggregate view. A per
 
 - **FR-014**: The app MUST automatically categorise transactions using description keyword matching against the following default categories: Housing, Groceries, Transport, Entertainment, Utilities, Health & Fitness, Shopping, Personal Care, Eating Out, Travel, Holidays, Subscriptions, Insurance, Savings & Investments, Fuel, Taxes, Income, Internal Transfer, Uncategorised.
 - **FR-015**: Transactions with no matching keyword MUST be assigned to "Uncategorised".
+- **FR-015a**: The parser MUST automatically skip rows where the description matches any entry in a hardcoded skip list. The initial skip list MUST include: "OPENING BALANCE", "CLOSING BALANCE". These rows MUST never appear in the staging view or be written to the master ledger.
+- **FR-015b**: Rows where the description matches known internal transfer patterns (e.g. "PAYMENT RECEIVED") MUST be automatically categorised as "Internal Transfer" rather than skipped, as they represent real financial movements between accounts. The initial Internal Transfer keyword list MUST include: "PAYMENT RECEIVED", "PAYMENT THANK YOU", "BALANCE TRANSFER".
 - **FR-016**: The user MUST be able to manually override the category of any transaction; the override MUST be persisted in the master ledger.
 
 **Custom Categories**
@@ -402,5 +406,6 @@ All summary and transaction views default to the household aggregate view. A per
 - Category names are treated case-sensitively when stored; the uniqueness check at creation is case-insensitive to prevent accidental duplicates. A custom category name that matches an existing default or custom category name (case-insensitive) is rejected with a clear error message.
 - The primary deployment target for v1 is GitHub Pages (or equivalent static hosting such as Netlify or Vercel); the app is built as a static site using Vite and requires no server-side hosting. The app must be fully functional when served from a static host and accessed in a Chromium-based browser (Chrome or Edge).
 - The sourceFile field on transaction records stores the original filename only (e.g. nationwide-march-2026.csv); full filesystem paths are not stored. The original bank statement CSV files are not copied or moved by the app — only their data is absorbed into the master ledger.
+- Rows matching the skip list (OPENING BALANCE, CLOSING BALANCE) are non-transactional ledger markers and are excluded from import silently. Rows matching internal transfer patterns are real financial events and are imported as Internal Transfer category rather than skipped.
 - A future Electron-based desktop distribution is a known v2 consideration but is out of scope for this version.
 - Full ledger sharing between household members (e.g. sending the master ledger file directly) is achievable outside the app by copying the `budget-ledger.csv` file. A "seed export" feature — exporting household structure (categories, people, account mappings) without transaction history, to bootstrap a new instance — is a known v2 candidate and is explicitly out of scope for v1.

@@ -1,6 +1,7 @@
 import { SessionProvider, useSession } from './store/SessionContext';
 import { Layout, type ViewId } from './components/shared/Layout';
 import { ChooseFolder } from './components/shared/ChooseFolder';
+import { ImportScreen } from './components/import/ImportScreen';
 
 function ViewPlaceholder({ name }: { name: string }) {
   return (
@@ -29,7 +30,7 @@ function AppContent() {
       {(currentView) => {
         switch (currentView) {
           case 'import':
-            return <ViewPlaceholder name="Import" />;
+            return <ImportScreen />;
           case 'summaries':
             return <ViewPlaceholder name="Summaries" />;
           case 'budgets':

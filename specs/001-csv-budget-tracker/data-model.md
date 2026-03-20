@@ -1,7 +1,7 @@
 # Data Model: UK Bank CSV Budget Tracker
 
 **Branch**: `001-csv-budget-tracker` | **Date**: 2026-03-19
-**Source**: spec.md v1.6.0 + research.md
+**Source**: spec.md v1.7.0 + research.md
 
 ---
 
@@ -324,6 +324,6 @@ Hardcoded at build time (v1). Keyword matching is case-insensitive substring. Fi
 | DIRECT LINE, AVIVA, LV=, ADMIRAL, AXA | Insurance |
 | HMRC, COUNCIL TAX REFUND, TAX | Taxes |
 | SALARY, PAYROLL, BACS CREDIT, WAGES | Income |
-| TRANSFER TO, TRANSFER FROM, SAVINGS TRANSFER | Internal Transfer |
+| TRANSFER TO, TRANSFER FROM, SAVINGS TRANSFER, PAYMENT RECEIVED, PAYMENT THANK YOU, BALANCE TRANSFER, DIRECT DEBIT PAYMENT, CREDIT CARD PAYMENT | Internal Transfer |
 
 Any transaction not matching any keyword → `Uncategorised`.

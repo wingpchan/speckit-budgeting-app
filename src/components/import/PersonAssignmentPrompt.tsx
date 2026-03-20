@@ -1,13 +1,12 @@
 import { useState } from 'react';
 import type { AccountPersonMappingRecord, PersonRecord } from '../../models/index';
-import { serialiseRecord } from '../../services/ledger/ledger-writer';
 import { toISODate } from '../../utils/dates';
 
 interface PersonAssignmentPromptProps {
   account: string;
   activePeople: PersonRecord[];
   earliestTransactionDate: string;
-  onConfirm: (rows: string[]) => void;
+  onConfirm: (mapping: AccountPersonMappingRecord) => void;
   onCancel: () => void;
 }
 
@@ -38,7 +37,7 @@ export function PersonAssignmentPrompt({
       effectiveDate,
     };
 
-    onConfirm([serialiseRecord(mapping)]);
+    onConfirm(mapping);
   }
 
   return (

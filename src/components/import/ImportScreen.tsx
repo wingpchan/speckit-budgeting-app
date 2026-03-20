@@ -7,11 +7,13 @@ import { ManualColumnMappingUI } from './ManualColumnMappingUI';
 import { AccountLabelPrompt } from './AccountLabelPrompt';
 import { PersonAssignmentPrompt } from './PersonAssignmentPrompt';
 import { StagingView } from './StagingView';
+import { DuplicateWarningModal } from './DuplicateWarningModal';
 import type {
   AccountPersonMappingRecord,
   CategoryRecord,
   FormatProfileRecord,
   PersonRecord,
+  TransactionRecord,
 } from '../../models/index';
 
 export function ImportScreen() {
@@ -24,6 +26,9 @@ export function ImportScreen() {
   const accountMappings = records.filter(
     (r): r is AccountPersonMappingRecord => r.type === 'accountPersonMapping',
   );
+  const existingTransactions = records.filter(
+    (r): r is TransactionRecord => r.type === 'transaction',
+  );
 
   // Active persons for PersonAssignmentPrompt dropdown
   const activePeople = people.filter((p) => p.status === 'active');
@@ -35,12 +40,15 @@ export function ImportScreen() {
     setAccount,
     personAssigned,
     confirmImport,
+    overrideDuplicate,
+    cancelDuplicate,
     cancel,
   } = useImport({
     profiles,
     categories,
     people,
     accountMappings,
+    existingTransactions,
     dirHandle: session.dirHandle,
     onCommitted: () => refresh(),
   });
@@ -96,7 +104,7 @@ export function ImportScreen() {
     );
   }
 
-  if (state.step === 'manual_mapping') {
+  if (state.step === 'manual_mapping' && state.file) {
     const detection = state.detectionResult;
     const suggestedMappings =
       detection?.status === 'unrecognised' ? detection.suggestedMappings : [];
@@ -104,6 +112,7 @@ export function ImportScreen() {
 
     return (
       <ManualColumnMappingUI
+        file={state.file}
         suggestedHeaders={headers}
         suggestedMappings={suggestedMappings as Array<{ sourceHeader?: string; canonicalField?: import('../../models/index').CanonicalField }>}
         onApply={applyManualMappings}
@@ -128,14 +137,8 @@ export function ImportScreen() {
         account={state.account}
         activePeople={activePeople}
         earliestTransactionDate={earliestDate}
-        onConfirm={async (rows) => {
-          // Append the AccountPersonMappingRecord then advance
-          if (session.dirHandle) {
-            const { appendRecords } = await import('../../services/ledger/ledger-writer');
-            await appendRecords(session.dirHandle, rows);
-            await refresh();
-          }
-          personAssigned();
+        onConfirm={(mapping) => {
+          personAssigned(mapping);
         }}
         onCancel={cancel}
       />
@@ -152,6 +155,28 @@ export function ImportScreen() {
         onConfirm={confirmImport}
         onCancel={cancel}
         isConfirming={state.step === 'confirming'}
+      />
+    );
+  }
+
+  if (state.step === 'duplicate_warning' && state.duplicateWarning) {
+    const warning = state.duplicateWarning;
+    if (warning.kind === 'exact') {
+      return (
+        <DuplicateWarningModal
+          variant="exact"
+          priorImportDate={warning.priorImportDate}
+          onOverride={overrideDuplicate}
+          onCancel={cancelDuplicate}
+        />
+      );
+    }
+    return (
+      <DuplicateWarningModal
+        variant="dateRange"
+        overlapRange={warning.overlapRange}
+        onProceed={overrideDuplicate}
+        onCancel={cancelDuplicate}
       />
     );
   }

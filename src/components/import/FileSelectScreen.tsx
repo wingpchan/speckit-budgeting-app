@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useState } from 'react';
 
 interface FileSelectScreenProps {
   onFileSelected: (file: File) => void;
@@ -7,20 +7,28 @@ interface FileSelectScreenProps {
 }
 
 export function FileSelectScreen({ onFileSelected, isDetecting, error }: FileSelectScreenProps) {
-  const inputRef = useRef<HTMLInputElement>(null);
   const [localError, setLocalError] = useState<string | null>(null);
 
-  function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
+  async function handleClick() {
     setLocalError(null);
 
-    // Reject non-CSV at read time
+    let fileHandle: FileSystemFileHandle;
+    try {
+      [fileHandle] = await window.showOpenFilePicker({
+        types: [{ description: 'CSV files', accept: { 'text/csv': ['.csv'] } }],
+        multiple: false,
+      });
+    } catch (err) {
+      // User dismissed the picker — not an error
+      if (err instanceof DOMException && err.name === 'AbortError') return;
+      setLocalError('Could not open file picker');
+      return;
+    }
+
+    const file = await fileHandle.getFile();
+
     if (!file.name.toLowerCase().endsWith('.csv') && file.type !== 'text/csv') {
       setLocalError('Only CSV files are supported');
-      // Reset input so the same file can be re-selected after error is cleared
-      if (inputRef.current) inputRef.current.value = '';
       return;
     }
 
@@ -39,26 +47,19 @@ export function FileSelectScreen({ onFileSelected, isDetecting, error }: FileSel
         </p>
       </div>
 
-      <label className="flex flex-col items-center gap-3 cursor-pointer w-full max-w-sm">
-        <div className="w-full border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-indigo-400 transition-colors">
+      <div className="w-full max-w-sm">
+        <button
+          onClick={handleClick}
+          disabled={isDetecting}
+          className="w-full border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-indigo-400 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+        >
           {isDetecting ? (
             <p className="text-indigo-600 font-medium">Detecting format…</p>
           ) : (
-            <>
-              <p className="text-gray-400 mb-2">Click to choose a CSV file</p>
-              <p className="text-xs text-gray-300">or drag and drop</p>
-            </>
+            <p className="text-gray-400">Click to choose a CSV file</p>
           )}
-        </div>
-        <input
-          ref={inputRef}
-          type="file"
-          accept=".csv,text/csv"
-          className="sr-only"
-          onChange={handleChange}
-          disabled={isDetecting}
-        />
-      </label>
+        </button>
+      </div>
 
       {displayError && (
         <div className="bg-red-50 border border-red-200 rounded-lg px-4 py-3 text-sm text-red-700 max-w-sm w-full text-center">

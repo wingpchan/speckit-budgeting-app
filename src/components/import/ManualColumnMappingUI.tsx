@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import Papa from 'papaparse';
 import type { CanonicalField, ColumnMapping, DetectionHints } from '../../models/index';
 
 const CANONICAL_FIELDS: CanonicalField[] = [
@@ -16,6 +17,7 @@ const REQUIRED_FIELDS: CanonicalField[] = ['date', 'description'];
 const REQUIRED_AMOUNT_FIELDS: CanonicalField[] = ['amount', 'paidOut', 'paidIn'];
 
 interface ManualColumnMappingUIProps {
+  file: File;
   suggestedHeaders: string[];
   suggestedMappings: Partial<ColumnMapping>[];
   onApply: (
@@ -26,11 +28,13 @@ interface ManualColumnMappingUIProps {
 }
 
 export function ManualColumnMappingUI({
+  file,
   suggestedHeaders,
   suggestedMappings,
   onApply,
   onCancel,
 }: ManualColumnMappingUIProps) {
+  const [headers, setHeaders] = useState<string[]>(suggestedHeaders);
   const [assignments, setAssignments] = useState<Record<string, CanonicalField | ''>>(() => {
     const initial: Record<string, CanonicalField | ''> = {};
     for (const header of suggestedHeaders) {
@@ -44,6 +48,26 @@ export function ManualColumnMappingUI({
   const [metadataRowCount, setMetadataRowCount] = useState(0);
   const [dateFormat, setDateFormat] = useState('DD/MM/YYYY');
 
+  useEffect(() => {
+    let cancelled = false;
+    void file.text().then((text) => {
+      if (cancelled) return;
+      const lines = text.split(/\r?\n/);
+      const headerLine = lines[metadataRowCount] ?? '';
+      const parsed = Papa.parse<string[]>(headerLine, { header: false });
+      const newHeaders = (parsed.data[0] as string[] | undefined) ?? [];
+      setHeaders(newHeaders);
+      setAssignments((prev) => {
+        const next: Record<string, CanonicalField | ''> = {};
+        for (const h of newHeaders) {
+          next[h] = prev[h] ?? '';
+        }
+        return next;
+      });
+    });
+    return () => { cancelled = true; };
+  }, [file, metadataRowCount]);
+
   function isValid(): boolean {
     const assignedFields = Object.values(assignments);
     const hasDate = assignedFields.includes('date');
@@ -53,7 +77,7 @@ export function ManualColumnMappingUI({
   }
 
   function handleApply() {
-    const mappings: ColumnMapping[] = suggestedHeaders
+    const mappings: ColumnMapping[] = headers
       .filter((h) => assignments[h] && assignments[h] !== '')
       .map((h) => ({
         sourceHeader: h,
@@ -116,7 +140,7 @@ export function ManualColumnMappingUI({
       </div>
 
       <div className="space-y-2 mb-4">
-        {suggestedHeaders.map((header) => {
+        {headers.map((header) => {
           const current = assignments[header] ?? '';
           const isMissing =
             (REQUIRED_FIELDS.includes(current as CanonicalField) ||
