@@ -11,12 +11,15 @@ const activeCategories: CategoryRecord[] = [
   makeCategory('Groceries'),
   makeCategory('Subscriptions'),
   makeCategory('Eating Out'),
+  makeCategory('Entertainment'),
   makeCategory('Shopping'),
   makeCategory('Transport'),
+  makeCategory('Fuel'),
   makeCategory('Holidays'),
   makeCategory('Utilities'),
   makeCategory('Telecoms'),
   makeCategory('Housing'),
+  makeCategory('Income'),
   makeCategory('Internal Transfer'),
   makeCategory('Uncategorised'),
 ];
@@ -105,5 +108,33 @@ describe('keyword categorisation — new keywords (v1.8.0)', () => {
 
   it('"MORTGAGE PAYMENT REF12345" → "Internal Transfer" (not Housing)', () => {
     expect(categorise('MORTGAGE PAYMENT REF12345', index)).toBe('Internal Transfer');
+  });
+});
+
+describe('keyword categorisation — new keywords (v1.9.0)', () => {
+  const index = buildKeywordIndex(activeCategories, DEFAULT_KEYWORD_MAP);
+
+  it('"TV LICENCE MBP" → "Utilities" (not Fuel via BP substring)', () => {
+    expect(categorise('TV LICENCE MBP', index)).toBe('Utilities');
+  });
+
+  it('"B/CARD PLAT VISA" → "Internal Transfer"', () => {
+    expect(categorise('B/CARD PLAT VISA', index)).toBe('Internal Transfer');
+  });
+
+  it('"NATIONAL LOTTERY WWW.NATIONAL-GB" → "Entertainment"', () => {
+    expect(categorise('NATIONAL LOTTERY WWW.NATIONAL-GB', index)).toBe('Entertainment');
+  });
+
+  it('"DELIVEROO" → "Eating Out"', () => {
+    expect(categorise('DELIVEROO', index)).toBe('Eating Out');
+  });
+
+  it('"TRAINLINE" → "Transport"', () => {
+    expect(categorise('TRAINLINE', index)).toBe('Transport');
+  });
+
+  it('"FASTER PAYMENT IN SALARY" → "Income"', () => {
+    expect(categorise('FASTER PAYMENT IN SALARY', index)).toBe('Income');
   });
 });
