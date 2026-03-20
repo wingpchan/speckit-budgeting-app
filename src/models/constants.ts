@@ -164,7 +164,7 @@ export const REFERENCE_FORMAT_PROFILES: Omit<FormatProfileRecord, 'createdDate'>
     type: 'formatProfile',
     profileName: 'Nationwide Current Account',
     detectionHints: {
-      metadataRowCount: 3,
+      metadataRowCount: 4,
       dateFormat: 'DD Mon YYYY',
       headerSignatures: ['Paid out', 'Paid in', 'Balance'],
       confidenceThreshold: 0.8,
@@ -181,7 +181,7 @@ export const REFERENCE_FORMAT_PROFILES: Omit<FormatProfileRecord, 'createdDate'>
     type: 'formatProfile',
     profileName: 'Nationwide Credit Card',
     detectionHints: {
-      metadataRowCount: 3,
+      metadataRowCount: 4,
       dateFormat: 'DD Mon YYYY',
       headerSignatures: ['Paid out', 'Paid in', 'Location'],
       confidenceThreshold: 0.8,

@@ -1,12 +1,13 @@
 import { useState } from 'react';
 
 interface AccountLabelPromptProps {
+  initialLabel?: string;
   onConfirm: (account: string) => void;
   onCancel: () => void;
 }
 
-export function AccountLabelPrompt({ onConfirm, onCancel }: AccountLabelPromptProps) {
-  const [label, setLabel] = useState('');
+export function AccountLabelPrompt({ initialLabel, onConfirm, onCancel }: AccountLabelPromptProps) {
+  const [label, setLabel] = useState(initialLabel ?? '');
   const [error, setError] = useState<string | null>(null);
 
   function handleConfirm() {
@@ -23,8 +24,9 @@ export function AccountLabelPrompt({ onConfirm, onCancel }: AccountLabelPromptPr
     <div className="max-w-md mx-auto">
       <h2 className="text-lg font-semibold text-gray-800 mb-2">Name This Account</h2>
       <p className="text-sm text-gray-500 mb-4">
-        The account name could not be read from this CSV file. Enter a label to identify this
-        account (e.g. "Nationwide Current Account", "NewDay Credit Card").
+        {initialLabel
+          ? 'We detected this account name from the CSV. Please confirm or edit it before continuing.'
+          : 'The account name could not be read from this CSV file. Enter a label to identify this account (e.g. "Nationwide Current Account", "NewDay Credit Card").'}
         <br />
         <span className="text-xs text-gray-400 mt-1 block">
           Note: filename-derived labels are not accepted — please enter a descriptive name.

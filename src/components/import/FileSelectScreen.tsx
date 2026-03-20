@@ -15,8 +15,7 @@ export function FileSelectScreen({ onFileSelected, isDetecting, error }: FileSel
     let fileHandle: FileSystemFileHandle;
     try {
       [fileHandle] = await window.showOpenFilePicker({
-        types: [{ description: 'CSV files', accept: { 'text/csv': ['.csv'] } }],
-        multiple: false,
+        types: [{ accept: { 'text/csv': ['.csv'] } }],
       });
     } catch (err) {
       // User dismissed the picker — not an error

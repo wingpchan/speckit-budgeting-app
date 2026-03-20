@@ -122,7 +122,13 @@ export function ImportScreen() {
   }
 
   if (state.step === 'account_labelling') {
-    return <AccountLabelPrompt onConfirm={setAccount} onCancel={cancel} />;
+    return (
+      <AccountLabelPrompt
+        initialLabel={state.account ?? ''}
+        onConfirm={setAccount}
+        onCancel={cancel}
+      />
+    );
   }
 
   if (state.step === 'person_assignment' && state.account) {

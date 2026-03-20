@@ -183,7 +183,9 @@ export function useImport(options: UseImportOptions) {
         parseResult: result,
         contentHash,
         account,
-        nextStep,
+        // For new accounts, route through account_labelling so the user can
+        // confirm or edit the extracted name before person assignment.
+        nextStep: nextStep === 'person_assignment' ? 'account_labelling' : nextStep,
       });
     },
     [options.accountMappings],

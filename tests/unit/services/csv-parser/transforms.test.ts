@@ -261,13 +261,14 @@ describe('Windows-1252 encoding — Nationwide CSV', () => {
     { sourceHeader: 'Paid in', canonicalField: 'paidIn' as CanonicalField, transform: 'stripPound' as const },
     { sourceHeader: 'Balance', canonicalField: 'balance' as CanonicalField, transform: 'stripPound' as const },
   ];
-  const hints = { metadataRowCount: 3, dateFormat: 'DD Mon YYYY' };
+  const hints = { metadataRowCount: 4, dateFormat: 'DD Mon YYYY' };
 
   it('debit row with Windows-1252 £ produces correct negative pence amount', async () => {
     const csvText = [
-      'Account Name:,Current Account',
-      'Account Balance:,£1234.56',
-      'Available Balance:,£1234.56',
+      '"Account Name:","FlexAccount ****01949"',
+      '"Account Balance:","£1,234.56"',
+      '"Available Balance:","£1,234.56"',
+      '',
       'Date,Transactions,Paid out,Paid in,Balance',
       '15 Mar 2026,TESCO METRO,£29.99,,£1204.57',
     ].join('\r\n');
@@ -282,9 +283,10 @@ describe('Windows-1252 encoding — Nationwide CSV', () => {
 
   it('credit row with Windows-1252 £ produces correct positive pence amount', async () => {
     const csvText = [
-      'Account Name:,Current Account',
-      'Account Balance:,£500.00',
-      'Available Balance:,£500.00',
+      '"Account Name:","FlexAccount ****01949"',
+      '"Account Balance:","£500.00"',
+      '"Available Balance:","£500.00"',
+      '',
       'Date,Transactions,Paid out,Paid in,Balance',
       '01 Mar 2026,SALARY,,£2500.00,£3000.00',
     ].join('\r\n');

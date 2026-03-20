@@ -50,12 +50,16 @@ export function ManualColumnMappingUI({
 
   useEffect(() => {
     let cancelled = false;
-    void file.text().then((text) => {
+    void file.arrayBuffer().then((buf) => {
       if (cancelled) return;
+      const text = new TextDecoder('windows-1252').decode(buf);
       const lines = text.split(/\r?\n/);
-      const headerLine = lines[metadataRowCount] ?? '';
-      const parsed = Papa.parse<string[]>(headerLine, { header: false });
-      const newHeaders = (parsed.data[0] as string[] | undefined) ?? [];
+      const contentFromHeader = lines.slice(metadataRowCount).join('\n');
+      const parsed = Papa.parse<Record<string, string>>(contentFromHeader, {
+        header: true,
+        skipEmptyLines: true,
+      });
+      const newHeaders = parsed.meta.fields ?? [];
       setHeaders(newHeaders);
       setAssignments((prev) => {
         const next: Record<string, CanonicalField | ''> = {};
@@ -66,7 +70,7 @@ export function ManualColumnMappingUI({
       });
     });
     return () => { cancelled = true; };
-  }, [file, metadataRowCount]);
+  }, [file, metadataRowCount, dateFormat]);
 
   function isValid(): boolean {
     const assignedFields = Object.values(assignments);
