@@ -133,7 +133,7 @@ The following profiles are seeded into every new ledger at initialisation. They 
   },
   "columnMappings": [
     { "sourceHeader": "Date",        "canonicalField": "date",        "transform": "parseDDMonYYYY" },
-    { "sourceHeader": "Transactions","canonicalField": "description"  },
+    { "sourceHeader": "Description", "canonicalField": "description"  },
     { "sourceHeader": "Paid out",    "canonicalField": "paidOut",     "transform": "stripPound" },
     { "sourceHeader": "Paid in",     "canonicalField": "paidIn",      "transform": "stripPound" },
     { "sourceHeader": "Balance",     "canonicalField": "balance",     "transform": "stripPound" }
@@ -154,7 +154,7 @@ The following profiles are seeded into every new ledger at initialisation. They 
   },
   "columnMappings": [
     { "sourceHeader": "Date",        "canonicalField": "date",        "transform": "parseDDMonYYYY" },
-    { "sourceHeader": "Transactions","canonicalField": "description"  },
+    { "sourceHeader": "Description", "canonicalField": "description"  },
     { "sourceHeader": "Location",    "canonicalField": "ignore"       },
     { "sourceHeader": "Paid out",    "canonicalField": "paidOut",     "transform": "stripPound" },
     { "sourceHeader": "Paid in",     "canonicalField": "paidIn",      "transform": "stripPound" }

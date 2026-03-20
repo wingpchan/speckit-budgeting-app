@@ -283,7 +283,7 @@ describe('skip list filtering', () => {
 describe('Windows-1252 encoding — Nationwide CSV', () => {
   const nationwideMappings = [
     { sourceHeader: 'Date', canonicalField: 'date' as CanonicalField, transform: 'parseDDMonYYYY' as const },
-    { sourceHeader: 'Transactions', canonicalField: 'description' as CanonicalField },
+    { sourceHeader: 'Description', canonicalField: 'description' as CanonicalField },
     { sourceHeader: 'Paid out', canonicalField: 'paidOut' as CanonicalField, transform: 'stripPound' as const },
     { sourceHeader: 'Paid in', canonicalField: 'paidIn' as CanonicalField, transform: 'stripPound' as const },
     { sourceHeader: 'Balance', canonicalField: 'balance' as CanonicalField, transform: 'stripPound' as const },
@@ -296,7 +296,7 @@ describe('Windows-1252 encoding — Nationwide CSV', () => {
       '"Account Balance:","£1,234.56"',
       '"Available Balance:","£1,234.56"',
       '',
-      'Date,Transactions,Paid out,Paid in,Balance',
+      'Date,Description,Paid out,Paid in,Balance',
       '15 Mar 2026,TESCO METRO,£29.99,,£1204.57',
     ].join('\r\n');
 
@@ -314,7 +314,7 @@ describe('Windows-1252 encoding — Nationwide CSV', () => {
       '"Account Balance:","£500.00"',
       '"Available Balance:","£500.00"',
       '',
-      'Date,Transactions,Paid out,Paid in,Balance',
+      'Date,Description,Paid out,Paid in,Balance',
       '01 Mar 2026,SALARY,,£2500.00,£3000.00',
     ].join('\r\n');
     const result = await csvParserService.parseWithMapping(w1252File(csvText, 'nationwide.csv'), nationwideMappings, hints);
