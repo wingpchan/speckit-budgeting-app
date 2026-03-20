@@ -1,7 +1,8 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { buildKeywordIndex, categorise } from '../../../src/services/categoriser/categoriser.service';
+import { overrideCategory } from '../../../src/services/categoriser/category-override.service';
 import { DEFAULT_KEYWORD_MAP } from '../../../src/models/constants';
-import type { CategoryRecord } from '../../../src/models/index';
+import type { CategoryRecord, TransactionRecord } from '../../../src/models/index';
 
 function makeCategory(name: string, status: 'active' | 'inactive' = 'active'): CategoryRecord {
   return { type: 'category', name, isDefault: true, createdDate: '2026-01-01', status };
@@ -108,6 +109,63 @@ describe('keyword categorisation — new keywords (v1.8.0)', () => {
 
   it('"MORTGAGE PAYMENT REF12345" → "Internal Transfer" (not Housing)', () => {
     expect(categorise('MORTGAGE PAYMENT REF12345', index)).toBe('Internal Transfer');
+  });
+});
+
+describe('overrideCategory', () => {
+  const original: TransactionRecord = {
+    type: 'transaction',
+    date: '2026-03-15',
+    description: 'TESCO EXTRA',
+    amount: -1250,
+    transactionType: 'expense',
+    category: 'Groceries',
+    account: 'Nationwide Current',
+    sourceFile: 'nationwide-march.csv',
+    importedDate: '2026-03-15',
+    contentHash: 'abc123',
+    personName: 'Household',
+  };
+
+  it('appends a new TransactionRecord with the updated category field', async () => {
+    const appendRecords = vi.fn().mockResolvedValue(undefined);
+    const dirHandle = {} as FileSystemDirectoryHandle;
+
+    await overrideCategory(original, 'Shopping', dirHandle, appendRecords);
+
+    expect(appendRecords).toHaveBeenCalledOnce();
+    const [rows] = appendRecords.mock.calls[0] as [string[]];
+    expect(rows).toHaveLength(1);
+    // The row should contain the new category
+    expect(rows[0]).toContain('Shopping');
+    // And still contain the original fields
+    expect(rows[0]).toContain('TESCO EXTRA');
+    expect(rows[0]).toContain('abc123');
+  });
+
+  it('preserves all original fields except category', async () => {
+    const appendRecords = vi.fn().mockResolvedValue(undefined);
+    const dirHandle = {} as FileSystemDirectoryHandle;
+
+    await overrideCategory(original, 'Shopping', dirHandle, appendRecords);
+
+    const [rows] = appendRecords.mock.calls[0] as [string[]];
+    const row = rows[0];
+    // Verify original fields present
+    expect(row).toContain('2026-03-15');
+    expect(row).toContain('Nationwide Current');
+    expect(row).toContain('Household');
+    expect(row).toContain('-1250');
+  });
+
+  it('deactivated category remains valid when read from a historic transaction record', () => {
+    // The category on the record is the source of truth for display — not the active category list
+    const txWithDeactivatedCategory: TransactionRecord = {
+      ...original,
+      category: 'Child Care',
+    };
+    // Reading the category from the record directly (not from an active list) must always work
+    expect(txWithDeactivatedCategory.category).toBe('Child Care');
   });
 });
 

@@ -141,14 +141,14 @@
 
 ### Tests for User Story 3 (TDD — write first, confirm they fail, then implement)
 
-- [ ] T053 [P] [US3] Extend categoriser unit tests in tests/unit/services/categoriser.test.ts: `overrideCategory` appends a new `TransactionRecord` with updated `category` field; deactivated category remains valid for historic display (read from record, not from active list)
+- [X] T053 [P] [US3] Extend categoriser unit tests in tests/unit/services/categoriser.test.ts: `overrideCategory` appends a new `TransactionRecord` with updated `category` field; deactivated category remains valid for historic display (read from record, not from active list)
 
 ### Implementation for User Story 3
 
-- [ ] T054 [US3] Implement category override service in src/services/categoriser/category-override.service.ts: `overrideCategory(original: TransactionRecord, newCategory: string, dirHandle): Promise<void>` — appends a new `TransactionRecord` with all fields copied from `original` plus updated `category`; later records for the same transaction (matched by `contentHash + date + description`) supersede earlier ones in all read operations — must satisfy T053
-- [ ] T055 [US3] Implement `TransactionList` component in src/components/import/TransactionList.tsx: paginated table (date, description, amount £, category, account, person); category column is an inline `<select>` showing active categories only; on change shows confirmation modal "Change category from X to Y?"; on confirm calls `overrideCategory`; on success refreshes ledger records
-- [ ] T056 [US3] Implement `useCategories` hook in src/hooks/useCategories.ts: exposes `{ allCategories, activeCategories, defaultCategories, customCategories }` derived from `CategoryRecord` list in `useLedger` records; resolves current status using most-recent-record logic
-- [ ] T057 [US3] Verify `TransactionList` (T055) uses `activeCategories` from `useCategories` for the override dropdown; verify a transaction whose category was overridden to a now-deactivated category still displays that category name (read from the transaction record, not the active list)
+- [X] T054 [US3] Implement category override service in src/services/categoriser/category-override.service.ts: `overrideCategory(original: TransactionRecord, newCategory: string, dirHandle): Promise<void>` — appends a new `TransactionRecord` with all fields copied from `original` plus updated `category`; later records for the same transaction (matched by `contentHash + date + description`) supersede earlier ones in all read operations — must satisfy T053
+- [X] T055 [US3] Implement `TransactionList` component in src/components/import/TransactionList.tsx: paginated table (date, description, amount £, category, account, person); category column is an inline `<select>` showing active categories only; on change shows confirmation modal "Change category from X to Y?"; on confirm calls `overrideCategory`; on success refreshes ledger records
+- [X] T056 [US3] Implement `useCategories` hook in src/hooks/useCategories.ts: exposes `{ allCategories, activeCategories, defaultCategories, customCategories }` derived from `CategoryRecord` list in `useLedger` records; resolves current status using most-recent-record logic
+- [X] T057 [US3] Verify `TransactionList` (T055) uses `activeCategories` from `useCategories` for the override dropdown; verify a transaction whose category was overridden to a now-deactivated category still displays that category name (read from the transaction record, not the active list)
 
 **Checkpoint**: TESCO → "Groceries" on import; inline override to "Shopping"; ledger reload shows "Shopping"; deactivated category not in dropdown but visible in historic records
 

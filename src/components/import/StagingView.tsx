@@ -27,7 +27,9 @@ export function StagingView({
   const [categoryOverrides, setCategoryOverrides] = useState<Record<number, string>>({});
 
   const keywordIndex = buildKeywordIndex(categories, DEFAULT_KEYWORD_MAP);
-  const activeCategories = categories.filter((c) => c.status === 'active');
+  const activeCategories = categories
+    .filter((c) => c.status === 'active')
+    .sort((a, b) => a.name.localeCompare(b.name));
 
   const categorisedRows = rows.map((row) => ({
     ...row,

@@ -114,6 +114,49 @@ function parseRecord(raw: RawRow): AllRecordTypes | null {
   }
 }
 
+/**
+ * Applies last-record-wins supersession for TransactionRecords.
+ *
+ * The composite key is `date + description + amount + account`.
+ * `contentHash` is intentionally excluded: it is a SHA-256 of the entire imported
+ * file, so every row from the same import batch shares the same hash and it cannot
+ * serve as a per-row identifier.
+ *
+ * Later records in the append-only log (e.g. category overrides) supersede earlier
+ * ones with the same key. Non-transaction records are returned unchanged and in
+ * original order.
+ */
+function applyTransactionSupersession(records: AllRecordTypes[]): AllRecordTypes[] {
+  // Pass 1: build a map from composite key → last-seen TransactionRecord
+  const latestTx = new Map<string, TransactionRecord>();
+  for (const record of records) {
+    if (record.type === 'transaction') {
+      const key = `${record.date}\0${record.description}\0${record.amount}\0${record.account}`;
+      latestTx.set(key, record);
+    }
+  }
+
+  // Pass 2: rebuild the list, replacing each transaction with the latest version
+  // and skipping superseded duplicates (keep first occurrence slot, replace value)
+  const seen = new Set<string>();
+  const out: AllRecordTypes[] = [];
+
+  for (const record of records) {
+    if (record.type !== 'transaction') {
+      out.push(record);
+      continue;
+    }
+    const key = `${record.date}\0${record.description}\0${record.amount}\0${record.account}`;
+    if (!seen.has(key)) {
+      seen.add(key);
+      out.push(latestTx.get(key)!);
+    }
+    // subsequent rows with the same key are superseded — skip them
+  }
+
+  return out;
+}
+
 export function parseLedgerCsv(csvText: string): {
   version: number;
   records: AllRecordTypes[];
@@ -124,7 +167,7 @@ export function parseLedgerCsv(csvText: string): {
     skipEmptyLines: true,
   });
 
-  const records: AllRecordTypes[] = [];
+  const rawRecords: AllRecordTypes[] = [];
   let version = 0;
 
   for (const raw of result.data) {
@@ -133,8 +176,8 @@ export function parseLedgerCsv(csvText: string): {
     if (record.type === 'meta') {
       version = record.version;
     }
-    records.push(record);
+    rawRecords.push(record);
   }
 
-  return { version, records };
+  return { version, records: applyTransactionSupersession(rawRecords) };
 }
