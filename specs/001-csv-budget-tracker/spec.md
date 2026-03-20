@@ -1,7 +1,7 @@
 # Feature Specification: UK Bank CSV Budget Tracker
 
 **Feature Branch**: `001-csv-budget-tracker`
-**Version**: 1.7.0
+**Version**: 1.8.0
 **Created**: 2026-03-19
 **Status**: Draft
 **Input**: User description: "Build a React budgeting application that imports UK bank and credit card statement CSV files, automatically categorises transactions, and displays financial summaries with historical comparison capability."
@@ -283,7 +283,7 @@ All summary and transaction views default to the household aggregate view. A per
 
 **Categorisation**
 
-- **FR-014**: The app MUST automatically categorise transactions using description keyword matching against the following default categories: Housing, Groceries, Transport, Entertainment, Utilities, Health & Fitness, Shopping, Personal Care, Eating Out, Travel, Holidays, Subscriptions, Insurance, Savings & Investments, Fuel, Taxes, Income, Internal Transfer, Uncategorised.
+- **FR-014**: The app MUST automatically categorise transactions using description keyword matching against the following default categories: Housing, Groceries, Transport, Entertainment, Utilities, Telecoms, Health & Fitness, Shopping, Personal Care, Eating Out, Travel, Holidays, Subscriptions, Insurance, Savings & Investments, Fuel, Taxes, Income, Internal Transfer, Uncategorised.
 - **FR-015**: Transactions with no matching keyword MUST be assigned to "Uncategorised".
 - **FR-015a**: The parser MUST automatically skip rows where the description matches any entry in a hardcoded skip list. The initial skip list MUST include: "OPENING BALANCE", "CLOSING BALANCE". These rows MUST never appear in the staging view or be written to the master ledger.
 - **FR-015b**: Rows where the description matches known internal transfer patterns (e.g. "PAYMENT RECEIVED") MUST be automatically categorised as "Internal Transfer" rather than skipped, as they represent real financial movements between accounts. The initial Internal Transfer keyword list MUST include: "PAYMENT RECEIVED", "PAYMENT THANK YOU", "BALANCE TRANSFER".

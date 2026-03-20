@@ -129,7 +129,7 @@ interface CategoryRecord {
 
 ```
 Housing, Groceries, Transport, Entertainment, Utilities,
-Health & Fitness, Shopping, Personal Care, Eating Out, Travel,
+Telecoms, Health & Fitness, Shopping, Personal Care, Eating Out, Travel,
 Holidays, Subscriptions, Insurance, Savings & Investments,
 Fuel, Taxes, Income, Internal Transfer, Uncategorised
 ```
@@ -306,21 +306,29 @@ interface SessionState {
 
 Hardcoded at build time (v1). Keyword matching is case-insensitive substring. First match wins in priority order.
 
+Note: specific multi-word keywords are listed before their general substrings to ensure correct first-match-wins priority (e.g. TESCO MOBILE before TESCO, SKY MOBILE before SKY, EDF ENERGY before EDF, MORTGAGE PAYMENT before MORTGAGE).
+
 | Keyword(s) | Category |
 |---|---|
+| TESCO MOBILE | Telecoms |
 | TESCO, ASDA, SAINSBURY, MORRISONS, WAITROSE, ALDI, LIDL, CO-OP, MARKS & SPENCER FOOD, M&S FOOD | Groceries |
-| NETFLIX, SPOTIFY, AMAZON PRIME, DISNEY, APPLE.COM/BILL, NOW TV, SKY | Subscriptions |
+| NETFLIX, SPOTIFY, AMAZON PRIME, DISNEY, APPLE.COM/BILL, NOW TV | Subscriptions |
+| SKY MOBILE | Telecoms |
+| SKY, CLAUDE.AI, ANTHROPIC, CHATGPT, OPENAI, APPLE ONE, GOOGLE ONE, MICROSOFT 365, OFFICE 365, ADOBE, DROPBOX, ICLOUD, YOUTUBE PREMIUM, AUDIBLE, DUOLINGO, HEADSPACE, CALM | Subscriptions |
 | COSTA, STARBUCKS, CAFE, GREGGS, McDONALDS, BURGER KING, KFC, PIZZA, NANDOS, SUBWAY | Eating Out |
 | AMAZON, EBAY, ASOS, H&M, ZARA, NEXT, JOHN LEWIS, PRIMARK, IKEA | Shopping |
 | UBER, BOLT, TAXI, TRAINLINE, NATIONAL RAIL, TFL, BUS | Transport |
 | SHELL, BP, ESSO, TEXACO, MOTO, FUEL | Fuel |
 | HOLIDAY INN, AIRBNB, BOOKING.COM, EXPEDIA, EASYJET, RYANAIR, BRITISH AIRWAYS | Holidays |
 | HOTEL, HILTON, MARRIOTT, TRAVELODGE, PREMIER INN | Travel |
-| GYM, FITNESS, PUREGYM, DAVID LLOYD, NUFFIELD | Health & Fitness |
+| GYM, FITNESS, PUREGYM, DAVID LLOYD, NUFFIELD, NHS, HOSPITAL, DOCTOR, BUPA | Health & Fitness |
 | BOOTS, SUPERDRUG, PHARMACY, DENTIST | Personal Care |
-| NHS, HOSPITAL, DOCTOR, BUPA | Health & Fitness |
-| MORTGAGE, RENT, GROUND RENT | Housing |
-| GAS, ELECTRIC, WATER, BROADBAND, BT, VIRGIN MEDIA, EDF, BRITISH GAS | Utilities |
+| MORTGAGE PAYMENT, NATIONWIDE C/CARD, NATIONWIDE CREDIT, BARCLAYCARD, AMEX, AMERICAN EXPRESS, CAPITAL ONE, VANQUIS, AQUA CARD, VIRGIN MONEY CREDIT, MBNA, LOAN PAYMENT, STANDING ORDER TO, FASTER PAYMENT TO | Internal Transfer |
+| MORTGAGE, RENT, GROUND RENT, SERVICE CHARGE, LETTING AGENT, ESTATE AGENT RENT | Housing |
+| OCTOPUS ENERGY, EDF ENERGY, OVO ENERGY | Utilities |
+| NOW BROADBAND | Telecoms |
+| GAS, ELECTRIC, WATER, BROADBAND, EDF, BRITISH GAS, EON, E.ON, NPOWER, BULB, TV LICENCE, BBC, THAMES WATER, ANGLIAN WATER, SEVERN TRENT, UNITED UTILITIES, YORKSHIRE WATER, WESSEX WATER, SOUTHERN WATER, AFFINITY WATER | Utilities |
+| VODAFONE, EE , O2 , THREE, GIFFGAFF, BT , VIRGIN MEDIA, TALKTALK, PLUSNET, ID MOBILE, SMARTY, LEBARA | Telecoms |
 | DIRECT LINE, AVIVA, LV=, ADMIRAL, AXA | Insurance |
 | HMRC, COUNCIL TAX REFUND, TAX | Taxes |
 | SALARY, PAYROLL, BACS CREDIT, WAGES | Income |

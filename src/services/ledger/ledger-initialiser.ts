@@ -5,7 +5,7 @@ import type { MetaRecord, PersonRecord, CategoryRecord, FormatProfileRecord } fr
 /**
  * Creates a new budget-ledger.csv in the given directory handle.
  * Writes the superset column header row, meta record, Household person,
- * 19 default categories, and 3 reference format profiles.
+ * 20 default categories, and 3 reference format profiles.
  */
 export async function createNewLedger(dirHandle: FileSystemDirectoryHandle): Promise<void> {
   const today = new Date().toISOString().slice(0, 10);

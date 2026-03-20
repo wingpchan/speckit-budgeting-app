@@ -14,6 +14,10 @@ const activeCategories: CategoryRecord[] = [
   makeCategory('Shopping'),
   makeCategory('Transport'),
   makeCategory('Holidays'),
+  makeCategory('Utilities'),
+  makeCategory('Telecoms'),
+  makeCategory('Housing'),
+  makeCategory('Internal Transfer'),
   makeCategory('Uncategorised'),
 ];
 
@@ -65,5 +69,41 @@ describe('buildKeywordIndex + categorise', () => {
 
   it('returns Uncategorised when no keyword matches', () => {
     expect(categorise('', index)).toBe('Uncategorised');
+  });
+});
+
+describe('keyword categorisation — new keywords (v1.8.0)', () => {
+  const index = buildKeywordIndex(activeCategories, DEFAULT_KEYWORD_MAP);
+
+  it('"OCTOPUS ENERGY DIRECT DEBIT" → "Utilities"', () => {
+    expect(categorise('OCTOPUS ENERGY DIRECT DEBIT', index)).toBe('Utilities');
+  });
+
+  it('"TV LICENCE" → "Utilities" (not Fuel or other)', () => {
+    expect(categorise('TV LICENCE', index)).toBe('Utilities');
+  });
+
+  it('"VODAFONE DIRECT DEBIT" → "Telecoms"', () => {
+    expect(categorise('VODAFONE DIRECT DEBIT', index)).toBe('Telecoms');
+  });
+
+  it('"ID MOBILE" → "Telecoms"', () => {
+    expect(categorise('ID MOBILE MONTHLY', index)).toBe('Telecoms');
+  });
+
+  it('"CLAUDE.AI SUBSCRIPTION" → "Subscriptions"', () => {
+    expect(categorise('CLAUDE.AI SUBSCRIPTION', index)).toBe('Subscriptions');
+  });
+
+  it('"NATIONWIDE C/CARD PAYMENT" → "Internal Transfer"', () => {
+    expect(categorise('NATIONWIDE C/CARD PAYMENT', index)).toBe('Internal Transfer');
+  });
+
+  it('"MORTGAGE" → "Housing" (not Internal Transfer)', () => {
+    expect(categorise('MORTGAGE', index)).toBe('Housing');
+  });
+
+  it('"MORTGAGE PAYMENT REF12345" → "Internal Transfer" (not Housing)', () => {
+    expect(categorise('MORTGAGE PAYMENT REF12345', index)).toBe('Internal Transfer');
   });
 });
