@@ -2,6 +2,7 @@ import { useState, Fragment } from 'react';
 import { formatPence } from '../../utils/pence';
 import { overrideCategory } from '../../services/categoriser/category-override.service';
 import { getActiveCategories } from '../../services/categoriser/category.service';
+import { findConflictingRule } from '../../services/categoriser/keyword-rules.service';
 import { useSession } from '../../store/SessionContext';
 import { useKeywordRules } from '../../hooks/useKeywordRules';
 import { KeywordRulePrompt } from '../rules/KeywordRulePrompt';
@@ -22,7 +23,7 @@ interface TransactionListProps {
 
 export function TransactionList({ transactions, categories, onRefresh }: TransactionListProps) {
   const { state } = useSession();
-  const { saveRule, isSaving: isRuleSaving } = useKeywordRules();
+  const { rules, saveRule, isSaving: isRuleSaving } = useKeywordRules();
   const sortedActiveCategories = getActiveCategories(categories).sort((a, b) =>
     a.name.localeCompare(b.name),
   );
@@ -34,6 +35,7 @@ export function TransactionList({ transactions, categories, onRefresh }: Transac
   const [overrideError, setOverrideError] = useState<string | null>(null);
   const [rulePromptFor, setRulePromptFor] = useState<TransactionRecord | null>(null);
   const [ruleSaveWarning, setRuleSaveWarning] = useState<string>('');
+  const [ruleConflictWarned, setRuleConflictWarned] = useState(false);
 
   const totalPages = Math.max(1, Math.ceil(transactions.length / PAGE_SIZE));
   const pageTransactions = transactions.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
@@ -55,6 +57,7 @@ export function TransactionList({ transactions, categories, onRefresh }: Transac
       setPendingCategory('');
       setRulePromptFor(overriddenTx);
       setRuleSaveWarning('');
+      setRuleConflictWarned(false);
       await onRefresh?.();
     } catch (err) {
       setOverrideError(err instanceof Error ? err.message : 'Failed to save override');
@@ -70,18 +73,31 @@ export function TransactionList({ transactions, categories, onRefresh }: Transac
   }
 
   async function handleRuleConfirm(pattern: string, category: string) {
+    if (!ruleConflictWarned) {
+      const conflict = findConflictingRule(pattern, category, rules);
+      if (conflict) {
+        setRuleSaveWarning(
+          `A rule for this pattern already maps to "${conflict.category}". Click Confirm again to replace it.`,
+        );
+        setRuleConflictWarned(true);
+        return;
+      }
+    }
     const result = await saveRule(pattern, category);
     if (result === 'duplicate') {
       setRuleSaveWarning('An active rule for this pattern and category already exists.');
+      setRuleConflictWarned(false);
     } else {
       setRulePromptFor(null);
       setRuleSaveWarning('');
+      setRuleConflictWarned(false);
     }
   }
 
   function handleRuleDismiss() {
     setRulePromptFor(null);
     setRuleSaveWarning('');
+    setRuleConflictWarned(false);
   }
 
   // Build a composite key for the transaction that has the rule prompt open
@@ -193,7 +209,8 @@ export function TransactionList({ transactions, categories, onRefresh }: Transac
                             category={rulePromptFor.category}
                             onConfirm={handleRuleConfirm}
                             onDismiss={handleRuleDismiss}
-                            duplicateWarning={ruleSaveWarning || undefined}
+                            duplicateWarning={!ruleConflictWarned ? (ruleSaveWarning || undefined) : undefined}
+                            overrideWarning={ruleConflictWarned ? (ruleSaveWarning || undefined) : undefined}
                             isSaving={isRuleSaving}
                           />
                         </td>

@@ -8,6 +8,7 @@ export type ViewId =
   | 'categories'
   | 'people'
   | 'transactions'
+  | 'rules'
   | 'search'
   | 'export';
 

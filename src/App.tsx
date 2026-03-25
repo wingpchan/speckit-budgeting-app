@@ -6,8 +6,11 @@ import { ImportScreen } from './components/import/ImportScreen';
 import { TransactionList } from './components/import/TransactionList';
 import { PeopleScreen } from './components/people/PeopleScreen';
 import { CategoriesScreen } from './components/categories/CategoriesScreen';
+import { KeywordRulesScreen } from './components/rules/KeywordRulesScreen';
 import { useLedger } from './hooks/useLedger';
-import type { CategoryRecord, TransactionRecord } from './models/index';
+import { resolveKeywordRules, setKeywordRuleStatus } from './services/categoriser/keyword-rules.service';
+import { getActiveCategories } from './services/categoriser/category.service';
+import type { CategoryRecord, KeywordRuleRecord, TransactionRecord } from './models/index';
 
 function TransactionsScreen() {
   const { records, refresh } = useLedger();
@@ -45,6 +48,40 @@ function CategoriesPage() {
   return <CategoriesScreen categories={categories} isLoading={isLoading} onRefresh={refresh} />;
 }
 
+function KeywordRulesPage() {
+  const { state } = useSession();
+  const { records, isLoading, refresh, appendRecords } = useLedger();
+
+  useEffect(() => {
+    void refresh();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const categories = records.filter((r): r is CategoryRecord => r.type === 'category');
+  const rawRules = records.filter((r): r is KeywordRuleRecord => r.type === 'keywordRule');
+  const activeCategoryNames = new Set(getActiveCategories(categories).map((c) => c.name));
+  const rules = resolveKeywordRules(rawRules).map((r) => ({
+    ...r,
+    categoryIsInactive: !activeCategoryNames.has(r.category),
+  }));
+
+  async function handleToggleStatus(pattern: string, newStatus: 'active' | 'inactive') {
+    const rule = rules.find((r) => r.pattern === pattern);
+    const category = rule?.category ?? '';
+    if (!state.dirHandle) throw new Error('No ledger directory selected');
+    await setKeywordRuleStatus(pattern, category, newStatus, state.dirHandle, appendRecords);
+  }
+
+  return (
+    <KeywordRulesScreen
+      rules={rules}
+      categories={categories}
+      isLoading={isLoading}
+      onToggleStatus={handleToggleStatus}
+    />
+  );
+}
+
 function ViewPlaceholder({ name }: { name: string }) {
   return (
     <div className="p-8 text-center text-gray-500">
@@ -79,6 +116,8 @@ function AppContent() {
             return <ViewPlaceholder name="Budgets" />;
           case 'categories':
             return <CategoriesPage />;
+          case 'rules':
+            return <KeywordRulesPage />;
           case 'people':
             return <PeopleScreen />;
           case 'transactions':

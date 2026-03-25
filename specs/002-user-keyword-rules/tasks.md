@@ -79,9 +79,9 @@ description: "Task list for User-Defined Keyword Rules for Auto-Categorisation"
 
 ### Implementation for User Story 3
 
-- [ ] T013 [P] [US3] Implement `KeywordRulesScreen` component in `src/components/rules/KeywordRulesScreen.tsx` per contracts/ui-contracts.md: table with columns Pattern, Category, Created, Status, Action; "Deactivate"/"Activate" toggle button per row; visual indicator for rules whose category is inactive (`categoryIsInactive: true`); empty-state message when no rules exist; no delete action (depends on T007)
-- [ ] T014 [US3] Add a "Rules" navigation entry to `src/components/shared/NavBar.tsx` linking to the keyword rules screen (depends on T013)
-- [ ] T015 [US3] Register `KeywordRulesScreen` as a navigable view in `src/App.tsx`, accessible from the NavBar entry added in T014 (depends on T013, T014)
+- [x] T013 [P] [US3] Implement `KeywordRulesScreen` component in `src/components/rules/KeywordRulesScreen.tsx` per contracts/ui-contracts.md: table with columns Pattern, Category, Created, Status, Action; "Deactivate"/"Activate" toggle button per row; visual indicator for rules whose category is inactive (`categoryIsInactive: true`); empty-state message when no rules exist; no delete action (depends on T007)
+- [x] T014 [US3] Add a "Rules" navigation entry to `src/components/shared/NavBar.tsx` linking to the keyword rules screen (depends on T013)
+- [x] T015 [US3] Register `KeywordRulesScreen` as a navigable view in `src/App.tsx`, accessible from the NavBar entry added in T014 (depends on T013, T014)
 
 **Checkpoint**: All three user stories are independently functional. The Rules screen lists rules, toggles work, and deactivated rules do not fire during import.
 

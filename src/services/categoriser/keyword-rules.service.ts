@@ -20,6 +20,25 @@ export function isDuplicateRule(
 }
 
 /**
+ * Find an active rule with the same pattern but a different category.
+ * Returns the conflicting rule, or undefined if none exists.
+ * Use this to warn the user before silently replacing an existing rule.
+ */
+export function findConflictingRule(
+  pattern: string,
+  category: string,
+  existingRules: ResolvedKeywordRule[],
+): ResolvedKeywordRule | undefined {
+  const lowerPattern = pattern.toLowerCase();
+  return existingRules.find(
+    (r) =>
+      r.status === 'active' &&
+      r.pattern.toLowerCase() === lowerPattern &&
+      r.category !== category,
+  );
+}
+
+/**
  * Append a new keywordRule record to the master ledger.
  * Does not check for duplicates — caller is responsible for pre-checking via isDuplicateRule().
  */

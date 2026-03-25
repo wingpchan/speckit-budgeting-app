@@ -22,9 +22,16 @@ interface KeywordRulePromptProps {
 
   /**
    * If provided and non-empty, the component displays this as an inline warning
-   * and the Confirm button remains disabled.
+   * and the Confirm button remains disabled (exact duplicate — no-op to save again).
    */
   duplicateWarning?: string;
+
+  /**
+   * If provided and non-empty, the component displays this as an inline warning
+   * but the Confirm button remains enabled (pattern conflict — user may click Confirm
+   * again to proceed and replace the existing rule).
+   */
+  overrideWarning?: string;
 
   /** When true, the Confirm button shows a loading state and is disabled */
   isSaving?: boolean;
@@ -36,11 +43,13 @@ export function KeywordRulePrompt({
   onConfirm,
   onDismiss,
   duplicateWarning,
+  overrideWarning,
   isSaving = false,
 }: KeywordRulePromptProps) {
   const [pattern, setPattern] = useState(transactionDescription);
 
   const isPatternEmpty = pattern.trim().length === 0;
+  // overrideWarning does NOT disable Confirm — user must click again to confirm replacement
   const isDisabled = isPatternEmpty || Boolean(duplicateWarning) || isSaving;
 
   async function handleConfirm() {
@@ -72,6 +81,9 @@ export function KeywordRulePrompt({
         )}
         {duplicateWarning && (
           <span className="text-xs text-amber-600">{duplicateWarning}</span>
+        )}
+        {overrideWarning && !duplicateWarning && (
+          <span className="text-xs text-amber-600">{overrideWarning}</span>
         )}
       </div>
       <div className="flex items-center gap-2 mb-2">

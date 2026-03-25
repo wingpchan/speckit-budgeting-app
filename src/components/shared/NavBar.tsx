@@ -10,6 +10,7 @@ const NAV_LINKS: Array<{ id: ViewId; label: string }> = [
   { id: 'summaries', label: 'Summaries' },
   { id: 'budgets', label: 'Budgets' },
   { id: 'categories', label: 'Categories' },
+  { id: 'rules', label: 'Rules' },
   { id: 'people', label: 'People' },
   { id: 'transactions', label: 'Transactions' },
   { id: 'search', label: 'Search' },

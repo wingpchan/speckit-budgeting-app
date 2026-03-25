@@ -1,6 +1,7 @@
 import { describe, it, expect, vi } from 'vitest';
 import {
   isDuplicateRule,
+  findConflictingRule,
   saveKeywordRule,
   resolveKeywordRules,
   setKeywordRuleStatus,
@@ -46,6 +47,55 @@ describe('isDuplicateRule', () => {
 
   it('returns false when no rules exist', () => {
     expect(isDuplicateRule('TESCO', 'Groceries', [])).toBe(false);
+  });
+});
+
+// ── findConflictingRule ───────────────────────────────────────────────────────
+
+describe('findConflictingRule', () => {
+  const existing: ResolvedKeywordRule[] = [
+    {
+      pattern: 'AMAZON',
+      category: 'Shopping',
+      createdDate: '2026-03-21T10:00:00Z',
+      status: 'active',
+      categoryIsInactive: false,
+    },
+    {
+      pattern: 'NETFLIX',
+      category: 'Subscriptions',
+      createdDate: '2026-03-21T11:00:00Z',
+      status: 'inactive',
+      categoryIsInactive: false,
+    },
+  ];
+
+  it('returns undefined when no rules exist', () => {
+    expect(findConflictingRule('AMAZON', 'Shopping', [])).toBeUndefined();
+  });
+
+  it('returns undefined for exact match (same pattern, same category)', () => {
+    expect(findConflictingRule('AMAZON', 'Shopping', existing)).toBeUndefined();
+  });
+
+  it('returns the conflicting rule when same pattern but different category', () => {
+    const result = findConflictingRule('AMAZON', 'Electronics', existing);
+    expect(result).toBeDefined();
+    expect(result?.category).toBe('Shopping');
+  });
+
+  it('is case-insensitive for pattern comparison', () => {
+    expect(findConflictingRule('amazon', 'Food', existing)).toBeDefined();
+    expect(findConflictingRule('Amazon', 'Food', existing)?.category).toBe('Shopping');
+  });
+
+  it('returns undefined when the conflicting rule is inactive', () => {
+    // NETFLIX→Subscriptions is inactive — not a conflict
+    expect(findConflictingRule('NETFLIX', 'Entertainment', existing)).toBeUndefined();
+  });
+
+  it('returns undefined when pattern does not match any existing rule', () => {
+    expect(findConflictingRule('TESCO', 'Groceries', existing)).toBeUndefined();
   });
 });
 
