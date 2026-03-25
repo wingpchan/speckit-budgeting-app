@@ -1,6 +1,7 @@
 import { useState, Fragment } from 'react';
 import { formatPence } from '../../utils/pence';
 import { overrideCategory } from '../../services/categoriser/category-override.service';
+import { getActiveCategories } from '../../services/categoriser/category.service';
 import { useSession } from '../../store/SessionContext';
 import { useKeywordRules } from '../../hooks/useKeywordRules';
 import { KeywordRulePrompt } from '../rules/KeywordRulePrompt';
@@ -22,9 +23,9 @@ interface TransactionListProps {
 export function TransactionList({ transactions, categories, onRefresh }: TransactionListProps) {
   const { state } = useSession();
   const { saveRule, isSaving: isRuleSaving } = useKeywordRules();
-  const sortedActiveCategories = categories
-    .filter((c) => c.status === 'active')
-    .sort((a, b) => a.name.localeCompare(b.name));
+  const sortedActiveCategories = getActiveCategories(categories).sort((a, b) =>
+    a.name.localeCompare(b.name),
+  );
 
   const [page, setPage] = useState(0);
   const [pending, setPending] = useState<PendingOverride | null>(null);

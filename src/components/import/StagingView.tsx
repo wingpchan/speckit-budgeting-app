@@ -3,6 +3,7 @@ import { formatPence } from '../../utils/pence';
 import type { ParsedRow } from '../../services/csv-parser/types';
 import type { CategoryRecord, KeywordRuleRecord } from '../../models/index';
 import { buildKeywordIndex, categorise } from '../../services/categoriser/categoriser.service';
+import { getActiveCategories } from '../../services/categoriser/category.service';
 import { resolveKeywordRules } from '../../services/categoriser/keyword-rules.service';
 import { DEFAULT_KEYWORD_MAP } from '../../models/constants';
 import { useKeywordRules } from '../../hooks/useKeywordRules';
@@ -42,9 +43,9 @@ export function StagingView({
 
   const resolvedRules = resolveKeywordRules(keywordRules ?? []);
   const keywordIndex = buildKeywordIndex(categories, DEFAULT_KEYWORD_MAP, resolvedRules);
-  const activeCategories = categories
-    .filter((c) => c.status === 'active')
-    .sort((a, b) => a.name.localeCompare(b.name));
+  const activeCategories = getActiveCategories(categories).sort((a, b) =>
+    a.name.localeCompare(b.name),
+  );
 
   const categorisedRows = rows.map((row) => ({
     ...row,

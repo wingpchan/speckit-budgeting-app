@@ -5,6 +5,7 @@ import { ChooseFolder } from './components/shared/ChooseFolder';
 import { ImportScreen } from './components/import/ImportScreen';
 import { TransactionList } from './components/import/TransactionList';
 import { PeopleScreen } from './components/people/PeopleScreen';
+import { CategoriesScreen } from './components/categories/CategoriesScreen';
 import { useLedger } from './hooks/useLedger';
 import type { CategoryRecord, TransactionRecord } from './models/index';
 
@@ -29,6 +30,19 @@ function TransactionsScreen() {
       />
     </div>
   );
+}
+
+function CategoriesPage() {
+  const { records, isLoading, refresh } = useLedger();
+
+  useEffect(() => {
+    void refresh();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const categories = records.filter((r): r is CategoryRecord => r.type === 'category');
+
+  return <CategoriesScreen categories={categories} isLoading={isLoading} onRefresh={refresh} />;
 }
 
 function ViewPlaceholder({ name }: { name: string }) {
@@ -64,7 +78,7 @@ function AppContent() {
           case 'budgets':
             return <ViewPlaceholder name="Budgets" />;
           case 'categories':
-            return <ViewPlaceholder name="Categories" />;
+            return <CategoriesPage />;
           case 'people':
             return <PeopleScreen />;
           case 'transactions':

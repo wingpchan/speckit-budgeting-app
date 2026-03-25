@@ -58,7 +58,7 @@ export async function addPerson(
     type: 'person',
     name: name.trim(),
     isDefault: false,
-    createdDate: new Date().toISOString().slice(0, 10),
+    createdDate: new Date().toISOString(),
     status: 'active',
   };
   await appendRecords([serialiseRecord(record)]);
@@ -83,7 +83,7 @@ export async function deactivatePerson(
     type: 'person',
     name: latest.name,
     isDefault: latest.isDefault,
-    createdDate: new Date().toISOString().slice(0, 10),
+    createdDate: new Date().toISOString(),
     status: 'inactive',
   };
   await appendRecords([serialiseRecord(record)]);
@@ -104,7 +104,7 @@ export async function reactivatePerson(
     type: 'person',
     name: latest.name,
     isDefault: latest.isDefault,
-    createdDate: new Date().toISOString().slice(0, 10),
+    createdDate: new Date().toISOString(),
     status: 'active',
   };
   await appendRecords([serialiseRecord(record)]);
