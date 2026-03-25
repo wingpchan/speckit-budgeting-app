@@ -4,6 +4,7 @@ import { Layout, type ViewId } from './components/shared/Layout';
 import { ChooseFolder } from './components/shared/ChooseFolder';
 import { ImportScreen } from './components/import/ImportScreen';
 import { TransactionList } from './components/import/TransactionList';
+import { PeopleScreen } from './components/people/PeopleScreen';
 import { useLedger } from './hooks/useLedger';
 import type { CategoryRecord, TransactionRecord } from './models/index';
 
@@ -65,7 +66,7 @@ function AppContent() {
           case 'categories':
             return <ViewPlaceholder name="Categories" />;
           case 'people':
-            return <ViewPlaceholder name="People" />;
+            return <PeopleScreen />;
           case 'transactions':
             return <TransactionsScreen />;
           case 'search':
