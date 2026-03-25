@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import Papa from 'papaparse';
-import type { CanonicalField, ColumnMapping, DetectionHints } from '../../models/index';
+import type { CanonicalField, ColumnMapping, ColumnTransform, DetectionHints } from '../../models/index';
 
 const CANONICAL_FIELDS: CanonicalField[] = [
   'date',
@@ -81,12 +81,22 @@ export function ManualColumnMappingUI({
   }
 
   function handleApply() {
+    const DATE_TRANSFORMS: Record<string, ColumnTransform> = {
+      'DD/MM/YYYY': 'parseUKDate',
+      'DD Mon YYYY': 'parseDDMonYYYY',
+      'ISO': 'parseISODate',
+    };
+    const dateTransform = DATE_TRANSFORMS[dateFormat];
+
     const mappings: ColumnMapping[] = headers
       .filter((h) => assignments[h] && assignments[h] !== '')
-      .map((h) => ({
-        sourceHeader: h,
-        canonicalField: assignments[h] as CanonicalField,
-      }));
+      .map((h) => {
+        const canonicalField = assignments[h] as CanonicalField;
+        if (canonicalField === 'date' && dateTransform) {
+          return { sourceHeader: h, canonicalField, transform: dateTransform };
+        }
+        return { sourceHeader: h, canonicalField };
+      });
 
     onApply(mappings, { metadataRowCount, dateFormat });
   }

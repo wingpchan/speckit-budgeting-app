@@ -70,8 +70,9 @@ export function mergeAmountColumns(opts: {
   paidOut: number;
   paidIn: number;
 }): { amount: number; transactionType: 'expense' | 'income' } {
-  if (opts.paidOut > 0) {
-    return { amount: -opts.paidOut, transactionType: 'expense' };
+  if (opts.paidOut !== 0) {
+    // paidOut may be positive (most banks) or negative (some banks store debits as -25.99)
+    return { amount: -Math.abs(opts.paidOut), transactionType: 'expense' };
   }
   return { amount: opts.paidIn, transactionType: 'income' };
 }

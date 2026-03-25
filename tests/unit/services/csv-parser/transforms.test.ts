@@ -153,6 +153,19 @@ describe('mergeAmountColumns (paidOut/paidIn split)', () => {
     expect(result.amount).toBe(0);
     expect(result.transactionType).toBe('income');
   });
+
+  // Bug fix: debit column may contain negative values (e.g. -25.99 → -2599 pence)
+  it('negative paidOut (debit column stores negative) → negative amount, expense type', () => {
+    const result = mergeAmountColumns({ paidOut: -2599, paidIn: 0 });
+    expect(result.amount).toBe(-2599);
+    expect(result.transactionType).toBe('expense');
+  });
+
+  it('negative paidOut and zero paidIn: amount equals negated abs value', () => {
+    const result = mergeAmountColumns({ paidOut: -10000, paidIn: 0 });
+    expect(result.amount).toBe(-10000);
+    expect(result.transactionType).toBe('expense');
+  });
 });
 
 describe('absAmount', () => {
