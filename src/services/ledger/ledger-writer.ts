@@ -2,12 +2,14 @@ import type { AllRecordTypes } from '../../models/index';
 
 /**
  * Column order matches the ledger-format.md superset header row.
+ * v3 adds: pattern (keywordRule record type)
  */
 const COLUMNS = [
   'type', 'version', 'date', 'description', 'amount', 'transactionType',
   'category', 'account', 'sourceFile', 'importedDate', 'contentHash', 'personName',
   'month', 'setDate', 'reason', 'name', 'isDefault', 'createdDate', 'status',
   'profileName', 'columnMappings', 'detectionHints', 'accountName', 'effectiveDate',
+  'pattern',
 ] as const;
 
 export const LEDGER_HEADER = COLUMNS.join(',');
@@ -89,6 +91,14 @@ export function serialiseRecord(record: AllRecordTypes): string {
       fields.accountName = record.accountName;
       fields.personName = record.personName;
       fields.effectiveDate = record.effectiveDate;
+      break;
+
+    case 'keywordRule':
+      fields.type = 'keywordRule';
+      fields.pattern = record.pattern;
+      fields.category = record.category;
+      fields.createdDate = record.createdDate;
+      fields.status = record.status;
       break;
   }
 

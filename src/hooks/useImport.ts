@@ -5,12 +5,14 @@ import type {
   ColumnMapping,
   DetectionHints,
   FormatProfileRecord,
+  KeywordRuleRecord,
   PersonRecord,
   TransactionRecord,
 } from '../models/index';
 import { csvParserService } from '../services/csv-parser/csv-parser.service';
 import { extractAccountName } from '../services/csv-parser/account-extractor';
 import { buildKeywordIndex, categorise } from '../services/categoriser/categoriser.service';
+import { resolveKeywordRules } from '../services/categoriser/keyword-rules.service';
 import { buildTransactionRecord, commitImport } from '../services/ledger/transaction-committer';
 import { detectExactDuplicate, detectDateRangeOverlap } from '../services/duplicate/duplicate.service';
 import { DEFAULT_KEYWORD_MAP } from '../models/constants';
@@ -133,6 +135,7 @@ interface UseImportOptions {
   people: PersonRecord[];
   accountMappings: AccountPersonMappingRecord[];
   existingTransactions: TransactionRecord[];
+  keywordRules?: KeywordRuleRecord[];
   dirHandle: FileSystemDirectoryHandle | null;
   onCommitted?: () => void;
 }
@@ -267,7 +270,8 @@ export function useImport(options: UseImportOptions) {
     dispatch({ type: 'CONFIRM_IMPORT' });
 
     try {
-      const keywordIndex = buildKeywordIndex(categories, DEFAULT_KEYWORD_MAP);
+      const resolvedRules = resolveKeywordRules(options.keywordRules ?? []);
+      const keywordIndex = buildKeywordIndex(categories, DEFAULT_KEYWORD_MAP, resolvedRules);
 
       // Include the pending mapping (if any) when resolving person names so that
       // transactions in this batch are correctly attributed before it is persisted.
@@ -298,7 +302,7 @@ export function useImport(options: UseImportOptions) {
         message: err instanceof Error ? err.message : 'Failed to commit import',
       });
     }
-  }, [state, dirHandle, categories, options.accountMappings, onCommitted]);
+  }, [state, dirHandle, categories, options.accountMappings, options.keywordRules, onCommitted]);
 
   /** Builds and commits all TransactionRecords to the ledger. */
   const confirmImport = useCallback(async (categoryOverrides: Record<number, string> = {}) => {

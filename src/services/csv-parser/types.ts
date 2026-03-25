@@ -35,7 +35,14 @@ export class ParseError extends Error {
   }
 }
 
+export interface KeywordEntry {
+  keywordUpper: string;
+  category: string;
+  /** For diagnostics only — not used in matching logic */
+  source: 'user' | 'default';
+}
+
 export interface KeywordIndex {
-  entries: Array<{ keywordUpper: string; category: string }>;
+  entries: KeywordEntry[];
   fallback: string;
 }

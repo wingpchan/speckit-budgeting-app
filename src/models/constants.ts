@@ -1,6 +1,6 @@
 import type { FormatProfileRecord } from './index';
 
-export const LEDGER_VERSION = 2;
+export const LEDGER_VERSION = 3;
 
 export const CONFIDENCE_THRESHOLD = 0.7;
 

@@ -9,6 +9,7 @@ import type {
   FormatProfileRecord,
   PersonRecord,
   AccountPersonMappingRecord,
+  KeywordRuleRecord,
 } from '../../../src/models/index';
 
 function buildCsv(...records: ReturnType<typeof serialiseRecord>[]): string {
@@ -154,6 +155,24 @@ describe('parseLedgerCsv', () => {
     expect(parsed.detectionHints.headerSignatures).toEqual(['Paid out']);
   });
 
+  it('parses a keywordRule record', () => {
+    const rule: KeywordRuleRecord = {
+      type: 'keywordRule',
+      pattern: 'AMAZON',
+      category: 'Shopping',
+      createdDate: '2026-03-21T10:00:00Z',
+      status: 'active',
+    };
+    const csv = buildCsv(serialiseRecord(rule));
+    const result = parseLedgerCsv(csv);
+    const parsed = result.records[0] as KeywordRuleRecord;
+    expect(parsed.type).toBe('keywordRule');
+    expect(parsed.pattern).toBe('AMAZON');
+    expect(parsed.category).toBe('Shopping');
+    expect(parsed.createdDate).toBe('2026-03-21T10:00:00Z');
+    expect(parsed.status).toBe('active');
+  });
+
   it('handles empty cells represented as consecutive delimiters', () => {
     const meta: MetaRecord = { type: 'meta', version: 2 };
     const csv = buildCsv(serialiseRecord(meta));
@@ -278,5 +297,71 @@ describe('serialiseRecord round-trip', () => {
     const meta: MetaRecord = { type: 'meta', version: 2 };
     const row = serialiseRecord(meta);
     expect(row.endsWith('\r\n')).toBe(true);
+  });
+
+  it('round-trips a keywordRule record (active)', () => {
+    const rule: KeywordRuleRecord = {
+      type: 'keywordRule',
+      pattern: 'AMAZON',
+      category: 'Shopping',
+      createdDate: '2026-03-21T10:00:00Z',
+      status: 'active',
+    };
+    const row = serialiseRecord(rule);
+    const csv = buildCsv(row);
+    const result = parseLedgerCsv(csv);
+    const parsed = result.records[0] as KeywordRuleRecord;
+    expect(parsed.type).toBe('keywordRule');
+    expect(parsed.pattern).toBe('AMAZON');
+    expect(parsed.category).toBe('Shopping');
+    expect(parsed.createdDate).toBe('2026-03-21T10:00:00Z');
+    expect(parsed.status).toBe('active');
+  });
+
+  it('round-trips a keywordRule record (inactive)', () => {
+    const rule: KeywordRuleRecord = {
+      type: 'keywordRule',
+      pattern: 'NETFLIX',
+      category: 'Subscriptions',
+      createdDate: '2026-03-21T11:00:00Z',
+      status: 'inactive',
+    };
+    const row = serialiseRecord(rule);
+    const csv = buildCsv(row);
+    const result = parseLedgerCsv(csv);
+    const parsed = result.records[0] as KeywordRuleRecord;
+    expect(parsed.status).toBe('inactive');
+    expect(parsed.pattern).toBe('NETFLIX');
+  });
+
+  it('keywordRule serialised row emits empty string for transaction-only columns', () => {
+    const rule: KeywordRuleRecord = {
+      type: 'keywordRule',
+      pattern: 'TESCO',
+      category: 'Groceries',
+      createdDate: '2026-03-21T12:00:00Z',
+      status: 'active',
+    };
+    const row = serialiseRecord(rule);
+    // Should contain 'keywordRule' in type column but empty for date, amount, etc.
+    const fields = row.replace(/\r\n$/, '').split(',');
+    expect(fields[0]).toBe('keywordRule'); // type
+    expect(fields[2]).toBe(''); // date — empty
+    expect(fields[4]).toBe(''); // amount — empty
+  });
+
+  it('keywordRule pattern with comma is RFC 4180 quoted', () => {
+    const rule: KeywordRuleRecord = {
+      type: 'keywordRule',
+      pattern: 'MARKS, SPENCER',
+      category: 'Shopping',
+      createdDate: '2026-03-21T12:00:00Z',
+      status: 'active',
+    };
+    const row = serialiseRecord(rule);
+    const csv = buildCsv(row);
+    const result = parseLedgerCsv(csv);
+    const parsed = result.records[0] as KeywordRuleRecord;
+    expect(parsed.pattern).toBe('MARKS, SPENCER');
   });
 });

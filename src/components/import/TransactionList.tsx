@@ -1,53 +1,60 @@
-import { useState } from 'react';
+import { useState, Fragment } from 'react';
 import { formatPence } from '../../utils/pence';
 import { overrideCategory } from '../../services/categoriser/category-override.service';
-import { useCategories } from '../../hooks/useCategories';
-import { useLedger } from '../../hooks/useLedger';
 import { useSession } from '../../store/SessionContext';
-import type { TransactionRecord } from '../../models/index';
+import { useKeywordRules } from '../../hooks/useKeywordRules';
+import { KeywordRulePrompt } from '../rules/KeywordRulePrompt';
+import type { CategoryRecord, TransactionRecord } from '../../models/index';
 
 const PAGE_SIZE = 50;
 
 interface PendingOverride {
   transaction: TransactionRecord;
   fromCategory: string;
-  toCategory: string;
 }
 
 interface TransactionListProps {
   transactions: TransactionRecord[];
+  categories: CategoryRecord[];
+  onRefresh?: () => Promise<void>;
 }
 
-export function TransactionList({ transactions }: TransactionListProps) {
+export function TransactionList({ transactions, categories, onRefresh }: TransactionListProps) {
   const { state } = useSession();
-  const { refresh } = useLedger();
-  const { activeCategories } = useCategories();
-  const sortedActiveCategories = [...activeCategories].sort((a, b) =>
-    a.name.localeCompare(b.name),
-  );
+  const { saveRule, isSaving: isRuleSaving } = useKeywordRules();
+  const sortedActiveCategories = categories
+    .filter((c) => c.status === 'active')
+    .sort((a, b) => a.name.localeCompare(b.name));
 
   const [page, setPage] = useState(0);
   const [pending, setPending] = useState<PendingOverride | null>(null);
+  const [pendingCategory, setPendingCategory] = useState<string>('');
   const [isOverriding, setIsOverriding] = useState(false);
   const [overrideError, setOverrideError] = useState<string | null>(null);
+  const [rulePromptFor, setRulePromptFor] = useState<TransactionRecord | null>(null);
+  const [ruleSaveWarning, setRuleSaveWarning] = useState<string>('');
 
   const totalPages = Math.max(1, Math.ceil(transactions.length / PAGE_SIZE));
   const pageTransactions = transactions.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
 
-  function handleCategoryChange(tx: TransactionRecord, newCategory: string) {
-    if (newCategory === tx.category) return;
-    setPending({ transaction: tx, fromCategory: tx.category, toCategory: newCategory });
+  function handleEditTrigger(tx: TransactionRecord) {
+    setPending({ transaction: tx, fromCategory: tx.category });
+    setPendingCategory(tx.category);
     setOverrideError(null);
   }
 
   async function handleConfirmOverride() {
-    if (!pending || !state.dirHandle) return;
+    if (!pending || pendingCategory === pending.fromCategory || !state.dirHandle) return;
     setIsOverriding(true);
     setOverrideError(null);
     try {
-      await overrideCategory(pending.transaction, pending.toCategory, state.dirHandle);
-      await refresh();
+      await overrideCategory(pending.transaction, pendingCategory, state.dirHandle);
+      const overriddenTx: TransactionRecord = { ...pending.transaction, category: pendingCategory };
       setPending(null);
+      setPendingCategory('');
+      setRulePromptFor(overriddenTx);
+      setRuleSaveWarning('');
+      await onRefresh?.();
     } catch (err) {
       setOverrideError(err instanceof Error ? err.message : 'Failed to save override');
     } finally {
@@ -57,7 +64,28 @@ export function TransactionList({ transactions }: TransactionListProps) {
 
   function handleCancelOverride() {
     setPending(null);
+    setPendingCategory('');
     setOverrideError(null);
+  }
+
+  async function handleRuleConfirm(pattern: string, category: string) {
+    const result = await saveRule(pattern, category);
+    if (result === 'duplicate') {
+      setRuleSaveWarning('An active rule for this pattern and category already exists.');
+    } else {
+      setRulePromptFor(null);
+      setRuleSaveWarning('');
+    }
+  }
+
+  function handleRuleDismiss() {
+    setRulePromptFor(null);
+    setRuleSaveWarning('');
+  }
+
+  // Build a composite key for the transaction that has the rule prompt open
+  function txKey(tx: TransactionRecord) {
+    return `${tx.date}\0${tx.description}\0${tx.amount}\0${tx.account}`;
   }
 
   return (
@@ -67,11 +95,24 @@ export function TransactionList({ transactions }: TransactionListProps) {
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg shadow-xl p-6 max-w-md w-full mx-4">
             <h3 className="text-base font-semibold text-gray-800 mb-2">Change Category</h3>
-            <p className="text-sm text-gray-600 mb-4">
-              Change category from{' '}
-              <strong className="text-gray-800">{pending.fromCategory}</strong> to{' '}
-              <strong className="text-gray-800">{pending.toCategory}</strong>?
+            <p className="text-sm text-gray-600 mb-1 truncate">{pending.transaction.description}</p>
+            <p className="text-sm text-gray-500 mb-3">
+              Current: <strong className="text-gray-800">{pending.fromCategory}</strong>
             </p>
+            <select
+              value={pendingCategory}
+              onChange={(e) => setPendingCategory(e.target.value)}
+              className="w-full text-sm text-gray-700 border border-gray-300 rounded px-2 py-1.5 bg-white focus:outline-none focus:ring-1 focus:ring-indigo-400 mb-4"
+            >
+              {!sortedActiveCategories.some((c) => c.name === pending.fromCategory) && (
+                <option value={pending.fromCategory}>{pending.fromCategory} (inactive)</option>
+              )}
+              {sortedActiveCategories.map((cat) => (
+                <option key={cat.name} value={cat.name}>
+                  {cat.name}
+                </option>
+              ))}
+            </select>
             {overrideError && (
               <p className="text-sm text-red-600 mb-3">{overrideError}</p>
             )}
@@ -85,8 +126,8 @@ export function TransactionList({ transactions }: TransactionListProps) {
               </button>
               <button
                 onClick={handleConfirmOverride}
-                disabled={isOverriding}
-                className="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded hover:bg-indigo-700 disabled:opacity-50"
+                disabled={pendingCategory === pending.fromCategory || isOverriding}
+                className="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isOverriding ? 'Saving…' : 'Confirm'}
               </button>
@@ -116,38 +157,50 @@ export function TransactionList({ transactions }: TransactionListProps) {
                 </td>
               </tr>
             ) : (
-              pageTransactions.map((tx, i) => (
-                <tr key={`${tx.contentHash}-${tx.date}-${i}`} className="hover:bg-gray-50">
-                  <td className="px-3 py-2 text-gray-700 whitespace-nowrap">{tx.date}</td>
-                  <td className="px-3 py-2 text-gray-700 max-w-xs truncate">{tx.description}</td>
-                  <td
-                    className={`px-3 py-2 text-right font-mono whitespace-nowrap ${
-                      tx.amount < 0 ? 'text-red-600' : 'text-green-600'
-                    }`}
-                  >
-                    {formatPence(tx.amount)}
-                  </td>
-                  <td className="px-3 py-2">
-                    <select
-                      value={tx.category}
-                      onChange={(e) => handleCategoryChange(tx, e.target.value)}
-                      className="text-sm text-gray-700 border border-gray-200 rounded px-1 py-0.5 bg-white focus:outline-none focus:ring-1 focus:ring-indigo-400"
-                    >
-                      {/* Pinned at position 0: inactive current category (exempt from sort) */}
-                      {!sortedActiveCategories.some((c) => c.name === tx.category) && (
-                        <option value={tx.category}>{tx.category}</option>
-                      )}
-                      {sortedActiveCategories.map((cat) => (
-                        <option key={cat.name} value={cat.name}>
-                          {cat.name}
-                        </option>
-                      ))}
-                    </select>
-                  </td>
-                  <td className="px-3 py-2 text-gray-700 truncate max-w-[10rem]">{tx.account}</td>
-                  <td className="px-3 py-2 text-gray-700">{tx.personName}</td>
-                </tr>
-              ))
+              pageTransactions.map((tx, i) => {
+                const key = `${tx.contentHash}-${tx.date}-${i}`;
+                const isPromptRow = rulePromptFor !== null && txKey(tx) === txKey(rulePromptFor);
+                return (
+                  <Fragment key={key}>
+                    <tr className="hover:bg-gray-50">
+                      <td className="px-3 py-2 text-gray-700 whitespace-nowrap">{tx.date}</td>
+                      <td className="px-3 py-2 text-gray-700 max-w-xs truncate">{tx.description}</td>
+                      <td
+                        className={`px-3 py-2 text-right font-mono whitespace-nowrap ${
+                          tx.amount < 0 ? 'text-red-600' : 'text-green-600'
+                        }`}
+                      >
+                        {formatPence(tx.amount)}
+                      </td>
+                      <td className="px-3 py-2">
+                        <span className="text-sm text-gray-700">{tx.category}</span>
+                        <button
+                          onClick={() => handleEditTrigger(tx)}
+                          className="ml-2 text-xs text-indigo-600 border border-indigo-200 rounded px-1.5 py-0.5 hover:bg-indigo-50"
+                        >
+                          Edit
+                        </button>
+                      </td>
+                      <td className="px-3 py-2 text-gray-700 truncate max-w-[10rem]">{tx.account}</td>
+                      <td className="px-3 py-2 text-gray-700">{tx.personName}</td>
+                    </tr>
+                    {isPromptRow && rulePromptFor && (
+                      <tr>
+                        <td colSpan={6} className="p-0">
+                          <KeywordRulePrompt
+                            transactionDescription={rulePromptFor.description}
+                            category={rulePromptFor.category}
+                            onConfirm={handleRuleConfirm}
+                            onDismiss={handleRuleDismiss}
+                            duplicateWarning={ruleSaveWarning || undefined}
+                            isSaving={isRuleSaving}
+                          />
+                        </td>
+                      </tr>
+                    )}
+                  </Fragment>
+                );
+              })
             )}
           </tbody>
         </table>

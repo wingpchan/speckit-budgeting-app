@@ -1,7 +1,7 @@
 <!--
 SYNC IMPACT REPORT
 ==================
-Version change: 1.5.0 → 1.5.1 (transaction record table corrected to include personName)
+Version change: 1.5.1 → 1.6.0 (added keywordRule as the seventh master ledger record type)
 
 Modified principles: None
 
@@ -10,23 +10,27 @@ Added sections: None
 Removed sections: None
 
 Changed fields:
-  - Technology Standards / record types table: `transaction` row — added `personName`
-    field to match FR-033 in spec.md v1.6.0. Field was present in spec but absent from
-    the constitution table; this amendment closes the discrepancy noted in plan.md.
+  - Technology Standards / record type count: "exactly six record types" →
+    "exactly seven record types"
+  - Technology Standards / record types table: added `keywordRule` row with fields
+    type, pattern, category, createdDate, status
+  - Technology Standards: added Ledger CSV Superset Header subsection documenting
+    all column names including the new `pattern` column; this was previously
+    undocumented in the constitution (implementation detail only in ledger-writer.ts)
 
 Templates reviewed:
-  - .specify/templates/plan-template.md       ✅ aligned (no transaction field names
-                                                referenced; no changes needed)
+  - .specify/templates/plan-template.md       ✅ aligned (no record type counts or
+                                                field names referenced; no changes needed)
   - .specify/templates/spec-template.md       ✅ aligned (technology-agnostic; no
                                                 conflicts)
-  - .specify/templates/tasks-template.md      ✅ aligned (no transaction field names
-                                                referenced; no changes needed)
+  - .specify/templates/tasks-template.md      ✅ aligned (no record type references;
+                                                no changes needed)
   - .specify/templates/agent-file-template.md ✅ aligned (generic guidance; no
                                                 conflicts)
 
 Dependent artifacts updated:
-  - specs/001-csv-budget-tracker/plan.md      ✅ discrepancy note removed (was flagged
-                                                in Constitution Check section; now resolved)
+  - specs/002-user-keyword-rules/plan.md      ✅ gate violation section updated to
+                                                reflect amendment applied and gate cleared
 
 Governance update: Compliance Review reference unchanged (Principles I–VI).
 
@@ -160,7 +164,7 @@ supported target browsers. Any proposal to introduce a backend, remote data stor
 additional persistence mechanism MUST go through the full amendment procedure before
 any implementation work begins.
 
-The master ledger stores exactly **six record types**, each identified by a `type` field:
+The master ledger stores exactly **seven record types**, each identified by a `type` field:
 
 | Record type | Fields |
 |---|---|
@@ -170,9 +174,24 @@ The master ledger stores exactly **six record types**, each identified by a `typ
 | `formatProfile` | type, profileName, columnMappings, detectionHints, createdDate |
 | `person` | type, name, createdDate, status |
 | `accountPersonMapping` | type, accountName, personName, effectiveDate |
+| `keywordRule` | type, pattern, category, createdDate, status |
 
 Any proposal to add, remove, or structurally change a record type MUST go through the
 full amendment procedure before any implementation work begins.
+
+**Ledger CSV Superset Header**: The master ledger CSV uses a single superset header row
+that covers all record types. Every record emits an empty string for columns it does not
+use. The authoritative column order is:
+
+```
+type, version, date, description, amount, transactionType, category, account,
+sourceFile, importedDate, contentHash, personName, month, setDate, reason,
+name, isDefault, createdDate, status, profileName, columnMappings,
+detectionHints, accountName, effectiveDate, pattern
+```
+
+Any proposal to add or remove a column from this header MUST go through the full
+amendment procedure before any implementation work begins.
 
 **Approved Tech Stack (NON-NEGOTIABLE)**: The following libraries and tools MUST be
 used for all features. Substitutions or additions MUST go through the full amendment
@@ -238,4 +257,4 @@ This constitution supersedes all other development practices and informal agreem
 does not violate Principles I–VI. Violations MUST be recorded in the Complexity Tracking
 table of the relevant `plan.md` with explicit justification.
 
-**Version**: 1.5.1 | **Ratified**: 2026-03-18 | **Last Amended**: 2026-03-19
+**Version**: 1.6.0 | **Ratified**: 2026-03-18 | **Last Amended**: 2026-03-21

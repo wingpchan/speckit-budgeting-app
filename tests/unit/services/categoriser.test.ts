@@ -2,7 +2,7 @@ import { describe, it, expect, vi } from 'vitest';
 import { buildKeywordIndex, categorise } from '../../../src/services/categoriser/categoriser.service';
 import { overrideCategory } from '../../../src/services/categoriser/category-override.service';
 import { DEFAULT_KEYWORD_MAP } from '../../../src/models/constants';
-import type { CategoryRecord, TransactionRecord } from '../../../src/models/index';
+import type { CategoryRecord, KeywordRuleRecord, TransactionRecord } from '../../../src/models/index';
 
 function makeCategory(name: string, status: 'active' | 'inactive' = 'active'): CategoryRecord {
   return { type: 'category', name, isDefault: true, createdDate: '2026-01-01', status };
@@ -166,6 +166,96 @@ describe('overrideCategory', () => {
     };
     // Reading the category from the record directly (not from an active list) must always work
     expect(txWithDeactivatedCategory.category).toBe('Child Care');
+  });
+});
+
+describe('buildKeywordIndex with user rules', () => {
+  function makeRule(
+    pattern: string,
+    category: string,
+    createdDate: string,
+    status: 'active' | 'inactive' = 'active',
+  ): KeywordRuleRecord {
+    return { type: 'keywordRule', pattern, category, createdDate, status };
+  }
+
+  const shoppingCat = makeCategory('Shopping');
+  const groceriesCat = makeCategory('Groceries');
+  const subscriptionsCat = makeCategory('Subscriptions');
+  const uncategorisedCat = makeCategory('Uncategorised');
+
+  it('user rule takes precedence over matching default-map entry', () => {
+    const userRules = [makeRule('TESCO', 'Shopping', '2026-03-21T10:00:00Z')];
+    const cats = [groceriesCat, shoppingCat, uncategorisedCat];
+    const idx = buildKeywordIndex(cats, DEFAULT_KEYWORD_MAP, userRules);
+    // TESCO normally maps to Groceries; user rule overrides to Shopping
+    expect(categorise('TESCO EXTRA', idx)).toBe('Shopping');
+  });
+
+  it('longest user-rule pattern wins over shorter conflicting user rule', () => {
+    const userRules = [
+      makeRule('AMAZON', 'Shopping', '2026-03-21T10:00:00Z'),
+      makeRule('AMAZON PRIME VIDEO', 'Subscriptions', '2026-03-21T11:00:00Z'),
+    ];
+    const cats = [shoppingCat, subscriptionsCat, uncategorisedCat];
+    const idx = buildKeywordIndex(cats, DEFAULT_KEYWORD_MAP, userRules);
+    expect(categorise('AMAZON PRIME VIDEO MONTHLY', idx)).toBe('Subscriptions');
+  });
+
+  it('user rule with deactivated target category is skipped', () => {
+    const inactiveShopping = makeCategory('Shopping', 'inactive');
+    const userRules = [makeRule('AMAZON', 'Shopping', '2026-03-21T10:00:00Z')];
+    const cats = [inactiveShopping, groceriesCat, subscriptionsCat, uncategorisedCat];
+    const idx = buildKeywordIndex(cats, DEFAULT_KEYWORD_MAP, userRules);
+    // Shopping is inactive — user rule for AMAZON to Shopping is skipped
+    // Default map has AMAZON PRIME → Subscriptions, AMAZON → Shopping (inactive = skipped)
+    // AMAZON alone should fall through to Uncategorised (Shopping inactive, no other match)
+    expect(categorise('AMAZON PURCHASE', idx)).toBe('Uncategorised');
+  });
+
+  it('empty userRules array produces unchanged default-map behaviour', () => {
+    const cats = [groceriesCat, shoppingCat, subscriptionsCat, uncategorisedCat];
+    const idxWithEmpty = buildKeywordIndex(cats, DEFAULT_KEYWORD_MAP, []);
+    const idxWithout = buildKeywordIndex(cats, DEFAULT_KEYWORD_MAP);
+    expect(categorise('TESCO EXTRA', idxWithEmpty)).toBe(categorise('TESCO EXTRA', idxWithout));
+    expect(categorise('AMAZON', idxWithEmpty)).toBe(categorise('AMAZON', idxWithout));
+  });
+
+  it('tied pattern length: most-recently-created rule wins', () => {
+    // Two user rules with same pattern length but different categories and dates
+    const userRules = [
+      makeRule('PRIME', 'Shopping', '2026-03-20T10:00:00Z'),
+      makeRule('PRIME', 'Subscriptions', '2026-03-21T10:00:00Z'),
+    ];
+    const cats = [shoppingCat, subscriptionsCat, uncategorisedCat];
+    const idx = buildKeywordIndex(cats, DEFAULT_KEYWORD_MAP, userRules);
+    // Most recently created (Subscriptions, 2026-03-21) should win
+    expect(categorise('AMAZON PRIME VIDEO', idx)).toBe('Subscriptions');
+  });
+});
+
+describe('regression: staging view must pass userRules to buildKeywordIndex', () => {
+  // Verifies the bug where StagingView called buildKeywordIndex without the userRules argument,
+  // causing user-defined keyword rules to be silently ignored during staging categorisation.
+  const shoppingCat = makeCategory('Shopping');
+  const uncategorisedCat = makeCategory('Uncategorised');
+
+  const userRuleRecord: KeywordRuleRecord = {
+    type: 'keywordRule',
+    pattern: 'ACME WIDGETS',
+    category: 'Shopping',
+    createdDate: '2026-03-21T10:00:00Z',
+    status: 'active',
+  };
+
+  it('without userRules (the pre-fix bug): description only in user rules returns Uncategorised', () => {
+    const idx = buildKeywordIndex([shoppingCat, uncategorisedCat], DEFAULT_KEYWORD_MAP);
+    expect(categorise('ACME WIDGETS LTD', idx)).toBe('Uncategorised');
+  });
+
+  it('with userRules (the fix): same description returns user-rule category', () => {
+    const idx = buildKeywordIndex([shoppingCat, uncategorisedCat], DEFAULT_KEYWORD_MAP, [userRuleRecord]);
+    expect(categorise('ACME WIDGETS LTD', idx)).toBe('Shopping');
   });
 });
 

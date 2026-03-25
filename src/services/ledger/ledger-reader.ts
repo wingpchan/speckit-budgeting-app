@@ -8,6 +8,7 @@ import type {
   FormatProfileRecord,
   PersonRecord,
   AccountPersonMappingRecord,
+  KeywordRuleRecord,
 } from '../../models/index';
 
 interface RawRow {
@@ -35,6 +36,7 @@ interface RawRow {
   detectionHints: string;
   accountName: string;
   effectiveDate: string;
+  pattern: string;
 }
 
 function parseBoolean(s: string): boolean {
@@ -108,6 +110,15 @@ function parseRecord(raw: RawRow): AllRecordTypes | null {
         personName: raw.personName,
         effectiveDate: raw.effectiveDate,
       } as AccountPersonMappingRecord;
+
+    case 'keywordRule':
+      return {
+        type: 'keywordRule',
+        pattern: raw.pattern,
+        category: raw.category,
+        createdDate: raw.createdDate,
+        status: raw.status as 'active' | 'inactive',
+      } as KeywordRuleRecord;
 
     default:
       return null;

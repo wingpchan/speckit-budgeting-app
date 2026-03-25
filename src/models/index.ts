@@ -5,7 +5,8 @@ export type RecordType =
   | 'category'
   | 'formatProfile'
   | 'person'
-  | 'accountPersonMapping';
+  | 'accountPersonMapping'
+  | 'keywordRule';
 
 export interface MetaRecord {
   type: 'meta';
@@ -97,6 +98,27 @@ export interface AccountPersonMappingRecord {
   effectiveDate: string;
 }
 
+export interface KeywordRuleRecord {
+  type: 'keywordRule';
+  /** Case-insensitive substring pattern to match against transaction descriptions */
+  pattern: string;
+  /** Target category name */
+  category: string;
+  /** ISO 8601 datetime */
+  createdDate: string;
+  status: 'active' | 'inactive';
+}
+
+/** Resolved view of a keyword rule: most-recent record per pattern, with category status flag */
+export interface ResolvedKeywordRule {
+  pattern: string;
+  category: string;
+  createdDate: string;
+  status: 'active' | 'inactive';
+  /** True when the target category is currently inactive — rule will not fire */
+  categoryIsInactive: boolean;
+}
+
 export interface SessionState {
   dirHandle: FileSystemDirectoryHandle | null;
   ledgerHandleKey: string | null;
@@ -115,4 +137,5 @@ export type AllRecordTypes =
   | CategoryRecord
   | FormatProfileRecord
   | PersonRecord
-  | AccountPersonMappingRecord;
+  | AccountPersonMappingRecord
+  | KeywordRuleRecord;

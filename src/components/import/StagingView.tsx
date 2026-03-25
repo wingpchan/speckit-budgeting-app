@@ -1,15 +1,25 @@
-import { useState } from 'react';
+import { useState, Fragment } from 'react';
 import { formatPence } from '../../utils/pence';
 import type { ParsedRow } from '../../services/csv-parser/types';
-import type { CategoryRecord } from '../../models/index';
+import type { CategoryRecord, KeywordRuleRecord } from '../../models/index';
 import { buildKeywordIndex, categorise } from '../../services/categoriser/categoriser.service';
+import { resolveKeywordRules } from '../../services/categoriser/keyword-rules.service';
 import { DEFAULT_KEYWORD_MAP } from '../../models/constants';
+import { useKeywordRules } from '../../hooks/useKeywordRules';
+import { KeywordRulePrompt } from '../rules/KeywordRulePrompt';
+
+interface RulePromptTarget {
+  rowIndex: number;
+  description: string;
+  category: string;
+}
 
 interface StagingViewProps {
   rows: ParsedRow[];
   account: string;
   detectedProfile: string | null;
   categories: CategoryRecord[];
+  keywordRules?: KeywordRuleRecord[];
   onConfirm: (categoryOverrides: Record<number, string>) => void;
   onCancel: () => void;
   isConfirming: boolean;
@@ -20,13 +30,18 @@ export function StagingView({
   account,
   detectedProfile,
   categories,
+  keywordRules,
   onConfirm,
   onCancel,
   isConfirming,
 }: StagingViewProps) {
+  const { saveRule, isSaving: isRuleSaving } = useKeywordRules();
   const [categoryOverrides, setCategoryOverrides] = useState<Record<number, string>>({});
+  const [rulePromptFor, setRulePromptFor] = useState<RulePromptTarget | null>(null);
+  const [ruleSaveWarning, setRuleSaveWarning] = useState<string>('');
 
-  const keywordIndex = buildKeywordIndex(categories, DEFAULT_KEYWORD_MAP);
+  const resolvedRules = resolveKeywordRules(keywordRules ?? []);
+  const keywordIndex = buildKeywordIndex(categories, DEFAULT_KEYWORD_MAP, resolvedRules);
   const activeCategories = categories
     .filter((c) => c.status === 'active')
     .sort((a, b) => a.name.localeCompare(b.name));
@@ -35,6 +50,33 @@ export function StagingView({
     ...row,
     category: categorise(row.description, keywordIndex),
   }));
+
+  function handleCategoryChange(i: number, newCategory: string, autoCategory: string) {
+    setCategoryOverrides((prev) => ({ ...prev, [i]: newCategory }));
+    if (newCategory !== autoCategory) {
+      setRulePromptFor({ rowIndex: i, description: categorisedRows[i].description, category: newCategory });
+      setRuleSaveWarning('');
+    } else {
+      // User reverted to the auto-categorised value — no rule needed
+      setRulePromptFor(null);
+      setRuleSaveWarning('');
+    }
+  }
+
+  async function handleRuleConfirm(pattern: string, category: string) {
+    const result = await saveRule(pattern, category);
+    if (result === 'duplicate') {
+      setRuleSaveWarning('An active rule for this pattern and category already exists.');
+    } else {
+      setRulePromptFor(null);
+      setRuleSaveWarning('');
+    }
+  }
+
+  function handleRuleDismiss() {
+    setRulePromptFor(null);
+    setRuleSaveWarning('');
+  }
 
   return (
     <div>
@@ -66,32 +108,46 @@ export function StagingView({
           </thead>
           <tbody className="divide-y divide-gray-100">
             {categorisedRows.map((row, i) => (
-              <tr key={i} className="hover:bg-gray-50">
-                <td className="px-3 py-2 text-gray-700 whitespace-nowrap">{row.date}</td>
-                <td className="px-3 py-2 text-gray-700 max-w-xs truncate">{row.description}</td>
-                <td
-                  className={`px-3 py-2 text-right font-mono whitespace-nowrap ${
-                    row.amount < 0 ? 'text-red-600' : 'text-green-600'
-                  }`}
-                >
-                  {formatPence(row.amount)}
-                </td>
-                <td className="px-3 py-2">
-                  <select
-                    value={categoryOverrides[i] ?? row.category}
-                    onChange={(e) =>
-                      setCategoryOverrides((prev) => ({ ...prev, [i]: e.target.value }))
-                    }
-                    className="text-sm text-gray-700 border border-gray-200 rounded px-1 py-0.5 bg-white focus:outline-none focus:ring-1 focus:ring-indigo-400"
+              <Fragment key={i}>
+                <tr className="hover:bg-gray-50">
+                  <td className="px-3 py-2 text-gray-700 whitespace-nowrap">{row.date}</td>
+                  <td className="px-3 py-2 text-gray-700 max-w-xs truncate">{row.description}</td>
+                  <td
+                    className={`px-3 py-2 text-right font-mono whitespace-nowrap ${
+                      row.amount < 0 ? 'text-red-600' : 'text-green-600'
+                    }`}
                   >
-                    {activeCategories.map((cat) => (
-                      <option key={cat.name} value={cat.name}>
-                        {cat.name}
-                      </option>
-                    ))}
-                  </select>
-                </td>
-              </tr>
+                    {formatPence(row.amount)}
+                  </td>
+                  <td className="px-3 py-2">
+                    <select
+                      value={categoryOverrides[i] ?? row.category}
+                      onChange={(e) => handleCategoryChange(i, e.target.value, row.category)}
+                      className="text-sm text-gray-700 border border-gray-200 rounded px-1 py-0.5 bg-white focus:outline-none focus:ring-1 focus:ring-indigo-400"
+                    >
+                      {activeCategories.map((cat) => (
+                        <option key={cat.name} value={cat.name}>
+                          {cat.name}
+                        </option>
+                      ))}
+                    </select>
+                  </td>
+                </tr>
+                {rulePromptFor?.rowIndex === i && (
+                  <tr>
+                    <td colSpan={4} className="p-0">
+                      <KeywordRulePrompt
+                        transactionDescription={rulePromptFor.description}
+                        category={rulePromptFor.category}
+                        onConfirm={handleRuleConfirm}
+                        onDismiss={handleRuleDismiss}
+                        duplicateWarning={ruleSaveWarning || undefined}
+                        isSaving={isRuleSaving}
+                      />
+                    </td>
+                  </tr>
+                )}
+              </Fragment>
             ))}
           </tbody>
         </table>

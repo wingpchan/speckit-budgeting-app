@@ -12,11 +12,16 @@ import type {
   AccountPersonMappingRecord,
   CategoryRecord,
   FormatProfileRecord,
+  KeywordRuleRecord,
   PersonRecord,
   TransactionRecord,
 } from '../../models/index';
 
-export function ImportScreen() {
+interface ImportScreenProps {
+  onNavigate?: (view: 'transactions') => void;
+}
+
+export function ImportScreen({ onNavigate }: ImportScreenProps = {}) {
   const { state: session } = useSession();
   const { records, refresh } = useLedger();
 
@@ -29,6 +34,7 @@ export function ImportScreen() {
   const existingTransactions = records.filter(
     (r): r is TransactionRecord => r.type === 'transaction',
   );
+  const keywordRules = records.filter((r): r is KeywordRuleRecord => r.type === 'keywordRule');
 
   // Active persons for PersonAssignmentPrompt dropdown
   const activePeople = people.filter((p) => p.status === 'active');
@@ -49,6 +55,7 @@ export function ImportScreen() {
     people,
     accountMappings,
     existingTransactions,
+    keywordRules,
     dirHandle: session.dirHandle,
     onCommitted: () => refresh(),
   });
@@ -67,12 +74,22 @@ export function ImportScreen() {
         <p className="text-gray-500 text-sm mb-6">
           {state.parseResult?.rows.length ?? 0} transactions saved to your ledger.
         </p>
-        <button
-          onClick={cancel}
-          className="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded hover:bg-indigo-700"
-        >
-          Import Another File
-        </button>
+        <div className="flex gap-3 justify-center">
+          {onNavigate && (
+            <button
+              onClick={() => onNavigate('transactions')}
+              className="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded hover:bg-indigo-700"
+            >
+              View Transactions
+            </button>
+          )}
+          <button
+            onClick={cancel}
+            className="px-4 py-2 border border-gray-300 text-gray-700 text-sm font-medium rounded hover:bg-gray-50"
+          >
+            Import Another File
+          </button>
+        </div>
       </div>
     );
   }
@@ -158,6 +175,7 @@ export function ImportScreen() {
         account={state.account ?? ''}
         detectedProfile={state.detectedProfile}
         categories={categories}
+        keywordRules={keywordRules}
         onConfirm={confirmImport}
         onCancel={cancel}
         isConfirming={state.step === 'confirming'}

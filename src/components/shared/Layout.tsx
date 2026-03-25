@@ -7,6 +7,7 @@ export type ViewId =
   | 'budgets'
   | 'categories'
   | 'people'
+  | 'transactions'
   | 'search'
   | 'export';
 
