@@ -8,7 +8,7 @@ import type { MetaRecord, PersonRecord, CategoryRecord, FormatProfileRecord } fr
  * 20 default categories, and 3 reference format profiles.
  */
 export async function createNewLedger(dirHandle: FileSystemDirectoryHandle): Promise<void> {
-  const today = new Date().toISOString().slice(0, 10);
+  const today = new Date().toISOString();
 
   const meta: MetaRecord = { type: 'meta', version: LEDGER_VERSION };
 

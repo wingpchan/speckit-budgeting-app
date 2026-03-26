@@ -8,6 +8,7 @@ import { AccountLabelPrompt } from './AccountLabelPrompt';
 import { PersonAssignmentPrompt } from './PersonAssignmentPrompt';
 import { StagingView } from './StagingView';
 import { DuplicateWarningModal } from './DuplicateWarningModal';
+import { getActivePeople } from '../../services/people/people.service';
 import type {
   AccountPersonMappingRecord,
   CategoryRecord,
@@ -36,8 +37,8 @@ export function ImportScreen({ onNavigate }: ImportScreenProps = {}) {
   );
   const keywordRules = records.filter((r): r is KeywordRuleRecord => r.type === 'keywordRule');
 
-  // Active persons for PersonAssignmentPrompt dropdown
-  const activePeople = people.filter((p) => p.status === 'active');
+  // Active persons for PersonAssignmentPrompt dropdown — uses service function for most-recent-record deduplication
+  const activePeople = getActivePeople(people);
 
   const {
     state,

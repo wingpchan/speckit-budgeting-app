@@ -10,7 +10,8 @@ import { KeywordRulesScreen } from './components/rules/KeywordRulesScreen';
 import { useLedger } from './hooks/useLedger';
 import { resolveKeywordRules, setKeywordRuleStatus } from './services/categoriser/keyword-rules.service';
 import { getActiveCategories } from './services/categoriser/category.service';
-import type { CategoryRecord, KeywordRuleRecord, TransactionRecord } from './models/index';
+import { getAllPeople } from './services/people/people.service';
+import type { CategoryRecord, KeywordRuleRecord, PersonRecord, TransactionRecord } from './models/index';
 
 function TransactionsScreen() {
   const { records, refresh } = useLedger();
@@ -82,6 +83,19 @@ function KeywordRulesPage() {
   );
 }
 
+function PeoplePage() {
+  const { records, isLoading, refresh } = useLedger();
+
+  useEffect(() => {
+    void refresh();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const personRecords = records.filter((r): r is PersonRecord => r.type === 'person');
+
+  return <PeopleScreen personRecords={personRecords} isLoading={isLoading} onRefresh={refresh} />;
+}
+
 function ViewPlaceholder({ name }: { name: string }) {
   return (
     <div className="p-8 text-center text-gray-500">
@@ -93,6 +107,14 @@ function ViewPlaceholder({ name }: { name: string }) {
 
 function AppContent() {
   const { state } = useSession();
+  const { records, refresh } = useLedger();
+
+  useEffect(() => {
+    if (state.dirHandle) void refresh();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [state.dirHandle]);
+
+  const allPeople = getAllPeople(records.filter((r): r is PersonRecord => r.type === 'person'));
 
   if (!state.dirHandle) {
     return (
@@ -105,7 +127,7 @@ function AppContent() {
   }
 
   return (
-    <Layout>
+    <Layout allPeople={allPeople}>
       {(currentView, navigate) => {
         switch (currentView) {
           case 'import':
@@ -119,7 +141,7 @@ function AppContent() {
           case 'rules':
             return <KeywordRulesPage />;
           case 'people':
-            return <PeopleScreen />;
+            return <PeoplePage />;
           case 'transactions':
             return <TransactionsScreen />;
           case 'search':

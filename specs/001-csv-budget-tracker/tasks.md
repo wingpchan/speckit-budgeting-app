@@ -200,10 +200,10 @@
 
 ### Implementation for User Story 12
 
-- [ ] T067 [US12] Implement `PersonFilter` component in src/components/shared/PersonFilter.tsx: "All (Household)" option plus one entry per person from `usePeople.allPeople` (deactivated persons shown as "Name (inactive)" — accessible for historic data); on change dispatches `SET_PERSON_FILTER` to `SessionContext`; clearing dispatches `null`
-- [ ] T068 [US12] Wire `PersonFilter` into `Layout`/`NavBar` beside `DateRangePicker`; verify `SessionContext` persists `personFilter` across route changes
-- [ ] T069 [US12] Implement `usePersonFilter` hook in src/hooks/usePersonFilter.ts: `filterByPerson<T extends { personName: string }>(records: T[], personFilter: string | null): T[]` — returns all records when `personFilter` is `null`; otherwise returns records where `personName === personFilter`
-- [ ] T070 [US12] Apply `usePersonFilter` in `TransactionList` (T055): compose with `useFilter`; only transactions matching both date range AND person filter are displayed; switching person filter immediately re-renders
+- [x] T067 [US12] Implement `PersonFilter` component in src/components/shared/PersonFilter.tsx: "All (Household)" option plus one entry per person from `usePeople.allPeople` (deactivated persons shown as "Name (inactive)" — accessible for historic data); on change dispatches `SET_PERSON_FILTER` to `SessionContext`; clearing dispatches `null`
+- [x] T068 [US12] Wire `PersonFilter` into `Layout`/`NavBar` beside `DateRangePicker`; verify `SessionContext` persists `personFilter` across route changes
+- [x] T069 [US12] Implement `usePersonFilter` hook in src/hooks/usePersonFilter.ts: `filterByPerson<T extends { personName: string }>(records: T[], personFilter: string | null): T[]` — returns all records when `personFilter` is `null`; otherwise returns records where `personName === personFilter`
+- [x] T070 [US12] Apply `usePersonFilter` in `TransactionList` (T055): compose with `useFilter`; only transactions matching both date range AND person filter are displayed; switching person filter immediately re-renders
 
 **Checkpoint**: Select "Alice" → only Alice's transactions; clear → household totals; active date filter + person filter both applied simultaneously
 

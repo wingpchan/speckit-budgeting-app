@@ -1,9 +1,12 @@
 import type { ViewId } from './Layout';
 import { DateRangePicker } from './DateRangePicker';
+import { PersonFilter } from './PersonFilter';
+import type { PersonRecord } from '../../models/index';
 
 interface NavBarProps {
   currentView: ViewId;
   onNavigate: (view: ViewId) => void;
+  allPeople: PersonRecord[];
 }
 
 const NAV_LINKS: Array<{ id: ViewId; label: string }> = [
@@ -18,7 +21,7 @@ const NAV_LINKS: Array<{ id: ViewId; label: string }> = [
   { id: 'export', label: 'Export' },
 ];
 
-export function NavBar({ currentView, onNavigate }: NavBarProps) {
+export function NavBar({ currentView, onNavigate, allPeople }: NavBarProps) {
   return (
     <nav className="bg-white border-b border-gray-200 px-4">
       <div className="max-w-7xl mx-auto flex items-center justify-between h-14">
@@ -41,7 +44,7 @@ export function NavBar({ currentView, onNavigate }: NavBarProps) {
         </ul>
         <div className="flex items-center gap-3">
           <DateRangePicker />
-          <div className="text-xs text-gray-400">[PersonFilter]</div>
+          <PersonFilter allPeople={allPeople} />
         </div>
       </div>
     </nav>

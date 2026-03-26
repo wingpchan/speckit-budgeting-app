@@ -5,6 +5,7 @@ import { getActiveCategories } from '../../services/categoriser/category.service
 import { findConflictingRule } from '../../services/categoriser/keyword-rules.service';
 import { useSession } from '../../store/SessionContext';
 import { useFilter } from '../../hooks/useFilter';
+import { usePersonFilter, filterByPerson } from '../../hooks/usePersonFilter';
 import { useKeywordRules } from '../../hooks/useKeywordRules';
 import { KeywordRulePrompt } from '../rules/KeywordRulePrompt';
 import type { CategoryRecord, TransactionRecord } from '../../models/index';
@@ -25,6 +26,7 @@ interface TransactionListProps {
 export function TransactionList({ transactions, categories, onRefresh }: TransactionListProps) {
   const { state } = useSession();
   const { start, end } = useFilter();
+  const personFilter = usePersonFilter();
   const { rules, saveRule, isSaving: isRuleSaving } = useKeywordRules();
   const sortedActiveCategories = getActiveCategories(categories).sort((a, b) =>
     a.name.localeCompare(b.name),
@@ -32,10 +34,10 @@ export function TransactionList({ transactions, categories, onRefresh }: Transac
 
   const [page, setPage] = useState(0);
 
-  // Reset to page 0 whenever the date filter changes
+  // Reset to page 0 whenever date or person filter changes
   useEffect(() => {
     setPage(0);
-  }, [start, end]);
+  }, [start, end, personFilter]);
   const [pending, setPending] = useState<PendingOverride | null>(null);
   const [pendingCategory, setPendingCategory] = useState<string>('');
   const [isOverriding, setIsOverriding] = useState(false);
@@ -44,7 +46,10 @@ export function TransactionList({ transactions, categories, onRefresh }: Transac
   const [ruleSaveWarning, setRuleSaveWarning] = useState<string>('');
   const [ruleConflictWarned, setRuleConflictWarned] = useState(false);
 
-  const filteredTransactions = transactions.filter((tx) => tx.date >= start && tx.date <= end);
+  const filteredTransactions = filterByPerson(
+    transactions.filter((tx) => tx.date >= start && tx.date <= end),
+    personFilter,
+  );
   const totalPages = Math.max(1, Math.ceil(filteredTransactions.length / PAGE_SIZE));
   const pageTransactions = filteredTransactions.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
 

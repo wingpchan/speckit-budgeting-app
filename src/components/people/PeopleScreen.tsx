@@ -1,18 +1,42 @@
 import { useState } from 'react';
-import { usePeople } from '../../hooks/usePeople';
+import { useSession } from '../../store/SessionContext';
+import {
+  getAllPeople,
+  addPerson as addPersonService,
+  deactivatePerson as deactivatePersonService,
+  reactivatePerson as reactivatePersonService,
+} from '../../services/people/people.service';
+import { appendRecords as appendToLedger } from '../../services/ledger/ledger-writer';
+import type { PersonRecord } from '../../models/index';
 
-export function PeopleScreen() {
-  const { allPeople, addPerson, deactivatePerson, reactivatePerson, isLoading } = usePeople();
+interface PeopleScreenProps {
+  personRecords: PersonRecord[];
+  isLoading: boolean;
+  onRefresh: () => Promise<void>;
+}
+
+export function PeopleScreen({ personRecords, isLoading, onRefresh }: PeopleScreenProps) {
+  const { state } = useSession();
   const [newName, setNewName] = useState('');
   const [addError, setAddError] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
+
+  const allPeople = getAllPeople(personRecords);
+
+  function makeAppendRecords() {
+    return async (rows: string[]) => {
+      if (!state.dirHandle) throw new Error('No ledger directory selected');
+      await appendToLedger(state.dirHandle, rows);
+      await onRefresh();
+    };
+  }
 
   async function handleAdd() {
     const trimmed = newName.trim();
     if (!trimmed) return;
     setAddError(null);
     try {
-      await addPerson(trimmed);
+      await addPersonService(trimmed, {} as FileSystemDirectoryHandle, personRecords, makeAppendRecords());
       setNewName('');
     } catch (err) {
       setAddError(err instanceof Error ? err.message : 'Failed to add person');
@@ -23,9 +47,9 @@ export function PeopleScreen() {
     setActionError(null);
     try {
       if (currentStatus === 'active') {
-        await deactivatePerson(name);
+        await deactivatePersonService(name, {} as FileSystemDirectoryHandle, personRecords, makeAppendRecords());
       } else {
-        await reactivatePerson(name);
+        await reactivatePersonService(name, {} as FileSystemDirectoryHandle, personRecords, makeAppendRecords());
       }
     } catch (err) {
       setActionError(err instanceof Error ? err.message : 'Failed to update person');
@@ -88,7 +112,7 @@ export function PeopleScreen() {
                     <span className="ml-2 text-xs text-gray-400">(default)</span>
                   )}
                 </td>
-                <td className="py-3 text-sm text-gray-600">{person.createdDate}</td>
+                <td className="py-3 text-sm text-gray-600">{person.createdDate.slice(0, 16).replace('T', ' ')}</td>
                 <td className="py-3">
                   <span
                     className={`text-xs font-medium px-2 py-0.5 rounded-full ${
