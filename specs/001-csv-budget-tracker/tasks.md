@@ -183,10 +183,10 @@
 
 ### Implementation for User Story 7
 
-- [ ] T063 [US7] Write unit tests for `useFilter` hook in tests/unit/hooks/useFilter.test.ts: monthly preset → first/last day of current month; weekly preset → current week Mon–Sun; yearly preset → Jan 1 – Dec 31; custom → user-supplied start/end passed through; filter object updates when `SessionState.dateFilter` changes
-- [ ] T064 [US7] Implement `DateRangePicker` component in src/components/shared/DateRangePicker.tsx: preset buttons (Weekly, Monthly, Yearly) and custom date inputs (start, end); on any change dispatches `SET_DATE_FILTER` to `SessionContext`; selecting a preset clears custom inputs; entering a custom date clears active preset selection
-- [ ] T065 [US7] Wire `DateRangePicker` into `Layout`/`NavBar` so it is visible from all views; verify `SessionContext` persists the filter across route changes (no re-entry required after navigation)
-- [ ] T066 [US7] Apply `useFilter` in `TransactionList` (T055): filter displayed transactions to those where `date ≥ start AND date ≤ end` from `useFilter`; verify filter changes immediately re-render the list
+- [x] T063 [US7] Write unit tests for `useFilter` hook in tests/unit/hooks/useFilter.test.ts: monthly preset → first/last day of current month; weekly preset → current week Mon–Sun; yearly preset → Jan 1 – Dec 31; custom → user-supplied start/end passed through; filter object updates when `SessionState.dateFilter` changes
+- [x] T064 [US7] Implement `DateRangePicker` component in src/components/shared/DateRangePicker.tsx: preset buttons (Weekly, Monthly, Yearly) and custom date inputs (start, end); on any change dispatches `SET_DATE_FILTER` to `SessionContext`; selecting a preset clears custom inputs; entering a custom date clears active preset selection
+- [x] T065 [US7] Wire `DateRangePicker` into `Layout`/`NavBar` so it is visible from all views; verify `SessionContext` persists the filter across route changes (no re-entry required after navigation)
+- [x] T066 [US7] Apply `useFilter` in `TransactionList` (T055): filter displayed transactions to those where `date ≥ start AND date ≤ end` from `useFilter`; verify filter changes immediately re-render the list
 
 **Checkpoint**: Set custom range Jan–Feb; navigate to all views; filter active throughout; select "Monthly" preset → custom range replaced with current month
 

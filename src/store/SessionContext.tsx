@@ -4,10 +4,10 @@ import type { SessionState } from '../models/index';
 
 function getCurrentMonthRange(): { start: string; end: string } {
   const now = new Date();
-  const year = now.getFullYear();
-  const month = now.getMonth(); // 0-indexed
-  const start = new Date(year, month, 1).toISOString().slice(0, 10);
-  const end = new Date(year, month + 1, 0).toISOString().slice(0, 10);
+  const year = now.getUTCFullYear();
+  const month = now.getUTCMonth();
+  const start = new Date(Date.UTC(year, month, 1)).toISOString().slice(0, 10);
+  const end = new Date(Date.UTC(year, month + 1, 0)).toISOString().slice(0, 10);
   return { start, end };
 }
 

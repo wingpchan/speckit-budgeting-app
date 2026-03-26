@@ -3,30 +3,29 @@ import { useSession } from '../store/SessionContext';
 
 function getWeekRange(): { start: string; end: string } {
   const now = new Date();
-  const day = now.getDay(); // 0 = Sunday
+  const year = now.getUTCFullYear();
+  const month = now.getUTCMonth();
+  const date = now.getUTCDate();
+  const day = now.getUTCDay(); // 0 = Sunday
   const mondayOffset = day === 0 ? -6 : 1 - day;
-  const monday = new Date(now);
-  monday.setDate(now.getDate() + mondayOffset);
-  const sunday = new Date(monday);
-  sunday.setDate(monday.getDate() + 6);
   return {
-    start: monday.toISOString().slice(0, 10),
-    end: sunday.toISOString().slice(0, 10),
+    start: new Date(Date.UTC(year, month, date + mondayOffset)).toISOString().slice(0, 10),
+    end: new Date(Date.UTC(year, month, date + mondayOffset + 6)).toISOString().slice(0, 10),
   };
 }
 
 function getMonthRange(): { start: string; end: string } {
   const now = new Date();
-  const year = now.getFullYear();
-  const month = now.getMonth();
+  const year = now.getUTCFullYear();
+  const month = now.getUTCMonth();
   return {
-    start: new Date(year, month, 1).toISOString().slice(0, 10),
-    end: new Date(year, month + 1, 0).toISOString().slice(0, 10),
+    start: new Date(Date.UTC(year, month, 1)).toISOString().slice(0, 10),
+    end: new Date(Date.UTC(year, month + 1, 0)).toISOString().slice(0, 10),
   };
 }
 
 function getYearRange(): { start: string; end: string } {
-  const year = new Date().getFullYear();
+  const year = new Date().getUTCFullYear();
   return {
     start: `${year}-01-01`,
     end: `${year}-12-31`,

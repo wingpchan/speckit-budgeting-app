@@ -1,4 +1,5 @@
 import type { ViewId } from './Layout';
+import { DateRangePicker } from './DateRangePicker';
 
 interface NavBarProps {
   currentView: ViewId;
@@ -38,9 +39,8 @@ export function NavBar({ currentView, onNavigate }: NavBarProps) {
             </li>
           ))}
         </ul>
-        {/* Placeholder slots for DateRangePicker and PersonFilter (wired in later phases) */}
-        <div className="flex gap-2">
-          <div className="text-xs text-gray-400">[DateRangePicker]</div>
+        <div className="flex items-center gap-3">
+          <DateRangePicker />
           <div className="text-xs text-gray-400">[PersonFilter]</div>
         </div>
       </div>

@@ -1,9 +1,10 @@
-import { useState, Fragment } from 'react';
+import { useState, useEffect, Fragment } from 'react';
 import { formatPence } from '../../utils/pence';
 import { overrideCategory } from '../../services/categoriser/category-override.service';
 import { getActiveCategories } from '../../services/categoriser/category.service';
 import { findConflictingRule } from '../../services/categoriser/keyword-rules.service';
 import { useSession } from '../../store/SessionContext';
+import { useFilter } from '../../hooks/useFilter';
 import { useKeywordRules } from '../../hooks/useKeywordRules';
 import { KeywordRulePrompt } from '../rules/KeywordRulePrompt';
 import type { CategoryRecord, TransactionRecord } from '../../models/index';
@@ -23,12 +24,18 @@ interface TransactionListProps {
 
 export function TransactionList({ transactions, categories, onRefresh }: TransactionListProps) {
   const { state } = useSession();
+  const { start, end } = useFilter();
   const { rules, saveRule, isSaving: isRuleSaving } = useKeywordRules();
   const sortedActiveCategories = getActiveCategories(categories).sort((a, b) =>
     a.name.localeCompare(b.name),
   );
 
   const [page, setPage] = useState(0);
+
+  // Reset to page 0 whenever the date filter changes
+  useEffect(() => {
+    setPage(0);
+  }, [start, end]);
   const [pending, setPending] = useState<PendingOverride | null>(null);
   const [pendingCategory, setPendingCategory] = useState<string>('');
   const [isOverriding, setIsOverriding] = useState(false);
@@ -37,8 +44,9 @@ export function TransactionList({ transactions, categories, onRefresh }: Transac
   const [ruleSaveWarning, setRuleSaveWarning] = useState<string>('');
   const [ruleConflictWarned, setRuleConflictWarned] = useState(false);
 
-  const totalPages = Math.max(1, Math.ceil(transactions.length / PAGE_SIZE));
-  const pageTransactions = transactions.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
+  const filteredTransactions = transactions.filter((tx) => tx.date >= start && tx.date <= end);
+  const totalPages = Math.max(1, Math.ceil(filteredTransactions.length / PAGE_SIZE));
+  const pageTransactions = filteredTransactions.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
 
   function handleEditTrigger(tx: TransactionRecord) {
     setPending({ transaction: tx, fromCategory: tx.category });
@@ -229,7 +237,7 @@ export function TransactionList({ transactions, categories, onRefresh }: Transac
         <div className="flex items-center justify-between mt-3 text-sm text-gray-500">
           <span>
             Showing {page * PAGE_SIZE + 1}–
-            {Math.min((page + 1) * PAGE_SIZE, transactions.length)} of {transactions.length}
+            {Math.min((page + 1) * PAGE_SIZE, filteredTransactions.length)} of {filteredTransactions.length}
           </span>
           <div className="flex gap-2">
             <button
