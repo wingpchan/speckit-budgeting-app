@@ -13,6 +13,7 @@ interface RulePromptTarget {
   rowIndex: number;
   description: string;
   category: string;
+  autoCategory: string;
 }
 
 interface StagingViewProps {
@@ -36,7 +37,7 @@ export function StagingView({
   onCancel,
   isConfirming,
 }: StagingViewProps) {
-  const { rules, saveRule, isSaving: isRuleSaving } = useKeywordRules();
+  const { saveRule, isSaving: isRuleSaving } = useKeywordRules();
   const [categoryOverrides, setCategoryOverrides] = useState<Record<number, string>>({});
   const [rulePromptFor, setRulePromptFor] = useState<RulePromptTarget | null>(null);
   const [ruleSaveWarning, setRuleSaveWarning] = useState<string>('');
@@ -48,15 +49,17 @@ export function StagingView({
     a.name.localeCompare(b.name),
   );
 
-  const categorisedRows = rows.map((row) => ({
-    ...row,
-    category: categorise(row.description, keywordIndex),
-  }));
+  const [categorisedRows] = useState(() =>
+    rows.map((row) => ({
+      ...row,
+      category: categorise(row.description, keywordIndex),
+    })),
+  );
 
   function handleCategoryChange(i: number, newCategory: string, autoCategory: string) {
     setCategoryOverrides((prev) => ({ ...prev, [i]: newCategory }));
     if (newCategory !== autoCategory) {
-      setRulePromptFor({ rowIndex: i, description: categorisedRows[i].description, category: newCategory });
+      setRulePromptFor({ rowIndex: i, description: categorisedRows[i].description, category: newCategory, autoCategory });
       setRuleSaveWarning('');
       setRuleConflictWarned(false);
     } else {
@@ -69,7 +72,7 @@ export function StagingView({
 
   async function handleRuleConfirm(pattern: string, category: string) {
     if (!ruleConflictWarned) {
-      const conflict = findConflictingRule(pattern, category, rules);
+      const conflict = findConflictingRule(pattern, category, resolvedRules);
       if (conflict) {
         setRuleSaveWarning(
           `A rule for this pattern already maps to "${conflict.category}". Click Confirm again to replace it.`,
@@ -78,7 +81,7 @@ export function StagingView({
         return;
       }
     }
-    const result = await saveRule(pattern, category);
+    const result = await saveRule(pattern, category, resolvedRules);
     if (result === 'duplicate') {
       setRuleSaveWarning('An active rule for this pattern and category already exists.');
       setRuleConflictWarned(false);
@@ -90,6 +93,13 @@ export function StagingView({
   }
 
   function handleRuleDismiss() {
+    if (rulePromptFor) {
+      setCategoryOverrides((prev) => {
+        const next = { ...prev };
+        delete next[rulePromptFor.rowIndex];
+        return next;
+      });
+    }
     setRulePromptFor(null);
     setRuleSaveWarning('');
     setRuleConflictWarned(false);

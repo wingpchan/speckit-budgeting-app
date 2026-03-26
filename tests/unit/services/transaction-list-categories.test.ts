@@ -533,6 +533,7 @@ interface RulePromptTarget {
   rowIndex: number;
   description: string;
   category: string;
+  autoCategory: string;
 }
 
 interface RulePromptState {
@@ -549,7 +550,7 @@ function applyHandleCategoryChange(
 ): RulePromptState {
   if (newCategory !== autoCategory) {
     return {
-      rulePromptFor: { rowIndex: i, description, category: newCategory },
+      rulePromptFor: { rowIndex: i, description, category: newCategory, autoCategory },
       ruleSaveWarning: '',
     };
   } else {
@@ -668,7 +669,7 @@ describe('T006 — staging dismiss after handleRuleDismiss', () => {
 
 describe('T007 — staging duplicate-warning after handleRuleConfirm returns duplicate', () => {
   const openState: RulePromptState = {
-    rulePromptFor: { rowIndex: 1, description: 'TESCO EXTRA', category: 'Shopping' },
+    rulePromptFor: { rowIndex: 1, description: 'TESCO EXTRA', category: 'Shopping', autoCategory: 'Groceries' },
     ruleSaveWarning: '',
   };
 

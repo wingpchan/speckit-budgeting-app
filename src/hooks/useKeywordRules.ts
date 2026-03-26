@@ -17,8 +17,10 @@ interface UseKeywordRulesReturn {
   /**
    * Save a new keyword rule to the ledger.
    * Returns 'saved' if successful, 'duplicate' if an identical active rule already exists.
+   * Pass rulesOverride to use a caller-supplied rules list for the duplicate check instead of
+   * the hook's own (potentially stale or empty) isolated rules list.
    */
-  saveRule: (pattern: string, category: string) => Promise<'saved' | 'duplicate'>;
+  saveRule: (pattern: string, category: string, rulesOverride?: ResolvedKeywordRule[]) => Promise<'saved' | 'duplicate'>;
 
   /** Toggle a rule's active/inactive status by appending a new ledger record */
   toggleStatus: (pattern: string, newStatus: 'active' | 'inactive') => Promise<void>;
@@ -52,8 +54,8 @@ export function useKeywordRules(): UseKeywordRulesReturn {
   }, [rawKeywordRules, activeCategoryNames]);
 
   const saveRule = useCallback(
-    async (pattern: string, category: string): Promise<'saved' | 'duplicate'> => {
-      if (isDuplicateRule(pattern, category, rules)) {
+    async (pattern: string, category: string, rulesOverride?: ResolvedKeywordRule[]): Promise<'saved' | 'duplicate'> => {
+      if (isDuplicateRule(pattern, category, rulesOverride ?? rules)) {
         return 'duplicate';
       }
       setIsSaving(true);
