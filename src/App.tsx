@@ -7,6 +7,7 @@ import { TransactionList } from './components/import/TransactionList';
 import { PeopleScreen } from './components/people/PeopleScreen';
 import { CategoriesScreen } from './components/categories/CategoriesScreen';
 import { KeywordRulesScreen } from './components/rules/KeywordRulesScreen';
+import { BudgetScreen } from './components/budgets/BudgetScreen';
 import { useLedger } from './hooks/useLedger';
 import { resolveKeywordRules, setKeywordRuleStatus } from './services/categoriser/keyword-rules.service';
 import { getActiveCategories } from './services/categoriser/category.service';
@@ -135,7 +136,7 @@ function AppContent() {
           case 'summaries':
             return <ViewPlaceholder name="Summaries" />;
           case 'budgets':
-            return <ViewPlaceholder name="Budgets" />;
+            return <BudgetScreen />;
           case 'categories':
             return <CategoriesPage />;
           case 'rules':
