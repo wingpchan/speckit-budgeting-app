@@ -53,6 +53,17 @@ export function getPrevMonth(yyyyMm: string): string {
 }
 
 /**
+ * Returns the next month string given "YYYY-MM". E.g. "2025-12" → "2026-01".
+ */
+export function getNextMonth(yyyyMm: string): string {
+  const [year, month] = yyyyMm.split('-').map(Number);
+  if (month === 12) {
+    return `${year + 1}-01`;
+  }
+  return `${year}-${String(month + 1).padStart(2, '0')}`;
+}
+
+/**
  * Formats "2026-03" → "March 2026".
  */
 export function toMonthLabel(yyyyMm: string): string {

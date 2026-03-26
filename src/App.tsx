@@ -8,11 +8,13 @@ import { PeopleScreen } from './components/people/PeopleScreen';
 import { CategoriesScreen } from './components/categories/CategoriesScreen';
 import { KeywordRulesScreen } from './components/rules/KeywordRulesScreen';
 import { BudgetScreen } from './components/budgets/BudgetScreen';
+import { SummariesScreen } from './components/summaries/SummariesScreen';
 import { useLedger } from './hooks/useLedger';
+import { usePersonFilter, filterByPerson } from './hooks/usePersonFilter';
 import { resolveKeywordRules, setKeywordRuleStatus } from './services/categoriser/keyword-rules.service';
 import { getActiveCategories } from './services/categoriser/category.service';
-import { getAllPeople } from './services/people/people.service';
-import type { CategoryRecord, KeywordRuleRecord, PersonRecord, TransactionRecord } from './models/index';
+import { getActivePeople } from './services/people/people.service';
+import type { CategoryRecord, KeywordRuleRecord, PersonRecord, TransactionRecord, BudgetRecord } from './models/index';
 
 function TransactionsScreen() {
   const { records, refresh } = useLedger();
@@ -97,6 +99,30 @@ function PeoplePage() {
   return <PeopleScreen personRecords={personRecords} isLoading={isLoading} onRefresh={refresh} />;
 }
 
+function SummariesPage() {
+  const { records, isLoading, refresh } = useLedger();
+  const personFilter = usePersonFilter();
+
+  useEffect(() => {
+    void refresh();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const allTransactions = records.filter((r): r is TransactionRecord => r.type === 'transaction');
+  const transactions = filterByPerson(allTransactions, personFilter);
+  const budgetRecords = records.filter((r): r is BudgetRecord => r.type === 'budget');
+  const categories = records.filter((r): r is CategoryRecord => r.type === 'category');
+
+  return (
+    <SummariesScreen
+      transactions={transactions}
+      budgetRecords={budgetRecords}
+      categories={categories}
+      isLoading={isLoading}
+    />
+  );
+}
+
 function ViewPlaceholder({ name }: { name: string }) {
   return (
     <div className="p-8 text-center text-gray-500">
@@ -115,7 +141,7 @@ function AppContent() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state.dirHandle]);
 
-  const allPeople = getAllPeople(records.filter((r): r is PersonRecord => r.type === 'person'));
+  const allPeople = getActivePeople(records.filter((r): r is PersonRecord => r.type === 'person'));
 
   if (!state.dirHandle) {
     return (
@@ -134,7 +160,7 @@ function AppContent() {
           case 'import':
             return <ImportScreen onNavigate={navigate} />;
           case 'summaries':
-            return <ViewPlaceholder name="Summaries" />;
+            return <SummariesPage />;
           case 'budgets':
             return <BudgetScreen />;
           case 'categories':
