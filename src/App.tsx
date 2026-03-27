@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { SessionProvider, useSession } from './store/SessionContext';
+import { LedgerProvider } from './store/LedgerContext';
 import { Layout, type ViewId } from './components/shared/Layout';
 import { ChooseFolder } from './components/shared/ChooseFolder';
 import { ImportScreen } from './components/import/ImportScreen';
@@ -88,18 +89,6 @@ function KeywordRulesPage() {
   );
 }
 
-function PeoplePage() {
-  const { records, isLoading, refresh } = useLedger();
-
-  useEffect(() => {
-    void refresh();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  const personRecords = records.filter((r): r is PersonRecord => r.type === 'person');
-
-  return <PeopleScreen personRecords={personRecords} isLoading={isLoading} onRefresh={refresh} />;
-}
 
 function SummariesPage() {
   const { records, isLoading, refresh } = useLedger();
@@ -154,12 +143,7 @@ function ViewPlaceholder({ name }: { name: string }) {
 
 function AppContent() {
   const { state } = useSession();
-  const { records, refresh } = useLedger();
-
-  useEffect(() => {
-    if (state.dirHandle) void refresh();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [state.dirHandle]);
+  const { records, isLoading, refresh } = useLedger();
 
   const allPeople = getActivePeople(records.filter((r): r is PersonRecord => r.type === 'person'));
 
@@ -188,7 +172,13 @@ function AppContent() {
           case 'rules':
             return <KeywordRulesPage />;
           case 'people':
-            return <PeoplePage />;
+            return (
+              <PeopleScreen
+                personRecords={records.filter((r): r is PersonRecord => r.type === 'person')}
+                isLoading={isLoading}
+                onRefresh={refresh}
+              />
+            );
           case 'transactions':
             return <TransactionsScreen />;
           case 'search':
@@ -204,7 +194,9 @@ function AppContent() {
 export default function App() {
   return (
     <SessionProvider>
-      <AppContent />
+      <LedgerProvider>
+        <AppContent />
+      </LedgerProvider>
     </SessionProvider>
   );
 }
