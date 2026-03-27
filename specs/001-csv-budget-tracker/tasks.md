@@ -265,10 +265,10 @@
 
 ### Implementation for User Story 8
 
-- [ ] T087 [US8] Write unit tests for search service in tests/unit/services/search.test.ts: case-insensitive substring match returns correct records; no match returns `[]`; date filter applied; person filter applied; both filters applied simultaneously; empty keyword returns all records within filter
-- [ ] T088 [US8] Implement search service in src/services/search/search.service.ts: `searchTransactions(keyword: string, records: TransactionRecord[], dateFilter: { start: string; end: string } | null, personFilter: string | null): TransactionRecord[]` — case-insensitive substring match on `description`; applies date and person filters when provided — must satisfy T087
+- [X] T087 [US8] Write unit tests for search service in tests/unit/services/search.test.ts: case-insensitive substring match returns correct records; no match returns `[]`; date filter applied; person filter applied; both filters applied simultaneously; empty keyword returns all records within filter
+- [X] T088 [US8] Implement search service in src/services/search/search.service.ts: `searchTransactions(keyword: string, records: TransactionRecord[], dateFilter: { start: string; end: string } | null, personFilter: string | null): TransactionRecord[]` — case-insensitive substring match on `description`; applies date and person filters when provided — must satisfy T087
 - [ ] T089 [US8] Implement `useSearch` hook in src/hooks/useSearch.ts: debounced keyword input (300 ms); calls `searchTransactions` with current `dateFilter` and `personFilter` from `useSession`; exposes `{ results, keyword, setKeyword, isSearching }`
-- [ ] T090 [US8] Implement `SearchScreen` page component in src/components/search/SearchScreen.tsx: auto-focus search input; result count displayed; results table (date, description, amount £, category, account, sourceFile, person); empty-state message "No matching transactions"; active `DateRangePicker` and `PersonFilter` from Layout apply to results automatically via `useSearch`
+- [X] T090 [US8] Implement `SearchScreen` page component in src/components/search/SearchScreen.tsx: auto-focus search input; result count displayed; results table (date, description, amount £, category, account, sourceFile, person); empty-state message "No matching transactions"; active `DateRangePicker` and `PersonFilter` from Layout apply to results automatically via `useSearch`
 
 **Checkpoint**: Search "TESCO" returns all Tesco records; date filter reduces results; person filter reduces results; both applied together
 
