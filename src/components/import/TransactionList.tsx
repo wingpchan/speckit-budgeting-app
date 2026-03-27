@@ -1,6 +1,6 @@
 import { useState, useEffect, Fragment } from 'react';
 import { formatPence } from '../../utils/pence';
-import { overrideCategory } from '../../services/categoriser/category-override.service';
+import { overrideCategory, overrideCategoryAll } from '../../services/categoriser/category-override.service';
 import { getActiveCategories } from '../../services/categoriser/category.service';
 import { findConflictingRule } from '../../services/categoriser/keyword-rules.service';
 import { useSession } from '../../store/SessionContext';
@@ -15,6 +15,8 @@ const PAGE_SIZE = 50;
 interface PendingOverride {
   transaction: TransactionRecord;
   fromCategory: string;
+  /** Set once the user clicks Confirm on step 1 — presence drives step-2 UI */
+  confirmedCategory?: string;
 }
 
 interface TransactionListProps {
@@ -59,13 +61,42 @@ export function TransactionList({ transactions, categories, onRefresh }: Transac
     setOverrideError(null);
   }
 
-  async function handleConfirmOverride() {
-    if (!pending || pendingCategory === pending.fromCategory || !state.dirHandle) return;
+  function handleConfirmOverride() {
+    if (!pending || pendingCategory === pending.fromCategory) return;
+    setOverrideError(null);
+    // Embed the chosen category directly into pending — single atom drives step-2 UI
+    setPending({ ...pending, confirmedCategory: pendingCategory });
+  }
+
+  async function handleScopeJustThis() {
+    if (!pending?.confirmedCategory || !state.dirHandle) return;
+    const newCategory = pending.confirmedCategory;
     setIsOverriding(true);
     setOverrideError(null);
     try {
-      await overrideCategory(pending.transaction, pendingCategory, state.dirHandle);
-      const overriddenTx: TransactionRecord = { ...pending.transaction, category: pendingCategory };
+      await overrideCategory(pending.transaction, newCategory, state.dirHandle);
+      const overriddenTx: TransactionRecord = { ...pending.transaction, category: newCategory };
+      setPending(null);
+      setPendingCategory('');
+      setRulePromptFor(overriddenTx);
+      setRuleSaveWarning('');
+      setRuleConflictWarned(false);
+      await onRefresh?.();
+    } catch (err) {
+      setOverrideError(err instanceof Error ? err.message : 'Failed to save override');
+    } finally {
+      setIsOverriding(false);
+    }
+  }
+
+  async function handleScopeAll() {
+    if (!pending?.confirmedCategory || !state.dirHandle) return;
+    const newCategory = pending.confirmedCategory;
+    setIsOverriding(true);
+    setOverrideError(null);
+    try {
+      await overrideCategoryAll(pending.transaction.description, newCategory, transactions, state.dirHandle);
+      const overriddenTx: TransactionRecord = { ...pending.transaction, category: newCategory };
       setPending(null);
       setPendingCategory('');
       setRulePromptFor(overriddenTx);
@@ -126,42 +157,77 @@ export function TransactionList({ transactions, categories, onRefresh }: Transac
           <div className="bg-white rounded-lg shadow-xl p-6 max-w-md w-full mx-4">
             <h3 className="text-base font-semibold text-gray-800 mb-2">Change Category</h3>
             <p className="text-sm text-gray-600 mb-1 truncate">{pending.transaction.description}</p>
-            <p className="text-sm text-gray-500 mb-3">
-              Current: <strong className="text-gray-800">{pending.fromCategory}</strong>
-            </p>
-            <select
-              value={pendingCategory}
-              onChange={(e) => setPendingCategory(e.target.value)}
-              className="w-full text-sm text-gray-700 border border-gray-300 rounded px-2 py-1.5 bg-white focus:outline-none focus:ring-1 focus:ring-indigo-400 mb-4"
-            >
-              {!sortedActiveCategories.some((c) => c.name === pending.fromCategory) && (
-                <option value={pending.fromCategory}>{pending.fromCategory} (inactive)</option>
-              )}
-              {sortedActiveCategories.map((cat) => (
-                <option key={cat.name} value={cat.name}>
-                  {cat.name}
-                </option>
-              ))}
-            </select>
-            {overrideError && (
-              <p className="text-sm text-red-600 mb-3">{overrideError}</p>
+            {!pending.confirmedCategory ? (
+              <>
+                <p className="text-sm text-gray-500 mb-3">
+                  Current: <strong className="text-gray-800">{pending.fromCategory}</strong>
+                </p>
+                <select
+                  value={pendingCategory}
+                  onChange={(e) => setPendingCategory(e.target.value)}
+                  className="w-full text-sm text-gray-700 border border-gray-300 rounded px-2 py-1.5 bg-white focus:outline-none focus:ring-1 focus:ring-indigo-400 mb-4"
+                >
+                  {!sortedActiveCategories.some((c) => c.name === pending.fromCategory) && (
+                    <option value={pending.fromCategory}>{pending.fromCategory} (inactive)</option>
+                  )}
+                  {sortedActiveCategories.map((cat) => (
+                    <option key={cat.name} value={cat.name}>
+                      {cat.name}
+                    </option>
+                  ))}
+                </select>
+                {overrideError && (
+                  <p className="text-sm text-red-600 mb-3">{overrideError}</p>
+                )}
+                <div className="flex gap-3 justify-end">
+                  <button
+                    onClick={handleCancelOverride}
+                    className="px-4 py-2 border border-gray-300 text-gray-700 text-sm font-medium rounded hover:bg-gray-50"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleConfirmOverride}
+                    disabled={pendingCategory === pending.fromCategory}
+                    className="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Confirm
+                  </button>
+                </div>
+              </>
+            ) : (
+              <>
+                <p className="text-sm text-gray-500 mb-4">
+                  Update just this transaction, or all transactions with the same description?
+                </p>
+                {overrideError && (
+                  <p className="text-sm text-red-600 mb-3">{overrideError}</p>
+                )}
+                <div className="flex gap-3 justify-end">
+                  <button
+                    onClick={handleCancelOverride}
+                    disabled={isOverriding}
+                    className="px-4 py-2 border border-gray-300 text-gray-700 text-sm font-medium rounded hover:bg-gray-50 disabled:opacity-50"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleScopeJustThis}
+                    disabled={isOverriding}
+                    className="px-4 py-2 border border-indigo-300 text-indigo-700 text-sm font-medium rounded hover:bg-indigo-50 disabled:opacity-50"
+                  >
+                    {isOverriding ? 'Saving…' : 'Just this one'}
+                  </button>
+                  <button
+                    onClick={handleScopeAll}
+                    disabled={isOverriding}
+                    className="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {isOverriding ? 'Saving…' : 'All matching'}
+                  </button>
+                </div>
+              </>
             )}
-            <div className="flex gap-3 justify-end">
-              <button
-                onClick={handleCancelOverride}
-                disabled={isOverriding}
-                className="px-4 py-2 border border-gray-300 text-gray-700 text-sm font-medium rounded hover:bg-gray-50 disabled:opacity-50"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleConfirmOverride}
-                disabled={pendingCategory === pending.fromCategory || isOverriding}
-                className="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {isOverriding ? 'Saving…' : 'Confirm'}
-              </button>
-            </div>
           </div>
         </div>
       )}

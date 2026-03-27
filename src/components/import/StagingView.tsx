@@ -16,6 +16,13 @@ interface RulePromptTarget {
   autoCategory: string;
 }
 
+/** Tracks a category change awaiting scope selection (just this one / all matching) */
+interface ScopeTarget {
+  rowIndex: number;
+  autoCategory: string;
+  confirmedCategory: string;
+}
+
 interface StagingViewProps {
   rows: ParsedRow[];
   account: string;
@@ -39,6 +46,7 @@ export function StagingView({
 }: StagingViewProps) {
   const { saveRule, isSaving: isRuleSaving } = useKeywordRules();
   const [categoryOverrides, setCategoryOverrides] = useState<Record<number, string>>({});
+  const [scopeTarget, setScopeTarget] = useState<ScopeTarget | null>(null);
   const [rulePromptFor, setRulePromptFor] = useState<RulePromptTarget | null>(null);
   const [ruleSaveWarning, setRuleSaveWarning] = useState<string>('');
   const [ruleConflictWarned, setRuleConflictWarned] = useState(false);
@@ -57,17 +65,79 @@ export function StagingView({
   );
 
   function handleCategoryChange(i: number, newCategory: string, autoCategory: string) {
-    setCategoryOverrides((prev) => ({ ...prev, [i]: newCategory }));
-    if (newCategory !== autoCategory) {
-      setRulePromptFor({ rowIndex: i, description: categorisedRows[i].description, category: newCategory, autoCategory });
-      setRuleSaveWarning('');
-      setRuleConflictWarned(false);
-    } else {
-      // User reverted to the auto-categorised value — no rule needed
-      setRulePromptFor(null);
-      setRuleSaveWarning('');
-      setRuleConflictWarned(false);
+    if (newCategory === autoCategory) {
+      // User reverted to auto — cancel any pending scope/rule for this row
+      setCategoryOverrides((prev) => {
+        const next = { ...prev };
+        delete next[i];
+        return next;
+      });
+      if (scopeTarget?.rowIndex === i) setScopeTarget(null);
+      if (rulePromptFor?.rowIndex === i) {
+        setRulePromptFor(null);
+        setRuleSaveWarning('');
+        setRuleConflictWarned(false);
+      }
+      return;
     }
+
+    // If a different row has a pending scope, revert it first
+    if (scopeTarget && scopeTarget.rowIndex !== i) {
+      setCategoryOverrides((prev) => {
+        const next = { ...prev };
+        delete next[scopeTarget.rowIndex];
+        return next;
+      });
+    }
+
+    // Apply the override immediately so the dropdown holds its value
+    setCategoryOverrides((prev) => ({ ...prev, [i]: newCategory }));
+    // Show the scope prompt for this row; close any existing rule prompt
+    setScopeTarget({ rowIndex: i, autoCategory, confirmedCategory: newCategory });
+    setRulePromptFor(null);
+    setRuleSaveWarning('');
+    setRuleConflictWarned(false);
+  }
+
+  function handleScopeJustThis() {
+    if (!scopeTarget) return;
+    const { rowIndex, autoCategory, confirmedCategory } = scopeTarget;
+    setScopeTarget(null);
+    setRulePromptFor({ rowIndex, description: categorisedRows[rowIndex].description, category: confirmedCategory, autoCategory });
+    setRuleSaveWarning('');
+    setRuleConflictWarned(false);
+  }
+
+  function handleScopeAll() {
+    if (!scopeTarget) return;
+    const { rowIndex, autoCategory, confirmedCategory } = scopeTarget;
+    const descLower = categorisedRows[rowIndex].description.toLowerCase();
+
+    // Build the complete update map in a single pass outside the functional updater,
+    // so no component-state closures are captured inside setCategoryOverrides.
+    const matchUpdates: Record<number, string> = {};
+    categorisedRows.forEach((row, idx) => {
+      if (row.description.toLowerCase() === descLower) {
+        matchUpdates[idx] = confirmedCategory;
+      }
+    });
+
+    setCategoryOverrides((prev) => ({ ...prev, ...matchUpdates }));
+    setScopeTarget(null);
+    setRulePromptFor({ rowIndex, description: categorisedRows[rowIndex].description, category: confirmedCategory, autoCategory });
+    setRuleSaveWarning('');
+    setRuleConflictWarned(false);
+  }
+
+  function handleScopeCancel() {
+    if (!scopeTarget) return;
+    const { rowIndex } = scopeTarget;
+    setCategoryOverrides((prev) => {
+      const next = { ...prev };
+      delete next[rowIndex];
+      return next;
+    });
+    setScopeTarget(null);
   }
 
   async function handleRuleConfirm(pattern: string, category: string) {
@@ -160,6 +230,38 @@ export function StagingView({
                     </select>
                   </td>
                 </tr>
+                {scopeTarget?.rowIndex === i && (
+                  <tr>
+                    <td colSpan={4} className="bg-indigo-50 border-t border-indigo-100 px-3 py-3">
+                      <p className="text-sm text-gray-700 mb-3">
+                        Update just this transaction, or all matching transactions in this import?
+                      </p>
+                      <div className="flex gap-2">
+                        <button
+                          type="button"
+                          onClick={handleScopeCancel}
+                          className="px-3 py-1.5 border border-gray-300 text-gray-700 text-xs font-medium rounded hover:bg-gray-50"
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          type="button"
+                          onClick={handleScopeJustThis}
+                          className="px-3 py-1.5 border border-indigo-300 text-indigo-700 text-xs font-medium rounded hover:bg-indigo-100"
+                        >
+                          Just this one
+                        </button>
+                        <button
+                          type="button"
+                          onClick={handleScopeAll}
+                          className="px-3 py-1.5 bg-indigo-600 text-white text-xs font-medium rounded hover:bg-indigo-700"
+                        >
+                          All matching
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                )}
                 {rulePromptFor?.rowIndex === i && (
                   <tr>
                     <td colSpan={4} className="p-0">

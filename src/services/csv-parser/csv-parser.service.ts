@@ -54,17 +54,22 @@ function extractDataRows(text: string, metadataRowCount: number): string[][] {
 }
 
 /**
- * Reads a File as text using Windows-1252 decoding.
+ * Reads a File as text, handling both UTF-8 and Windows-1252 encoded CSVs.
  *
- * `File.text()` always decodes as UTF-8, which turns the Windows-1252 £ byte
- * (0xA3) into U+FFFD (replacement character) rather than U+00A3 (£). UK bank
- * CSVs — including all Nationwide formats — are Windows-1252 encoded.
- * Decoding explicitly as Windows-1252 produces the correct £ sign, allowing
- * stripPound and the rest of the parse pipeline to work without workarounds.
+ * Tries UTF-8 first (via File.text()), strips any BOM, then checks for the
+ * tell-tale 'Â£' sequence — the Windows-1252 £ byte (0xA3) misread as UTF-8.
+ * If detected, re-reads the raw buffer as Windows-1252 to recover correct £
+ * signs. This covers all Nationwide and similar UK bank CSV formats regardless
+ * of whether they were saved as UTF-8 or ANSI/Windows-1252.
  */
 async function readFileText(file: File): Promise<string> {
-  const buffer = await file.arrayBuffer();
-  return new TextDecoder('windows-1252').decode(buffer);
+  let text = await file.text();
+  text = text.replace(/^\uFEFF/, '');
+  if (text.includes('Â£')) {
+    const buffer = await file.arrayBuffer();
+    text = new TextDecoder('windows-1252').decode(buffer);
+  }
+  return text;
 }
 
 export const csvParserService = {

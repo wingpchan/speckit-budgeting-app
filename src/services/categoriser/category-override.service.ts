@@ -2,6 +2,34 @@ import type { TransactionRecord } from '../../models/index';
 import { serialiseRecord } from '../ledger/ledger-writer';
 
 /**
+ * Appends corrected TransactionRecords for every record in `allTransactions`
+ * whose description matches `description` (case-insensitive), setting each to
+ * `newCategory`. All other fields are preserved unchanged.
+ *
+ * Batches all rows into a single append call for efficiency.
+ */
+export async function overrideCategoryAll(
+  description: string,
+  newCategory: string,
+  allTransactions: TransactionRecord[],
+  dirHandle: FileSystemDirectoryHandle,
+  appendFn?: (rows: string[]) => Promise<void>,
+): Promise<void> {
+  const descLower = description.toLowerCase();
+  const matching = allTransactions.filter(
+    (tx) => tx.description.toLowerCase() === descLower,
+  );
+  if (matching.length === 0) return;
+  const rows = matching.map((tx) => serialiseRecord({ ...tx, category: newCategory }));
+  if (appendFn) {
+    await appendFn(rows);
+  } else {
+    const { appendRecords } = await import('../ledger/ledger-writer');
+    await appendRecords(dirHandle, rows);
+  }
+}
+
+/**
  * Appends a new TransactionRecord to the ledger with an updated category.
  * All fields are copied from the original record; only `category` is replaced.
  *
