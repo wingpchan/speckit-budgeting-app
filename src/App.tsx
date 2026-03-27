@@ -9,8 +9,10 @@ import { CategoriesScreen } from './components/categories/CategoriesScreen';
 import { KeywordRulesScreen } from './components/rules/KeywordRulesScreen';
 import { BudgetScreen } from './components/budgets/BudgetScreen';
 import { SummariesScreen } from './components/summaries/SummariesScreen';
+import { SearchScreen } from './components/search/SearchScreen';
 import { useLedger } from './hooks/useLedger';
 import { usePersonFilter, filterByPerson } from './hooks/usePersonFilter';
+import { useFilter, filterByDate } from './hooks/useFilter';
 import { resolveKeywordRules, setKeywordRuleStatus } from './services/categoriser/keyword-rules.service';
 import { getActiveCategories } from './services/categoriser/category.service';
 import { getActivePeople } from './services/people/people.service';
@@ -123,6 +125,24 @@ function SummariesPage() {
   );
 }
 
+function SearchPage() {
+  const { records, refresh } = useLedger();
+  const { start, end } = useFilter();
+  const personFilter = usePersonFilter();
+
+  useEffect(() => {
+    void refresh();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const allTransactions = records.filter((r): r is TransactionRecord => r.type === 'transaction');
+  const dateFiltered = filterByDate(allTransactions, start, end);
+  const transactions = filterByPerson(dateFiltered, personFilter);
+  const categories = records.filter((r): r is CategoryRecord => r.type === 'category');
+
+  return <SearchScreen transactions={transactions} categories={categories} />;
+}
+
 function ViewPlaceholder({ name }: { name: string }) {
   return (
     <div className="p-8 text-center text-gray-500">
@@ -172,7 +192,7 @@ function AppContent() {
           case 'transactions':
             return <TransactionsScreen />;
           case 'search':
-            return <ViewPlaceholder name="Search" />;
+            return <SearchPage />;
           case 'export':
             return <ViewPlaceholder name="Export" />;
         }

@@ -1,0 +1,20 @@
+[33m4831b08[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32m004-staging-rule-prompt[m[33m)[m fix: Phase 11 post-testing bug fixes
+[33mbfe97f0[m feat: Phase 10 — monthly budget setting and tracking (T071-T077)
+[33m19c8250[m feat: Phase 9 — person filter and associated fixes
+[33m0a29709[m feat: Phase 8 — date range filtering (T063-T066)
+[33mcf38f85[m fix: keyword rule duplicate warning and staging dismiss revert
+[33me506e0f[m feat: complete feature 002 — keyword rules management screen and fixes
+[33m7777184[m fix: categories screen and dropdown consistency
+[33m1e25b68[m fix: wire PeopleScreen into App.tsx router — was returning ViewPlaceholder despite component existing from Phase 5
+[33m903dc9a[m fix: effective date pre-fill and debit amount parsing
+[33m72d9f77[m feat: features 002-004 — user keyword rules, category override UX, staging rule prompt feature 002 — user keyword rules - keywordRule added as 7th ledger record type (constitution v1.6.0) - LEDGER_VERSION bumped 2 → 3; v2 ledgers trigger migration prompt - override flow prompts to save user-defined keyword rule (non-blocking) - user rules evaluated before DEFAULT_KEYWORD_MAP at import time - longest-pattern-first tie-breaking; most-recently-created wins ties feature 003 — category override UX - plain text category display with explicit Edit button in TransactionList - category selector moved into confirmation modal (no accidental triggers) - Transactions nav item added; Search tab reserved for future use feature 004 — staging rule prompt - KeywordRulePrompt added to StagingView staging screen - rule saved to ledger immediately at prompt-confirm, before import confirmed - non-blocking — import proceeds regardless of prompt state - prompt dismissed on revert, row-switch, or import confirm without saving bug fixes - fix: KeywordRulePrompt not rendering due to unkeyed Fragment wrapper - fix: user keyword rules not applied in staging screen preview - fix: transaction supersession key corrected to date+description+amount+account - fix: category dropdown sort not applied in StagingView 236 tests passing
+[33m6927ad5[m[33m ([m[1;32m003-category-override-ux[m[33m, [m[1;32m002-user-keyword-rules[m[33m, [m[1;32m001-csv-budget-tracker[m[33m)[m fix: correct category dropdown sort and transaction supersession key
+[33mb298229[m feat: Phase 5 complete — people and accounts management, 158 tests passing
+[33m3d0a94c[m fix: TV LICENCE/BP keyword ordering, keyword map expansion, spec v1.9.0 (144 tests)
+[33mf14efb0[m fix: Nationwide description column mapping (Transactions → Description), Transaction type mapped to ignore
+[33m7322d66[m feat: Batch 3 — Telecoms category added, keyword map improvements, spec v1.8.0 (138 tests)
+[33m3654999[m feat: Batch 2 — expanded CSV auto-detection synonyms, ISO date support, category override on staging screen (130 tests)
+[33ma20e93d[m fix: Batch 1 — Nationwide metadataRowCount 4, manual mapping re-parse, single file picker, account name pre-population from metadata
+[33md2191c7[m fix: MVP import flow bugs (file picker, accountPersonMapping premature write, metadata re-parse), Windows-1252 encoding, stripPound NaN, skip list for balance markers, Internal Transfer keywords, ImportScreen wired up (113 tests)
+[33mc1e4016[m feat: Phase 3 complete — CSV import pipeline, 91 tests passing
+[33m39491b8[m feat: Phase 2 complete — foundational data layer, 44 tests passing

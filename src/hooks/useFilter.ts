@@ -33,6 +33,18 @@ function getYearRange(): { start: string; end: string } {
 }
 
 /**
+ * Pure filter function — no hook context required.
+ * Returns records whose date falls within [start, end] inclusive.
+ */
+export function filterByDate<T extends { date: string }>(
+  records: T[],
+  start: string,
+  end: string,
+): T[] {
+  return records.filter((r) => r.date >= start && r.date <= end);
+}
+
+/**
  * Derives { start, end } ISO date strings from the current session date filter preset.
  * For 'custom', returns the stored start/end from session state.
  */
