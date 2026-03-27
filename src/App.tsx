@@ -11,6 +11,7 @@ import { KeywordRulesScreen } from './components/rules/KeywordRulesScreen';
 import { BudgetScreen } from './components/budgets/BudgetScreen';
 import { SummariesScreen } from './components/summaries/SummariesScreen';
 import { SearchScreen } from './components/search/SearchScreen';
+import { ExportScreen } from './components/export/ExportScreen';
 import { useLedger } from './hooks/useLedger';
 import { usePersonFilter, filterByPerson } from './hooks/usePersonFilter';
 import { useFilter, filterByDate } from './hooks/useFilter';
@@ -132,14 +133,25 @@ function SearchPage() {
   return <SearchScreen transactions={transactions} categories={categories} />;
 }
 
-function ViewPlaceholder({ name }: { name: string }) {
-  return (
-    <div className="p-8 text-center text-gray-500">
-      <p className="text-lg font-medium">{name}</p>
-      <p className="text-sm mt-1">Coming in a future phase.</p>
-    </div>
-  );
+function ExportPage() {
+  const { records, refresh } = useLedger();
+  const { start, end } = useFilter();
+  const personFilter = usePersonFilter();
+
+  useEffect(() => {
+    void refresh();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const allTransactions = records.filter((r): r is TransactionRecord => r.type === 'transaction');
+  const dateFiltered = filterByDate(allTransactions, start, end);
+  const transactions = filterByPerson(dateFiltered, personFilter);
+  const budgetRecords = records.filter((r): r is BudgetRecord => r.type === 'budget');
+  const categories = getActiveCategories(records.filter((r): r is CategoryRecord => r.type === 'category'));
+
+  return <ExportScreen transactions={transactions} budgetRecords={budgetRecords} categories={categories} />;
 }
+
 
 function AppContent() {
   const { state } = useSession();
@@ -184,7 +196,7 @@ function AppContent() {
           case 'search':
             return <SearchPage />;
           case 'export':
-            return <ViewPlaceholder name="Export" />;
+            return <ExportPage />;
         }
       }}
     </Layout>
