@@ -3,6 +3,7 @@ import { SessionProvider, useSession } from './store/SessionContext';
 import { LedgerProvider } from './store/LedgerContext';
 import { Layout, type ViewId } from './components/shared/Layout';
 import { ChooseFolder } from './components/shared/ChooseFolder';
+import { LedgerErrorBoundary } from './components/shared/LedgerErrorBoundary';
 import { ImportScreen } from './components/import/ImportScreen';
 import { TransactionList } from './components/import/TransactionList';
 import { PeopleScreen } from './components/people/PeopleScreen';
@@ -18,6 +19,7 @@ import { useFilter, filterByDate } from './hooks/useFilter';
 import { resolveKeywordRules, setKeywordRuleStatus } from './services/categoriser/keyword-rules.service';
 import { getActiveCategories } from './services/categoriser/category.service';
 import { getActivePeople } from './services/people/people.service';
+import { saveDirectoryHandle } from './services/ledger/handle-store';
 import type { CategoryRecord, KeywordRuleRecord, PersonRecord, TransactionRecord, BudgetRecord } from './models/index';
 
 function TransactionsScreen() {
@@ -154,10 +156,15 @@ function ExportPage() {
 
 
 function AppContent() {
-  const { state } = useSession();
+  const { state, dispatch } = useSession();
   const { records, isLoading, refresh } = useLedger();
 
   const allPeople = getActivePeople(records.filter((r): r is PersonRecord => r.type === 'person'));
+
+  async function handleHandleRestored(dirHandle: FileSystemDirectoryHandle) {
+    await saveDirectoryHandle(dirHandle);
+    dispatch({ type: 'SET_LEDGER_HANDLE', handle: dirHandle });
+  }
 
   if (!state.dirHandle) {
     return (
@@ -171,34 +178,38 @@ function AppContent() {
 
   return (
     <Layout allPeople={allPeople}>
-      {(currentView, navigate) => {
-        switch (currentView) {
-          case 'import':
-            return <ImportScreen onNavigate={navigate} />;
-          case 'summaries':
-            return <SummariesPage />;
-          case 'budgets':
-            return <BudgetScreen />;
-          case 'categories':
-            return <CategoriesPage />;
-          case 'rules':
-            return <KeywordRulesPage />;
-          case 'people':
-            return (
-              <PeopleScreen
-                personRecords={records.filter((r): r is PersonRecord => r.type === 'person')}
-                isLoading={isLoading}
-                onRefresh={refresh}
-              />
-            );
-          case 'transactions':
-            return <TransactionsScreen />;
-          case 'search':
-            return <SearchPage />;
-          case 'export':
-            return <ExportPage />;
-        }
-      }}
+      {(currentView, navigate) => (
+        <LedgerErrorBoundary onHandleRestored={handleHandleRestored}>
+          {(() => {
+            switch (currentView) {
+              case 'import':
+                return <ImportScreen onNavigate={navigate} />;
+              case 'summaries':
+                return <SummariesPage />;
+              case 'budgets':
+                return <BudgetScreen />;
+              case 'categories':
+                return <CategoriesPage />;
+              case 'rules':
+                return <KeywordRulesPage />;
+              case 'people':
+                return (
+                  <PeopleScreen
+                    personRecords={records.filter((r): r is PersonRecord => r.type === 'person')}
+                    isLoading={isLoading}
+                    onRefresh={refresh}
+                  />
+                );
+              case 'transactions':
+                return <TransactionsScreen />;
+              case 'search':
+                return <SearchPage />;
+              case 'export':
+                return <ExportPage />;
+            }
+          })()}
+        </LedgerErrorBoundary>
+      )}
     </Layout>
   );
 }

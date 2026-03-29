@@ -1,7 +1,9 @@
 import { describe, it, expect } from 'vitest';
 import { scoreHeaderMapping, detectProfile } from '../../../../src/services/csv-parser/detection-registry';
+import { csvParserService } from '../../../../src/services/csv-parser/csv-parser.service';
+import { ParseError } from '../../../../src/services/csv-parser/types';
 import { REFERENCE_FORMAT_PROFILES } from '../../../../src/models/constants';
-import type { FormatProfileRecord } from '../../../../src/models/index';
+import type { FormatProfileRecord, ColumnMapping } from '../../../../src/models/index';
 
 const profiles = REFERENCE_FORMAT_PROFILES as FormatProfileRecord[];
 
@@ -201,5 +203,57 @@ describe('Format 6: Monzo-style — Date, Name, Type, Category, Amount, Currency
     expect(result.status).toBe('unrecognised');
     expect(findMapping(result, 'Date')?.canonicalField).toBe('date');
     expect(findMapping(result, 'Date')?.transform).toBe('parseISODate');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// csvParserService edge cases
+// ---------------------------------------------------------------------------
+
+function makeFile(content: string): File {
+  return new File([content], 'test.csv', { type: 'text/csv' });
+}
+
+const AMOUNT_MAPPINGS: ColumnMapping[] = [
+  { sourceHeader: 'Date', canonicalField: 'date' },
+  { sourceHeader: 'Description', canonicalField: 'description' },
+  { sourceHeader: 'Amount', canonicalField: 'amount' },
+];
+
+describe('csvParserService edge cases', () => {
+  it('throws ParseError(NO_FINANCIAL_DATA) for a CSV with header only and no data rows', async () => {
+    const csv = 'Date,Description,Amount\n';
+    await expect(
+      csvParserService.parseWithMapping(makeFile(csv), AMOUNT_MAPPINGS, {
+        metadataRowCount: 0,
+        dateFormat: 'YYYY-MM-DD',
+      }),
+    ).rejects.toSatisfy((err: unknown) => err instanceof ParseError && err.code === 'NO_FINANCIAL_DATA');
+  });
+
+  it('emits a ParseWarning and skips a row with a malformed date', async () => {
+    const csv = 'Date,Description,Amount\nnot-a-date,Test,10.00\n2026-01-15,Valid,5.00\n';
+    const result = await csvParserService.parseWithMapping(makeFile(csv), AMOUNT_MAPPINGS, {
+      metadataRowCount: 0,
+      dateFormat: 'YYYY-MM-DD',
+    });
+    expect(result.rows).toHaveLength(1);
+    expect(result.rows[0].date).toBe('2026-01-15');
+    expect(result.warnings).toHaveLength(1);
+    expect(result.warnings[0].field).toBe('date');
+    expect(result.warnings[0].message).toMatch(/malformed date/i);
+  });
+
+  it('emits a ParseWarning and skips a row with a non-numeric amount', async () => {
+    const csv = 'Date,Description,Amount\n2026-01-15,Test,not-a-number\n2026-01-16,Valid,5.00\n';
+    const result = await csvParserService.parseWithMapping(makeFile(csv), AMOUNT_MAPPINGS, {
+      metadataRowCount: 0,
+      dateFormat: 'YYYY-MM-DD',
+    });
+    expect(result.rows).toHaveLength(1);
+    expect(result.rows[0].date).toBe('2026-01-16');
+    expect(result.warnings).toHaveLength(1);
+    expect(result.warnings[0].field).toBe('amount');
+    expect(result.warnings[0].message).toMatch(/non-numeric/i);
   });
 });

@@ -235,3 +235,32 @@ describe('getComparablePeriods weekly', () => {
     expect(getComparablePeriods(records, 'weekly')).toBeNull();
   });
 });
+
+// ── Performance validation (SC-005) ────────────────────────────────────────
+
+describe('performance: 10,000 transactions', () => {
+  it('aggregateByPeriod completes within 500ms for 10,000 records (SC-005 proxy)', () => {
+    // Generate 10,000 synthetic transactions spread across 24 months
+    const records: TransactionRecord[] = [];
+    const categories = ['Groceries', 'Dining', 'Transport', 'Utilities', 'Shopping'];
+    for (let i = 0; i < 10000; i++) {
+      const monthOffset = i % 24;
+      const year = 2024 + Math.floor(monthOffset / 12);
+      const month = String((monthOffset % 12) + 1).padStart(2, '0');
+      const day = String((i % 28) + 1).padStart(2, '0');
+      records.push(
+        tx(`${year}-${month}-${day}`, -(i % 50000 + 100), categories[i % categories.length]),
+      );
+    }
+
+    const start = performance.now();
+    const summaries = aggregateByPeriod(records, 'monthly');
+    aggregateByPeriod(records, 'yearly');
+    getComparablePeriods(records, 'monthly');
+    const elapsed = performance.now() - start;
+
+    expect(summaries.length).toBeGreaterThan(0);
+    // Allow 500ms for pure computation (well within the 3s SC-005 render budget)
+    expect(elapsed).toBeLessThan(500);
+  });
+});

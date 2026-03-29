@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useLedger } from '../../hooks/useLedger';
 import { serialiseRecord } from '../../services/ledger/ledger-writer';
 import type { AccountPersonMappingRecord, PersonRecord } from '../../models/index';
@@ -22,6 +22,38 @@ export function AssignAccountModal({ accountName, activePeople, onClose }: Assig
   const [effectiveDate, setEffectiveDate] = useState(today);
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+
+  const dialogRef = useRef<HTMLDivElement>(null);
+
+  // Focus the select on mount
+  useEffect(() => {
+    dialogRef.current?.querySelector<HTMLSelectElement>('select')?.focus();
+  }, []);
+
+  // Focus trap + Escape → close
+  useEffect(() => {
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.key === 'Escape') { e.preventDefault(); onClose(); return; }
+      if (e.key !== 'Tab') return;
+      const dialog = dialogRef.current;
+      if (!dialog) return;
+      const focusable = Array.from(
+        dialog.querySelectorAll<HTMLElement>(
+          'button:not([disabled]), select, input, [tabindex]:not([tabindex="-1"])',
+        ),
+      );
+      if (focusable.length === 0) return;
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (e.shiftKey) {
+        if (document.activeElement === first) { e.preventDefault(); last.focus(); }
+      } else {
+        if (document.activeElement === last) { e.preventDefault(); first.focus(); }
+      }
+    }
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [onClose]);
 
   async function handleConfirm() {
     if (!selectedPerson || !effectiveDate) {
@@ -47,9 +79,14 @@ export function AssignAccountModal({ accountName, activePeople, onClose }: Assig
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-      <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-md">
-        <h2 className="text-lg font-semibold mb-4">Reassign Account</h2>
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="assign-account-title"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40"
+    >
+      <div ref={dialogRef} className="bg-white rounded-lg shadow-xl p-6 w-full max-w-md">
+        <h2 id="assign-account-title" className="text-lg font-semibold mb-4">Reassign Account</h2>
         <p className="text-sm text-gray-600 mb-4">
           Account: <span className="font-medium">{accountName}</span>
         </p>

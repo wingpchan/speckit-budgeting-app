@@ -26,11 +26,14 @@ export type DetectionResult =
   | { status: 'noData'; message: string };
 
 export class ParseError extends Error {
+  code: 'NOT_CSV' | 'NO_FINANCIAL_DATA' | 'UNRESOLVABLE_COLUMNS';
+
   constructor(
-    public code: 'NOT_CSV' | 'NO_FINANCIAL_DATA' | 'UNRESOLVABLE_COLUMNS',
+    code: 'NOT_CSV' | 'NO_FINANCIAL_DATA' | 'UNRESOLVABLE_COLUMNS',
     message: string,
   ) {
     super(message);
+    this.code = code;
     this.name = 'ParseError';
   }
 }

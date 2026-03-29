@@ -113,7 +113,7 @@ export function MonthlySummaryView({ transactions, budgetRecords }: MonthlySumma
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis dataKey="name" angle={-45} textAnchor="end" interval={0} tick={{ fontSize: 11 }} />
                   <YAxis tickFormatter={(v: number) => `£${(v / 100).toFixed(0)}`} />
-                  <Tooltip formatter={(v: number) => formatPence(v)} />
+                  <Tooltip formatter={(v) => (typeof v === 'number' ? formatPence(v) : String(v))} />
                   <Legend
                     verticalAlign="top"
                     content={(props) => {

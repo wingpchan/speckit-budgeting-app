@@ -66,7 +66,7 @@ type ImportAction =
       nextStep: ImportStep;
     }
   | { type: 'ACCOUNT_SET'; account: string; nextStep: ImportStep }
-  | { type: 'PERSON_ASSIGNED'; mapping: AccountPersonMappingRecord }
+  | { type: 'PERSON_ASSIGNED'; mapping?: AccountPersonMappingRecord }
   | { type: 'CONFIRM_IMPORT' }
   | { type: 'DUPLICATE_DETECTED'; warning: DuplicateWarning }
   | { type: 'DUPLICATE_OVERRIDE' }
@@ -109,7 +109,7 @@ function importReducer(state: ImportState, action: ImportAction): ImportState {
     case 'ACCOUNT_SET':
       return { ...state, step: action.nextStep, account: action.account };
     case 'PERSON_ASSIGNED':
-      return { ...state, step: 'staging', pendingAccountMapping: action.mapping };
+      return { ...state, step: 'staging', pendingAccountMapping: action.mapping ?? null };
     case 'CONFIRM_IMPORT':
       return { ...state, step: 'confirming' };
     case 'DUPLICATE_DETECTED':

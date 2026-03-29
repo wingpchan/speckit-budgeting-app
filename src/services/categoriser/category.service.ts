@@ -43,6 +43,9 @@ export async function addCategory(
   existingRecords: CategoryRecord[],
   appendRecords: (rows: string[]) => Promise<void>,
 ): Promise<void> {
+  if (name.trim() === '') {
+    throw new Error('Category name cannot be empty or whitespace only');
+  }
   const all = getAllCategories(existingRecords);
   const nameLower = name.toLowerCase().trim();
   const conflict = all.find((c) => c.name.toLowerCase() === nameLower);

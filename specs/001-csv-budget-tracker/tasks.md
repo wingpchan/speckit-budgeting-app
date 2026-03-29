@@ -315,12 +315,12 @@
 
 **Purpose**: Error handling, accessibility, performance validation, build verification
 
-- [ ] T099 [P] Add `LedgerErrorBoundary` component in src/components/shared/LedgerErrorBoundary.tsx: catches File System Access API errors (folder inaccessible mid-session, write permission denied); shows actionable message with "Re-open Folder" button that re-triggers `openLedger`; wraps all views that access the ledger
-- [ ] T100 [P] Performance validation: generate a synthetic `budget-ledger.csv` with 10,000 `TransactionRecord`s; load in the app and measure `MonthlySummaryView` render time; must complete within 3 seconds (SC-005); add `useMemo` to aggregation hooks if threshold exceeded
-- [ ] T101 [P] Edge case hardening across all services: empty CSV (no data rows) → `ParseError('NO_FINANCIAL_DATA')`; malformed date in CSV row → `ParseWarning` + row skipped; non-numeric amount → `ParseWarning` + row skipped; category name submitted with only whitespace → validation error; budget reason with only whitespace → treated as empty (blocked for past months); duplicate person name on add → clear error message
-- [ ] T102 [P] Keyboard navigation and ARIA: add `aria-label` to all icon-only buttons; ensure all modals trap focus and close on Escape; ensure all dropdowns and tables are navigable by keyboard; test with Chrome DevTools accessibility audit
-- [ ] T103 Run `npm audit`; resolve all high and critical severity vulnerabilities before tagging as release-ready (Principle II — no third-party analytics, no leaked credentials)
-- [ ] T104 Deployment validation: `npm run build` produces `dist/` without errors; deploy to GitHub Pages (or Netlify/Vercel preview); verify all 12 user stories function correctly when served from static host in Chrome and Edge
+- [X] T099 [P] Add `LedgerErrorBoundary` component in src/components/shared/LedgerErrorBoundary.tsx: catches File System Access API errors (folder inaccessible mid-session, write permission denied); shows actionable message with "Re-open Folder" button that re-triggers `openLedger`; wraps all views that access the ledger
+- [X] T100 [P] Performance validation: generate a synthetic `budget-ledger.csv` with 10,000 `TransactionRecord`s; load in the app and measure `MonthlySummaryView` render time; must complete within 3 seconds (SC-005); add `useMemo` to aggregation hooks if threshold exceeded
+- [X] T101 [P] Edge case hardening across all services: empty CSV (no data rows) → `ParseError('NO_FINANCIAL_DATA')`; malformed date in CSV row → `ParseWarning` + row skipped; non-numeric amount → `ParseWarning` + row skipped; category name submitted with only whitespace → validation error; budget reason with only whitespace → treated as empty (blocked for past months); duplicate person name on add → clear error message
+- [X] T102 [P] Keyboard navigation and ARIA: add `aria-label` to all icon-only buttons; ensure all modals trap focus and close on Escape; ensure all dropdowns and tables are navigable by keyboard; test with Chrome DevTools accessibility audit
+- [X] T103 Run `npm audit`; resolve all high and critical severity vulnerabilities before tagging as release-ready (Principle II — no third-party analytics, no leaked credentials)
+- [X] T104 Deployment validation: `npm run build` produces `dist/` without errors; deploy to GitHub Pages (or Netlify/Vercel preview); verify all 12 user stories function correctly when served from static host in Chrome and Edge
 
 **Checkpoint**: All 12 user stories independently testable; `npm test && npm run lint` exits clean; no high/critical npm audit issues; app fully functional on static hosting
 

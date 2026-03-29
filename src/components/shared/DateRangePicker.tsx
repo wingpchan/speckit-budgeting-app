@@ -43,13 +43,15 @@ export function DateRangePicker() {
       </div>
       <input
         type="date"
+        aria-label="Start date"
         value={preset === 'custom' ? start : ''}
         onChange={(e) => handleCustomChange('start', e.target.value)}
         className="text-xs border border-gray-200 rounded px-2 py-1 w-32 focus:outline-none focus:ring-1 focus:ring-indigo-400"
       />
-      <span className="text-xs text-gray-400">–</span>
+      <span className="text-xs text-gray-400" aria-hidden="true">–</span>
       <input
         type="date"
+        aria-label="End date"
         value={preset === 'custom' ? end : ''}
         onChange={(e) => handleCustomChange('end', e.target.value)}
         className="text-xs border border-gray-200 rounded px-2 py-1 w-32 focus:outline-none focus:ring-1 focus:ring-indigo-400"

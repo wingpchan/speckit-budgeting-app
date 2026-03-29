@@ -72,7 +72,7 @@ export function ComparisonPanel({ comparisons }: ComparisonPanelProps) {
             <CartesianGrid strokeDasharray="3 3" />
             <XAxis dataKey="name" angle={-35} textAnchor="end" interval={0} tick={{ fontSize: 11 }} />
             <YAxis tickFormatter={(v: number) => `£${(v / 100).toFixed(0)}`} />
-            <Tooltip formatter={(v: number) => formatPence(v)} />
+            <Tooltip formatter={(v) => (typeof v === 'number' ? formatPence(v) : String(v))} />
             <Legend />
             <Bar dataKey={pair.current.periodLabel} fill="#6366f1" />
             <Bar dataKey={pair.previous.periodLabel} fill="#a5b4fc" />

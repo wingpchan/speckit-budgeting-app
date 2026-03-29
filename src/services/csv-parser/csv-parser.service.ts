@@ -229,6 +229,16 @@ export const csvParserService = {
           }
         }
 
+        // Validate date format (must be YYYY-MM-DD)
+        if (date && !/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+          warnings.push({
+            rowIndex: i,
+            field: 'date',
+            message: `Malformed date "${date}" — expected YYYY-MM-DD, row skipped`,
+          });
+          continue;
+        }
+
         let finalAmount: number;
         let transactionType: 'expense' | 'income';
 
@@ -249,6 +259,16 @@ export const csvParserService = {
           transactionType = rawAmount < 0 ? 'expense' : 'income';
         } else {
           warnings.push({ rowIndex: i, field: 'amount', message: 'No amount column mapped' });
+          continue;
+        }
+
+        // Validate that the final amount is a real number
+        if (isNaN(finalAmount)) {
+          warnings.push({
+            rowIndex: i,
+            field: 'amount',
+            message: 'Non-numeric amount — row skipped',
+          });
           continue;
         }
 

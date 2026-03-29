@@ -89,7 +89,7 @@ export function ManualColumnMappingUI({
     const dateTransform = DATE_TRANSFORMS[dateFormat];
 
     const mappings: ColumnMapping[] = headers
-      .filter((h) => assignments[h] && assignments[h] !== '')
+      .filter((h) => Boolean(assignments[h]))
       .map((h) => {
         const canonicalField = assignments[h] as CanonicalField;
         if (canonicalField === 'date' && dateTransform) {

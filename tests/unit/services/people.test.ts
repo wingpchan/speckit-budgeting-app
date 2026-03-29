@@ -127,6 +127,15 @@ describe('addPerson', () => {
     expect(appendRecords).not.toHaveBeenCalled();
   });
 
+  it('includes the conflicting name in the duplicate error message', async () => {
+    const appendRecords = vi.fn();
+    const dirHandle = {} as FileSystemDirectoryHandle;
+    const existing: PersonRecord[] = [makePerson({ name: 'Alice' })];
+
+    await expect(addPerson('ALICE', dirHandle, existing, appendRecords)).rejects.toThrow('Alice');
+    expect(appendRecords).not.toHaveBeenCalled();
+  });
+
   it('rejects a name identical case-insensitively to Household', async () => {
     const appendRecords = vi.fn();
     const dirHandle = {} as FileSystemDirectoryHandle;

@@ -106,6 +106,14 @@ describe('addCategory', () => {
     expect(row).toContain('active');
   });
 
+  it('rejects a whitespace-only name', async () => {
+    const appendRecords = vi.fn();
+    await expect(
+      addCategory('   ', {} as FileSystemDirectoryHandle, [], appendRecords),
+    ).rejects.toThrow(/empty or whitespace/i);
+    expect(appendRecords).not.toHaveBeenCalled();
+  });
+
   it('rejects a name identical case-insensitively to an existing category', async () => {
     const appendRecords = vi.fn();
     const existing: CategoryRecord[] = [makeCat({ name: 'Groceries', isDefault: true })];

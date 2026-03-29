@@ -13,7 +13,7 @@ import type { KeywordEntry, KeywordIndex } from '../csv-parser/types';
 export function buildKeywordIndex(
   categories: CategoryRecord[],
   keywordMap: Array<{ keyword: string; category: string }>,
-  userRules?: KeywordRuleRecord[],
+  userRules?: Array<Pick<KeywordRuleRecord, 'pattern' | 'category' | 'createdDate' | 'status'>>,
 ): KeywordIndex {
   // Determine current status of each category name (most recent record wins)
   const statusByName = new Map<string, 'active' | 'inactive'>();

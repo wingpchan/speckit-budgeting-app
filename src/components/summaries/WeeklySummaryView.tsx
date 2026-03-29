@@ -62,7 +62,7 @@ export function WeeklySummaryView({ transactions }: WeeklySummaryViewProps) {
                   <Cell key={i} fill={COLOURS[i % COLOURS.length]} />
                 ))}
               </Pie>
-              <Tooltip formatter={(val: number) => formatPence(-val)} />
+              <Tooltip formatter={(val) => (typeof val === 'number' ? formatPence(-val) : String(val))} />
               <Legend />
             </PieChart>
           </ResponsiveContainer>
