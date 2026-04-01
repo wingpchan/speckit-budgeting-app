@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 
 interface BudgetEditPanelProps {
   category: string;
@@ -27,6 +28,44 @@ export function BudgetEditPanel({
   onClose,
 }: BudgetEditPanelProps) {
   const isPast = month < currentMonth;
+  const dialogRef = useRef<HTMLDivElement>(null);
+
+  // Escape → close; Tab → focus trap
+  useEffect(() => {
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        onClose();
+        return;
+      }
+      if (e.key !== 'Tab') return;
+      const dialog = dialogRef.current;
+      if (!dialog) return;
+      const focusable = Array.from(
+        dialog.querySelectorAll<HTMLElement>(
+          'button:not([disabled]), input:not([disabled]), textarea:not([disabled])',
+        ),
+      );
+      if (focusable.length === 0) return;
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (e.shiftKey) {
+        if (document.activeElement === first) { e.preventDefault(); last.focus(); }
+      } else {
+        if (document.activeElement === last) { e.preventDefault(); first.focus(); }
+      }
+    }
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [onClose]);
+
+  // Auto-focus first input on mount
+  useEffect(() => {
+    const first = dialogRef.current?.querySelector<HTMLElement>(
+      'input:not([disabled]), textarea:not([disabled]), button:not([disabled])',
+    );
+    first?.focus();
+  }, []);
 
   const [amountStr, setAmountStr] = useState(
     currentAmount > 0 ? (currentAmount / 100).toFixed(2) : '',
@@ -53,10 +92,16 @@ export function BudgetEditPanel({
     }
   }
 
-  return (
-    <div className="p-4 bg-white border border-gray-200 rounded-lg shadow-sm space-y-4">
+  return createPortal(
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="budget-edit-title"
+      className="fixed inset-0 flex items-center justify-center bg-black/50 z-50"
+    >
+    <div ref={dialogRef} className="bg-white rounded-lg shadow-xl p-6 max-w-md w-full mx-4 space-y-4">
       <div className="flex items-center justify-between">
-        <h3 className="font-medium text-gray-800">
+        <h3 id="budget-edit-title" className="font-medium text-gray-800">
           Edit budget — {category}
         </h3>
         <button
@@ -123,5 +168,7 @@ export function BudgetEditPanel({
         </button>
       </div>
     </div>
+    </div>,
+    document.body,
   );
 }

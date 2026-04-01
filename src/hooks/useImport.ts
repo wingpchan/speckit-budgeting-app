@@ -144,6 +144,7 @@ export function useImport(options: UseImportOptions) {
   const { profiles, categories, dirHandle, onCommitted } = options;
   const [state, dispatch] = useReducer(importReducer, initialState);
   const pendingCategoryOverridesRef = useRef<Record<number, string>>({});
+  const pendingProfileNameRef = useRef<string | null>(null);
 
   // ── Internal: parse and advance to the right next step ──────────────────
 
@@ -199,6 +200,7 @@ export function useImport(options: UseImportOptions) {
 
   const selectFile = useCallback(
     async (file: File) => {
+      pendingProfileNameRef.current = null;
       dispatch({ type: 'FILE_SELECTED', file });
 
       try {
@@ -234,8 +236,10 @@ export function useImport(options: UseImportOptions) {
     async (
       mappings: ColumnMapping[],
       hints: Pick<DetectionHints, 'metadataRowCount' | 'dateFormat'>,
+      profileName: string | null = null,
     ) => {
       if (!state.file) return;
+      pendingProfileNameRef.current = profileName;
       try {
         await _parseAndAdvance(state.file, mappings, hints, null, null);
       } catch (err) {
@@ -293,7 +297,24 @@ export function useImport(options: UseImportOptions) {
         });
       });
 
-      await commitImport(records, dirHandle, pendingAccountMapping);
+      const profileName = pendingProfileNameRef.current;
+      const profileRecord: import('../models/index').FormatProfileRecord | null =
+        profileName && state.mappings && state.hints
+          ? {
+              type: 'formatProfile',
+              profileName,
+              columnMappings: state.mappings,
+              detectionHints: {
+                metadataRowCount: state.hints.metadataRowCount,
+                dateFormat: state.hints.dateFormat,
+                headerSignatures: state.mappings.map((m) => m.sourceHeader),
+                confidenceThreshold: 0.8,
+              },
+              createdDate: toISODate(new Date()),
+            }
+          : null;
+
+      await commitImport(records, dirHandle, pendingAccountMapping, profileRecord);
       dispatch({ type: 'COMMITTED' });
       onCommitted?.();
     } catch (err) {

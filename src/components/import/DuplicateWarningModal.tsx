@@ -80,7 +80,8 @@ function ExactDuplicateContent({ priorImportDate, onOverride, onCancel }: ExactD
       <p className="text-sm text-gray-700 mb-4">
         This exact file was already imported on{' '}
         <span className="font-medium">{priorImportDate}</span>. Importing again will create
-        duplicate transactions.
+        duplicate transactions in your ledger. Only proceed if you have deliberately deleted those
+        transactions and need to re-import them.
       </p>
       <div className="flex gap-3 justify-end">
         <button
@@ -93,7 +94,7 @@ function ExactDuplicateContent({ priorImportDate, onOverride, onCancel }: ExactD
           onClick={onOverride}
           className="px-4 py-2 text-sm rounded bg-red-600 text-white hover:bg-red-700"
         >
-          Override Anyway
+          Import Anyway
         </button>
       </div>
     </>

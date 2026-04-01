@@ -23,6 +23,7 @@ interface ManualColumnMappingUIProps {
   onApply: (
     mappings: ColumnMapping[],
     hints: Pick<DetectionHints, 'metadataRowCount' | 'dateFormat'>,
+    profileName: string | null,
   ) => void;
   onCancel: () => void;
 }
@@ -98,7 +99,8 @@ export function ManualColumnMappingUI({
         return { sourceHeader: h, canonicalField };
       });
 
-    onApply(mappings, { metadataRowCount, dateFormat });
+    const resolvedProfileName = saveAsProfile && profileName.trim() ? profileName.trim() : null;
+    onApply(mappings, { metadataRowCount, dateFormat }, resolvedProfileName);
   }
 
   function fieldClass(field: CanonicalField | ''): string {

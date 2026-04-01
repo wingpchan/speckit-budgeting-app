@@ -152,7 +152,7 @@ export function BudgetScreen() {
                   {row.actual > 0 ? `£${(row.actual / 100).toFixed(2)}` : <span className="text-gray-400">—</span>}
                 </td>
                 <td className="py-3 pl-6">
-                  {row.hasBudget ? (
+                  {row.budget > 0 ? (
                     <BudgetStateIndicator state={row.state} actual={row.actual} budget={row.budget} />
                   ) : (
                     <span className="text-gray-400">—</span>

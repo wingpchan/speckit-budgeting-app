@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useSession } from '../../store/SessionContext';
 import { useLedger } from '../../hooks/useLedger';
 import { useImport } from '../../hooks/useImport';
@@ -40,6 +40,8 @@ export function ImportScreen({ onNavigate }: ImportScreenProps = {}) {
   // Active persons for PersonAssignmentPrompt dropdown — uses service function for most-recent-record deduplication
   const activePeople = getActivePeople(people);
 
+  const [acknowledgedUnrecognised, setAcknowledgedUnrecognised] = useState(false);
+
   const {
     state,
     selectFile,
@@ -66,6 +68,13 @@ export function ImportScreen({ onNavigate }: ImportScreenProps = {}) {
     void refresh();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Reset acknowledgement whenever we leave the manual_mapping step
+  useEffect(() => {
+    if (state.step !== 'manual_mapping') {
+      setAcknowledgedUnrecognised(false);
+    }
+  }, [state.step]);
 
   if (state.step === 'committed') {
     return (
@@ -124,8 +133,37 @@ export function ImportScreen({ onNavigate }: ImportScreenProps = {}) {
 
   if (state.step === 'manual_mapping' && state.file) {
     const detection = state.detectionResult;
-    const suggestedMappings =
-      detection?.status === 'unrecognised' ? detection.suggestedMappings : [];
+    const isUnrecognised = detection?.status === 'unrecognised';
+
+    if (isUnrecognised && !acknowledgedUnrecognised) {
+      return (
+        <div className="max-w-md mx-auto text-center py-8">
+          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-6 mb-6">
+            <p className="text-yellow-800 font-medium mb-2">File Not Recognised</p>
+            <p className="text-yellow-700 text-sm">
+              This file does not appear to be a bank statement. We could not detect the required
+              columns (Date, Description, Amount).
+            </p>
+          </div>
+          <div className="flex gap-3 justify-center">
+            <button
+              onClick={() => setAcknowledgedUnrecognised(true)}
+              className="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded hover:bg-indigo-700"
+            >
+              Map Columns Manually
+            </button>
+            <button
+              onClick={cancel}
+              className="px-4 py-2 border border-gray-300 text-gray-700 text-sm font-medium rounded hover:bg-gray-50"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      );
+    }
+
+    const suggestedMappings = isUnrecognised ? detection.suggestedMappings : [];
     const headers = suggestedMappings.map((m) => m?.sourceHeader ?? '').filter(Boolean) as string[];
 
     return (

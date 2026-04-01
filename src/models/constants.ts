@@ -346,7 +346,7 @@ export const REFERENCE_FORMAT_PROFILES: Omit<FormatProfileRecord, 'createdDate'>
     },
     columnMappings: [
       { sourceHeader: 'Date', canonicalField: 'date', transform: 'parseDDMonYYYY' },
-      { sourceHeader: 'Description', canonicalField: 'description' },
+      { sourceHeader: 'Transactions', canonicalField: 'description' },
       { sourceHeader: 'Location', canonicalField: 'ignore' },
       { sourceHeader: 'Paid out', canonicalField: 'paidOut', transform: 'stripPound' },
       { sourceHeader: 'Paid in', canonicalField: 'paidIn', transform: 'stripPound' },

@@ -1,4 +1,4 @@
-import type { AccountPersonMappingRecord, TransactionRecord } from '../../models/index';
+import type { AccountPersonMappingRecord, FormatProfileRecord, TransactionRecord } from '../../models/index';
 import type { ParsedRow } from '../csv-parser/types';
 import { serialiseRecord } from './ledger-writer';
 import { appendRecords } from './ledger-writer';
@@ -43,8 +43,10 @@ export async function commitImport(
   records: TransactionRecord[],
   dirHandle: FileSystemDirectoryHandle,
   pendingMapping: AccountPersonMappingRecord | null = null,
+  profileRecord: FormatProfileRecord | null = null,
 ): Promise<void> {
   const rows: string[] = [];
+  if (profileRecord) rows.push(serialiseRecord(profileRecord));
   if (pendingMapping) rows.push(serialiseRecord(pendingMapping));
   for (const r of records) rows.push(serialiseRecord(r));
   await appendRecords(dirHandle, rows);
