@@ -68,24 +68,19 @@ export function ComparisonPanel({ comparisons }: ComparisonPanelProps) {
       {/* Per-category comparison chart */}
       {barData.length > 0 && (
         <ResponsiveContainer width="100%" height={240}>
-          <BarChart data={barData} margin={{ top: 8, right: 8, left: 8, bottom: 40 }}>
+          <BarChart data={barData} margin={{ top: 20, right: 8, left: 8, bottom: 40 }}>
             <CartesianGrid strokeDasharray="3 3" />
             <XAxis dataKey="name" angle={-35} textAnchor="end" interval={0} tick={{ fontSize: 11 }} />
             <YAxis tickFormatter={(v: number) => `£${(v / 100).toFixed(0)}`} />
             <Tooltip formatter={(v) => (typeof v === 'number' ? formatPence(v) : String(v))} />
-            <Legend />
+            <Legend verticalAlign="top" />
             <Bar dataKey={pair.current.periodLabel} fill="#6366f1" />
             <Bar dataKey={pair.previous.periodLabel} fill="#a5b4fc" />
           </BarChart>
         </ResponsiveContainer>
       )}
 
-      {/* If there are more comparison pairs, list them */}
-      {comparisons.length > 1 && (
-        <p className="text-xs text-gray-500">
-          {comparisons.length - 1} additional comparable period{comparisons.length > 2 ? 's' : ''} available.
-        </p>
-      )}
+
     </div>
   );
 }

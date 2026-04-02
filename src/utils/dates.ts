@@ -90,3 +90,74 @@ export function isValidDate(s: string): boolean {
 export function toISODate(d: Date): string {
   return d.toISOString().slice(0, 10);
 }
+
+const SHORT_MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+/**
+ * Returns the ISO date of the Monday of the week containing the given date.
+ */
+export function getMondayOfWeek(dateISO: string): string {
+  const [y, m, d] = dateISO.split('-').map(Number);
+  const dt = new Date(Date.UTC(y, m - 1, d));
+  const dow = dt.getUTCDay(); // 0=Sun, 1=Mon, ..., 6=Sat
+  const diff = dow === 0 ? -6 : 1 - dow;
+  return new Date(Date.UTC(y, m - 1, d + diff)).toISOString().slice(0, 10);
+}
+
+/**
+ * Returns the Monday ISO date of the previous week.
+ */
+export function getPrevWeek(mondayISO: string): string {
+  const [y, m, d] = mondayISO.split('-').map(Number);
+  return new Date(Date.UTC(y, m - 1, d - 7)).toISOString().slice(0, 10);
+}
+
+/**
+ * Returns the Monday ISO date of the next week.
+ */
+export function getNextWeek(mondayISO: string): string {
+  const [y, m, d] = mondayISO.split('-').map(Number);
+  return new Date(Date.UTC(y, m - 1, d + 7)).toISOString().slice(0, 10);
+}
+
+/**
+ * Formats a Monday ISO date as "31 Mar - 6 Apr 2026".
+ */
+export function toWeekLabel(mondayISO: string): string {
+  const [y, m, d] = mondayISO.split('-').map(Number);
+  const mon = new Date(Date.UTC(y, m - 1, d));
+  const sun = new Date(Date.UTC(y, m - 1, d + 6));
+  const monStr = `${mon.getUTCDate()} ${SHORT_MONTHS[mon.getUTCMonth()]}`;
+  const sunStr = `${sun.getUTCDate()} ${SHORT_MONTHS[sun.getUTCMonth()]}`;
+  if (mon.getUTCMonth() === sun.getUTCMonth()) {
+    return `${mon.getUTCDate()} - ${sun.getUTCDate()} ${SHORT_MONTHS[mon.getUTCMonth()]} ${sun.getUTCFullYear()}`;
+  }
+  return `${monStr} - ${sunStr} ${sun.getUTCFullYear()}`;
+}
+
+/**
+ * Returns the previous year string. E.g. "2026" → "2025".
+ */
+export function getPrevYear(year: string): string {
+  return String(Number(year) - 1);
+}
+
+/**
+ * Returns the next year string. E.g. "2025" → "2026".
+ */
+export function getNextYear(year: string): string {
+  return String(Number(year) + 1);
+}
+
+/**
+ * Converts a Monday ISO date to its ISO week period key ("YYYY-Wnn").
+ * Matches the format produced by aggregateByPeriod for 'weekly' periods.
+ */
+export function mondayToWeekKey(mondayISO: string): string {
+  const [y, m, d] = mondayISO.split('-').map(Number);
+  // For a Monday, Thursday is always +3 days; ISO week year is determined by Thursday
+  const thursday = new Date(Date.UTC(y, m - 1, d + 3));
+  const yearStart = new Date(Date.UTC(thursday.getUTCFullYear(), 0, 1));
+  const week = Math.ceil(((thursday.getTime() - yearStart.getTime()) / 86_400_000 + 1) / 7);
+  return `${thursday.getUTCFullYear()}-W${String(week).padStart(2, '0')}`;
+}

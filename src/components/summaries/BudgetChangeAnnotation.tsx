@@ -42,15 +42,6 @@ export function BudgetChangeAnnotation({ viewBox, reason }: BudgetChangeAnnotati
           onMouseEnter={handleMouseEnter}
           onMouseLeave={handleMouseLeave}
         />
-        <text
-          x={(viewBox?.x ?? 0) + 4}
-          y={(viewBox?.y ?? 0) + 24}
-          fontSize={10}
-          fill="#6366f1"
-          style={{ pointerEvents: 'none', userSelect: 'none' }}
-        >
-          Budget change
-        </text>
       </g>
       {mousePos &&
         reason &&

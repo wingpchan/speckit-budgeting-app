@@ -1,5 +1,7 @@
 import { useState } from 'react';
 import { useSummaries } from '../../hooks/useSummaries';
+import { useSession } from '../../store/SessionContext';
+import { getMondayOfWeek, mondayToWeekKey } from '../../utils/dates';
 import { WeeklySummaryView } from './WeeklySummaryView';
 import { MonthlySummaryView } from './MonthlySummaryView';
 import { YearlySummaryView } from './YearlySummaryView';
@@ -28,6 +30,17 @@ export function SummariesScreen({
 }: SummariesScreenProps) {
   const [tab, setTab] = useState<SummaryTab>('monthly');
   const { comparisons } = useSummaries(transactions, tab);
+  const { state } = useSession();
+
+  // Derive the period key for the currently selected date filter, matching
+  // the format each view uses to look up its summary.
+  const activePeriodKey: string = (() => {
+    if (tab === 'weekly') return mondayToWeekKey(getMondayOfWeek(state.dateFilter.start));
+    if (tab === 'monthly') return state.dateFilter.start.slice(0, 7);
+    return state.dateFilter.start.slice(0, 4);
+  })();
+
+  const activePair = comparisons?.find(c => c.current.periodKey === activePeriodKey) ?? null;
 
   return (
     <div className="p-6 max-w-4xl mx-auto space-y-4">
@@ -62,7 +75,7 @@ export function SummariesScreen({
             <YearlySummaryView transactions={transactions} budgetRecords={budgetRecords} />
           )}
 
-          {comparisons && <ComparisonPanel comparisons={comparisons} />}
+          {activePair && <ComparisonPanel comparisons={[activePair]} />}
         </>
       )}
     </div>

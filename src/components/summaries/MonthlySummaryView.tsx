@@ -40,9 +40,8 @@ export function MonthlySummaryView({ transactions, budgetRecords }: MonthlySumma
   const categoryRows = current
     ? Object.entries(current.byCategory).map(([name, actual]) => {
         const budget = resolveBudget(currentMonth, name, budgetRecords);
-        const state = getBudgetState(actual, budget);
-        const hasBudget = budgetRecords.some((r) => r.category === name);
-        return { name, actual, budget, state, hasBudget };
+        const state = budget > 0 ? getBudgetState(actual, budget) : 'ok';
+        return { name, actual, budget, state };
       })
     : [];
 
@@ -108,10 +107,10 @@ export function MonthlySummaryView({ transactions, budgetRecords }: MonthlySumma
           {barData.length > 0 && (
             <div>
               <h3 className="text-sm font-medium text-gray-700 mb-2">Category spend vs budget</h3>
-              <ResponsiveContainer width="100%" height={300}>
-                <BarChart data={barData} margin={{ top: 8, right: 8, left: 8, bottom: 60 }}>
+              <ResponsiveContainer width="100%" height={400}>
+                <BarChart data={barData} margin={{ top: 8, right: 8, left: 8, bottom: 100 }}>
                   <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="name" angle={-45} textAnchor="end" interval={0} tick={{ fontSize: 11 }} />
+                  <XAxis dataKey="name" angle={-45} textAnchor="end" interval={0} tick={{ fontSize: 11 }} height={80} />
                   <YAxis tickFormatter={(v: number) => `£${(v / 100).toFixed(0)}`} />
                   <Tooltip formatter={(v) => (typeof v === 'number' ? formatPence(v) : String(v))} />
                   <Legend
@@ -171,7 +170,7 @@ export function MonthlySummaryView({ transactions, budgetRecords }: MonthlySumma
                       {row.budget > 0 ? formatPence(row.budget) : <span className="text-gray-400">—</span>}
                     </td>
                     <td className="py-2 pl-4">
-                      {row.hasBudget ? (
+                      {row.budget > 0 ? (
                         <BudgetStateIndicator state={row.state} actual={row.actual} budget={row.budget} />
                       ) : (
                         <span className="text-gray-400">—</span>

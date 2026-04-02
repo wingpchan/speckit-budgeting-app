@@ -1,10 +1,12 @@
 import {
-  LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip,
+  LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
   Legend, ResponsiveContainer, ReferenceLine,
 } from 'recharts';
 import { useSummaries } from '../../hooks/useSummaries';
 import { aggregateByPeriod } from '../../services/summaries/summary.service';
 import { getBudgetChanges } from '../../services/budget/budget.service';
+import { useSession } from '../../store/SessionContext';
+import { getPrevYear, getNextYear } from '../../utils/dates';
 import { BudgetChangeAnnotation } from './BudgetChangeAnnotation';
 import type { TransactionRecord, BudgetRecord } from '../../models/index';
 
@@ -18,16 +20,23 @@ interface YearlySummaryViewProps {
 }
 
 export function YearlySummaryView({ transactions, budgetRecords }: YearlySummaryViewProps) {
+  const { state, dispatch } = useSession();
   const { summaries } = useSummaries(transactions, 'yearly');
 
-  if (summaries.length === 0) {
-    return <p className="text-gray-500 text-sm py-4">No transactions in the selected period.</p>;
+  const currentYear = state.dateFilter.start.slice(0, 4);
+
+  function navigateTo(year: string) {
+    const y = Number(year);
+    const start = new Date(Date.UTC(y, 0, 1)).toISOString().slice(0, 10);
+    const end = new Date(Date.UTC(y, 11, 31)).toISOString().slice(0, 10);
+    dispatch({ type: 'SET_DATE_FILTER', start, end });
   }
 
-  const current = summaries[summaries.length - 1];
-
-  // Month-by-month breakdown for the current year
-  const currentYear = current.periodKey;
+  const current = summaries.find(s => s.periodKey === currentYear) ?? null;
+  const categoryEntries = current
+    ? Object.entries(current.byCategory).sort(([, a], [, b]) => b - a)
+    : [];
+  const categoryBarData = categoryEntries.map(([name, value]) => ({ name, Spend: value }));
   const txInYear = transactions.filter((t) => t.date.startsWith(currentYear));
   const monthSummaries = aggregateByPeriod(txInYear, 'monthly');
 
@@ -50,80 +59,140 @@ export function YearlySummaryView({ transactions, budgetRecords }: YearlySummary
 
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className="text-lg font-semibold text-gray-800">{current.periodLabel}</h2>
-        <div className="mt-3 grid grid-cols-3 gap-4">
-          <div className="p-4 bg-green-50 rounded-lg">
-            <p className="text-xs text-gray-500 uppercase tracking-wide">Income</p>
-            <p className="text-xl font-semibold text-green-700 mt-1">
-              {formatPence(current.totalIncome)}
-            </p>
-          </div>
-          <div className="p-4 bg-red-50 rounded-lg">
-            <p className="text-xs text-gray-500 uppercase tracking-wide">Expenses</p>
-            <p className="text-xl font-semibold text-red-700 mt-1">
-              {formatPence(current.totalExpenses)}
-            </p>
-          </div>
-          <div className={`p-4 rounded-lg ${current.netPosition >= 0 ? 'bg-blue-50' : 'bg-amber-50'}`}>
-            <p className="text-xs text-gray-500 uppercase tracking-wide">Net</p>
-            <p className={`text-xl font-semibold mt-1 ${current.netPosition >= 0 ? 'text-blue-700' : 'text-amber-700'}`}>
-              {current.netPosition >= 0 ? '' : '-'}{formatPence(current.netPosition)}
-            </p>
-          </div>
+      {/* Year navigator */}
+      <div className="flex items-center justify-between">
+        <h2 className="text-lg font-semibold text-gray-800">Yearly Summary</h2>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => navigateTo(getPrevYear(currentYear))}
+            className="px-3 py-1.5 rounded border border-gray-300 text-sm hover:bg-gray-100"
+          >
+            ← Prev
+          </button>
+          <span className="text-base font-medium w-36 text-center">
+            {currentYear}
+          </span>
+          <button
+            onClick={() => navigateTo(getNextYear(currentYear))}
+            className="px-3 py-1.5 rounded border border-gray-300 text-sm hover:bg-gray-100"
+          >
+            Next →
+          </button>
         </div>
       </div>
 
-      {lineData.length > 0 && (
-        <div>
-          <h3 className="text-sm font-medium text-gray-700 mb-2">Month-by-month trend</h3>
-          <ResponsiveContainer width="100%" height={300}>
-            <LineChart data={lineData} margin={{ top: 8, right: 8, left: 8, bottom: 60 }}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="month" angle={-45} textAnchor="end" interval={0} tick={{ fontSize: 11 }} />
-              <YAxis tickFormatter={(v: number) => `£${(v / 100).toFixed(0)}`} />
-              <Tooltip formatter={(v) => (typeof v === 'number' ? formatPence(v) : String(v))} />
-              <Legend
-                verticalAlign="top"
-                content={(props) => {
-                  const payload = (props as { payload?: Array<{ value: string; color: string }> }).payload ?? [];
-                  return (
-                    <div className="flex justify-center gap-4 text-xs mb-2">
-                      {payload.map((item, i) => (
-                        <span key={i} className="flex items-center gap-1">
-                          <svg width="16" height="6"><line x1="0" y1="3" x2="16" y2="3" stroke={item.color} strokeWidth="2" /></svg>
-                          {item.value}
-                        </span>
-                      ))}
-                      {budgetChanges.length > 0 && (
-                        <span className="flex items-center gap-1">
-                          <svg width="16" height="6"><line x1="0" y1="3" x2="16" y2="3" stroke="#6366f1" strokeDasharray="4 2" strokeWidth="2" /></svg>
-                          Budget change
-                        </span>
-                      )}
-                    </div>
-                  );
-                }}
-              />
-              <Line type="monotone" dataKey="Income" stroke="#22c55e" dot={false} />
-              <Line type="monotone" dataKey="Expenses" stroke="#ef4444" dot={false} />
-              <Line type="monotone" dataKey="Net" stroke="#6366f1" strokeDasharray="4 2" dot={false} />
-              {budgetChanges.map((c, i) => {
-                const label = monthKeyToLabel.get(c.month);
-                if (!label) return null;
-                return (
-                  <ReferenceLine
-                    key={i}
-                    x={label}
-                    strokeDasharray="4 2"
-                    stroke="#6366f1"
-                    label={<BudgetChangeAnnotation reason={c.reason} />}
+      {!current ? (
+        <p className="text-gray-500 text-sm py-4">No transactions in {currentYear}.</p>
+      ) : (
+        <>
+          <div className="grid grid-cols-3 gap-4">
+            <div className="p-4 bg-green-50 rounded-lg">
+              <p className="text-xs text-gray-500 uppercase tracking-wide">Income</p>
+              <p className="text-xl font-semibold text-green-700 mt-1">
+                {formatPence(current.totalIncome)}
+              </p>
+            </div>
+            <div className="p-4 bg-red-50 rounded-lg">
+              <p className="text-xs text-gray-500 uppercase tracking-wide">Expenses</p>
+              <p className="text-xl font-semibold text-red-700 mt-1">
+                {formatPence(current.totalExpenses)}
+              </p>
+            </div>
+            <div className={`p-4 rounded-lg ${current.netPosition >= 0 ? 'bg-blue-50' : 'bg-amber-50'}`}>
+              <p className="text-xs text-gray-500 uppercase tracking-wide">Net</p>
+              <p className={`text-xl font-semibold mt-1 ${current.netPosition >= 0 ? 'text-blue-700' : 'text-amber-700'}`}>
+                {current.netPosition >= 0 ? '' : '-'}{formatPence(current.netPosition)}
+              </p>
+            </div>
+          </div>
+
+          {categoryBarData.length > 0 && (
+            <div>
+              <h3 className="text-sm font-medium text-gray-700 mb-2">Category spend</h3>
+              <ResponsiveContainer width="100%" height={300}>
+                <BarChart data={categoryBarData} margin={{ top: 8, right: 8, left: 8, bottom: 80 }}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="name" angle={-45} textAnchor="end" interval={0} tick={{ fontSize: 11 }} height={80} />
+                  <YAxis tickFormatter={(v: number) => `£${(v / 100).toFixed(0)}`} />
+                  <Tooltip formatter={(v) => (typeof v === 'number' ? formatPence(v) : String(v))} />
+                  <Legend verticalAlign="top" />
+                  <Bar dataKey="Spend" fill="#f97316" />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          )}
+
+          {categoryEntries.length > 0 && (
+            <table className="w-full border-collapse text-sm">
+              <thead>
+                <tr className="border-b border-gray-200 text-left text-xs text-gray-500">
+                  <th className="pb-2 font-medium">Category</th>
+                  <th className="pb-2 font-medium text-right">Annual spend</th>
+                </tr>
+              </thead>
+              <tbody>
+                {categoryEntries.map(([name, value]) => (
+                  <tr key={name} className="border-b border-gray-100">
+                    <td className="py-2 font-medium text-gray-800">{name}</td>
+                    <td className="py-2 text-right tabular-nums">{formatPence(value)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+
+          {lineData.length > 0 && (
+            <div>
+              <h3 className="text-sm font-medium text-gray-700 mb-2">Month-by-month trend</h3>
+              <ResponsiveContainer width="100%" height={300}>
+                <LineChart data={lineData} margin={{ top: 8, right: 8, left: 8, bottom: 60 }}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="month" angle={-45} textAnchor="end" interval={0} tick={{ fontSize: 11 }} />
+                  <YAxis tickFormatter={(v: number) => `£${(v / 100).toFixed(0)}`} />
+                  <Tooltip formatter={(v) => (typeof v === 'number' ? formatPence(v) : String(v))} />
+                  <Legend
+                    verticalAlign="top"
+                    content={(props) => {
+                      const payload = (props as { payload?: Array<{ value: string; color: string }> }).payload ?? [];
+                      return (
+                        <div className="flex justify-center gap-4 text-xs mb-2">
+                          {payload.map((item, i) => (
+                            <span key={i} className="flex items-center gap-1">
+                              <svg width="16" height="6"><line x1="0" y1="3" x2="16" y2="3" stroke={item.color} strokeWidth="2" /></svg>
+                              {item.value}
+                            </span>
+                          ))}
+                          {budgetChanges.length > 0 && (
+                            <span className="flex items-center gap-1">
+                              <svg width="16" height="6"><line x1="0" y1="3" x2="16" y2="3" stroke="#6366f1" strokeDasharray="4 2" strokeWidth="2" /></svg>
+                              Budget change
+                            </span>
+                          )}
+                        </div>
+                      );
+                    }}
                   />
-                );
-              })}
-            </LineChart>
-          </ResponsiveContainer>
-        </div>
+                  <Line type="monotone" dataKey="Income" stroke="#22c55e" dot={false} />
+                  <Line type="monotone" dataKey="Expenses" stroke="#ef4444" dot={false} />
+                  <Line type="monotone" dataKey="Net" stroke="#6366f1" strokeDasharray="4 2" dot={false} />
+                  {budgetChanges.map((c, i) => {
+                    const label = monthKeyToLabel.get(c.month);
+                    if (!label) return null;
+                    return (
+                      <ReferenceLine
+                        key={i}
+                        x={label}
+                        strokeDasharray="4 2"
+                        stroke="#6366f1"
+                        label={<BudgetChangeAnnotation reason={c.reason} />}
+                      />
+                    );
+                  })}
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+          )}
+        </>
       )}
     </div>
   );
