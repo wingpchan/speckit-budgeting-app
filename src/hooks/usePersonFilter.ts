@@ -15,7 +15,7 @@ export function filterByPerson<T extends { personName: string }>(
 
 /**
  * Returns the current person filter value from SessionContext.
- * null means "All (Household)".
+ * null means "All" (no person filter — all transactions are returned).
  */
 export function usePersonFilter(): string | null {
   const { state } = useSession();
