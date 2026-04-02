@@ -38,7 +38,10 @@ export function BudgetScreen() {
   const { state } = useSession();
   const { records, isLoading, refresh, appendRecords } = useLedger();
 
-  const [month, setMonth] = useState(getCurrentMonth);
+  const [month, setMonth] = useState(() => {
+    const filterStart = state.dateFilter.start;
+    return filterStart ? filterStart.slice(0, 7) : getCurrentMonth();
+  });
   const [editingCategory, setEditingCategory] = useState<string | null>(null);
 
   const currentMonth = getCurrentMonth();
