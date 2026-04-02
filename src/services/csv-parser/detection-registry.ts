@@ -35,7 +35,7 @@ const FIELD_SYNONYMS: Partial<Record<CanonicalField, string[]>> = {
     'details of transactions',
     'transaction details',
   ],
-  amount: ['amount', 'value', 'amt', 'net amount', 'transaction amount', 'transaction value'],
+  amount: ['amount', 'value', 'amt', 'net amount', 'transaction amount', 'transaction value', 'amount(gbp)'],
   paidOut: ['paid out', 'debit', 'withdrawals', 'withdrawal', 'debit amount', 'amount debit', 'money out', 'out', 'dr'],
   paidIn: ['paid in', 'credit', 'deposits', 'deposit', 'credit amount', 'amount credit', 'money in', 'in', 'cr'],
   balance: ['balance', 'running balance', 'available balance', 'account balance'],

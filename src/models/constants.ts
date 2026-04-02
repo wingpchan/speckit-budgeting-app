@@ -367,4 +367,20 @@ export const REFERENCE_FORMAT_PROFILES: Omit<FormatProfileRecord, 'createdDate'>
       { sourceHeader: 'Amount', canonicalField: 'amount' },
     ],
   },
+  {
+    type: 'formatProfile',
+    profileName: 'NewDay Credit Card v2',
+    detectionHints: {
+      metadataRowCount: 0,
+      dateFormat: 'DD/MM/YYYY',
+      headerSignatures: ['Note', 'Amount(GBP)'],
+      confidenceThreshold: 0.7,
+    },
+    columnMappings: [
+      { sourceHeader: 'Date', canonicalField: 'date', transform: 'parseUKDate' },
+      { sourceHeader: 'Description', canonicalField: 'description' },
+      { sourceHeader: 'Note', canonicalField: 'ignore' },
+      { sourceHeader: 'Amount(GBP)', canonicalField: 'amount', transform: 'negateAmount' },
+    ],
+  },
 ];
