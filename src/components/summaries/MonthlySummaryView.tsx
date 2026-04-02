@@ -40,7 +40,7 @@ export function MonthlySummaryView({ transactions, budgetRecords }: MonthlySumma
   const categoryRows = current
     ? Object.entries(current.byCategory).map(([name, actual]) => {
         const budget = resolveBudget(currentMonth, name, budgetRecords);
-        const state = budget > 0 ? getBudgetState(actual, budget) : 'ok';
+        const state: 'over' | 'under' | 'exact' = budget > 0 ? getBudgetState(actual, budget) : 'under';
         return { name, actual, budget, state };
       })
     : [];
