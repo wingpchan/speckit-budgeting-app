@@ -16,6 +16,7 @@ import { ExportScreen } from './components/export/ExportScreen';
 import { useLedger } from './hooks/useLedger';
 import { usePersonFilter, filterByPerson } from './hooks/usePersonFilter';
 import { useFilter, filterByDate } from './hooks/useFilter';
+import { computeDateFilterLabel } from './utils/dates';
 import { resolveKeywordRules, setKeywordRuleStatus } from './services/categoriser/keyword-rules.service';
 import { getActiveCategories } from './services/categoriser/category.service';
 import { getActivePeople } from './services/people/people.service';
@@ -23,19 +24,72 @@ import { saveDirectoryHandle } from './services/ledger/handle-store';
 import type { CategoryRecord, KeywordRuleRecord, PersonRecord, TransactionRecord, BudgetRecord } from './models/index';
 
 function TransactionsScreen() {
+  const { state, dispatch } = useSession();
   const { records, refresh } = useLedger();
+  const { start, end } = useFilter();
+  const personFilter = usePersonFilter();
 
   useEffect(() => {
     void refresh();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const transactions = records.filter((r): r is TransactionRecord => r.type === 'transaction');
+  const allTransactions = records.filter((r): r is TransactionRecord => r.type === 'transaction');
+  const dateFiltered = filterByDate(allTransactions, start, end);
+  const transactions = filterByPerson(dateFiltered, personFilter);
   const categories = records.filter((r): r is CategoryRecord => r.type === 'category');
+
+  const periodLabel = computeDateFilterLabel(state.dateFilter.preset, state.dateFilter.start, state.dateFilter.end);
+  const personLabel = personFilter ?? 'All';
+
+  function handleClearFilters() {
+    const now = new Date();
+    const year = now.getUTCFullYear();
+    const month = now.getUTCMonth();
+    const monthStart = new Date(Date.UTC(year, month, 1)).toISOString().slice(0, 10);
+    const monthEnd = new Date(Date.UTC(year, month + 1, 0)).toISOString().slice(0, 10);
+    dispatch({ type: 'SET_VIEW_PRESET', preset: 'monthly' });
+    dispatch({ type: 'SET_DATE_FILTER', start: monthStart, end: monthEnd });
+    dispatch({ type: 'SET_PERSON_FILTER', personName: null });
+  }
 
   return (
     <div>
-      <h2 className="text-lg font-semibold text-gray-800 mb-4">Transactions</h2>
+      <h2 className="text-lg font-semibold text-gray-800 mb-2">Transactions</h2>
+
+      {/* Filter summary bar */}
+      <div style={{ display: 'inline-flex', gap: 16, alignItems: 'center', marginBottom: '1rem', fontSize: 13, color: 'var(--color-text-secondary)', background: '#eef2ff', border: '1px solid #c7d2fe', borderRadius: 8, padding: '8px 14px' }}>
+        <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+            <rect x="1" y="3" width="14" height="12" rx="2" stroke="currentColor" strokeWidth="1.5" />
+            <path d="M5 1v4M11 1v4M1 7h14" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+          </svg>
+          {periodLabel}
+        </span>
+        <span style={{ opacity: 0.4 }}>·</span>
+        <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+            <circle cx="8" cy="5" r="3" stroke="currentColor" strokeWidth="1.5" />
+            <path d="M2 14c0-3.314 2.686-5 6-5s6 1.686 6 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+          </svg>
+          {personLabel}
+        </span>
+        <span style={{ opacity: 0.4 }}>·</span>
+        <span>{transactions.length} transactions</span>
+      </div>
+
+      {transactions.length === 0 && (
+        <div style={{ marginBottom: '1rem', fontSize: 13, color: '#b45309' }}>
+          No transactions match the current filters.{' '}
+          <button
+            onClick={handleClearFilters}
+            style={{ color: '#6366f1', background: 'none', border: 'none', cursor: 'pointer', padding: 0, fontSize: 13, textDecoration: 'underline' }}
+          >
+            Clear filters
+          </button>
+        </div>
+      )}
+
       <TransactionList
         transactions={transactions}
         categories={categories}

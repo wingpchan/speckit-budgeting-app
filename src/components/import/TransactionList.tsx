@@ -232,6 +232,32 @@ export function TransactionList({ transactions, categories, onRefresh }: Transac
         </div>
       )}
 
+      {/* Pagination — top */}
+      {totalPages > 1 && (
+        <div className="flex items-center justify-between mb-3 text-sm text-gray-500">
+          <span>
+            Showing {page * PAGE_SIZE + 1}–
+            {Math.min((page + 1) * PAGE_SIZE, filteredTransactions.length)} of {filteredTransactions.length}
+          </span>
+          <div className="flex gap-2">
+            <button
+              onClick={() => setPage((p) => Math.max(0, p - 1))}
+              disabled={page === 0}
+              className="px-3 py-1 border border-gray-200 rounded hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              ← Prev
+            </button>
+            <button
+              onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
+              disabled={page >= totalPages - 1}
+              className="px-3 py-1 border border-gray-200 rounded hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              Next →
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Transaction table */}
       <div className="overflow-auto rounded-lg border border-gray-200">
         <table className="w-full text-sm">

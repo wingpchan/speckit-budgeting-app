@@ -1,5 +1,5 @@
 import { useSession } from '../../store/SessionContext';
-import { getMondayOfWeek, toWeekLabel, toMonthLabel } from '../../utils/dates';
+import { computeDateFilterLabel } from '../../utils/dates';
 
 type Preset = 'weekly' | 'monthly' | 'yearly';
 
@@ -36,25 +36,6 @@ function getPresetRange(p: Preset): { start: string; end: string } {
   }
 }
 
-function formatShort(iso: string): string {
-  if (!iso) return '';
-  const d = new Date(iso + 'T00:00:00Z');
-  return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' });
-}
-
-function computeLabel(preset: string, start: string, end: string): string {
-  if (!start) return '';
-  switch (preset) {
-    case 'weekly':
-      return toWeekLabel(getMondayOfWeek(start));
-    case 'monthly':
-      return toMonthLabel(start.slice(0, 7));
-    case 'yearly':
-      return start.slice(0, 4);
-    default:
-      return end ? `${formatShort(start)} – ${formatShort(end)}` : formatShort(start);
-  }
-}
 
 const inputStyle: React.CSSProperties = {
   fontSize: '11px',
@@ -105,7 +86,7 @@ export function DateRangePicker() {
     dispatch({ type: 'SET_VIEW_PRESET', preset: 'custom', start: newStart, end: newEnd });
   }
 
-  const label = computeLabel(preset, start, end);
+  const label = computeDateFilterLabel(preset, start, end);
 
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>

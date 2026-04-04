@@ -150,6 +150,34 @@ export function getNextYear(year: string): string {
 }
 
 /**
+ * Formats an ISO date (YYYY-MM-DD) to "15 Mar 2026" style.
+ */
+export function formatShortDate(iso: string): string {
+  if (!iso) return '';
+  const d = new Date(iso + 'T00:00:00Z');
+  return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' });
+}
+
+/**
+ * Returns a human-readable period label for a date filter preset.
+ * e.g. 'April 2026' for monthly, '2026' for yearly, '30 Mar - 5 Apr 2026' for weekly,
+ * 'Start – End' for custom.
+ */
+export function computeDateFilterLabel(preset: string, start: string, end: string): string {
+  if (!start) return '';
+  switch (preset) {
+    case 'weekly':
+      return toWeekLabel(getMondayOfWeek(start));
+    case 'monthly':
+      return toMonthLabel(start.slice(0, 7));
+    case 'yearly':
+      return start.slice(0, 4);
+    default:
+      return end ? `${formatShortDate(start)} – ${formatShortDate(end)}` : formatShortDate(start);
+  }
+}
+
+/**
  * Converts a Monday ISO date to its ISO week period key ("YYYY-Wnn").
  * Matches the format produced by aggregateByPeriod for 'weekly' periods.
  */

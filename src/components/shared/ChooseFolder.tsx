@@ -290,11 +290,15 @@ export function ChooseFolder({ onSuccess }: ChooseFolderProps) {
             fontWeight: 500,
             cursor: isLoading ? 'not-allowed' : 'pointer',
             opacity: isLoading ? 0.6 : 1,
-            marginBottom: '2.5rem',
+            marginBottom: 0,
           }}
         >
-          {isLoading ? 'Opening…' : 'Choose Folder to Get Started'}
+          {isLoading ? 'Opening…' : 'Choose Your Working Folder to Get Started'}
         </button>
+
+        <p style={{ color: '#a5b4fc', fontSize: 13, marginTop: 8, textAlign: 'center' }}>
+          This is where your budget ledger file will be saved and read from.
+        </p>
 
         {/* Feature cards */}
         <div
@@ -304,6 +308,7 @@ export function ChooseFolder({ onSuccess }: ChooseFolderProps) {
             gap: 12,
             maxWidth: 520,
             width: '100%',
+            marginTop: '2.5rem',
           }}
         >
           {/* Card 1 — Import CSV */}

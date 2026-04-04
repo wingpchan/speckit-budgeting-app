@@ -12,14 +12,14 @@ interface NavBarProps {
 
 const NAV_LINKS: Array<{ id: ViewId; label: string }> = [
   { id: 'import', label: 'Import' },
+  { id: 'transactions', label: 'Transactions' },
   { id: 'summaries', label: 'Summaries' },
   { id: 'budgets', label: 'Budgets' },
+  { id: 'search', label: 'Search' },
+  { id: 'export', label: 'Export' },
   { id: 'categories', label: 'Categories' },
   { id: 'rules', label: 'Rules' },
   { id: 'people', label: 'People' },
-  { id: 'transactions', label: 'Transactions' },
-  { id: 'search', label: 'Search' },
-  { id: 'export', label: 'Export' },
 ];
 
 export function NavBar({ currentView, onNavigate, allPeople, hasLedger = true }: NavBarProps) {
