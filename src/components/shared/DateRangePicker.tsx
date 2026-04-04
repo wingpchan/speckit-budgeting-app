@@ -56,6 +56,28 @@ function computeLabel(preset: string, start: string, end: string): string {
   }
 }
 
+const inputStyle: React.CSSProperties = {
+  fontSize: '11px',
+  background: 'rgba(255,255,255,0.08)',
+  border: '1px solid rgba(255,255,255,0.15)',
+  borderRadius: 4,
+  padding: '3px 6px',
+  color: 'white',
+  colorScheme: 'dark',
+  width: '116px',
+  outline: 'none',
+};
+
+const groupLabelStyle: React.CSSProperties = {
+  color: '#c7d2fe',
+  textAlign: 'left',
+  fontSize: '10px',
+  lineHeight: 1,
+  textTransform: 'uppercase',
+  letterSpacing: '0.07em',
+  whiteSpace: 'nowrap',
+};
+
 export function DateRangePicker() {
   const { state, dispatch } = useSession();
   const { preset, start, end } = state.dateFilter;
@@ -86,44 +108,76 @@ export function DateRangePicker() {
   const label = computeLabel(preset, start, end);
 
   return (
-    <div className="flex items-center gap-2">
-      <div className="flex rounded border border-gray-200 overflow-hidden text-xs">
-        {PRESETS.map(({ value, label: btnLabel }) => (
-          <button
-            key={value}
-            onClick={() => handlePreset(value)}
-            className={`px-2 py-1 font-medium transition-colors ${
-              preset === value
-                ? 'bg-indigo-600 text-white'
-                : 'bg-white text-gray-600 hover:bg-gray-50'
-            }`}
-          >
-            {btnLabel}
-          </button>
-        ))}
+    <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+      {/* Group 1 — Period preset + label */}
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 2 }}>
+        <span style={groupLabelStyle}>Filter by period</span>
+        <div
+          style={{
+            background: 'rgba(255,255,255,0.08)',
+            borderRadius: 6,
+            padding: 2,
+            display: 'flex',
+          }}
+        >
+          {PRESETS.map(({ value, label: btnLabel }) => (
+            <button
+              key={value}
+              onClick={() => handlePreset(value)}
+              style={{
+                color: preset === value ? 'white' : '#a5b4fc',
+                background: preset === value ? 'rgba(255,255,255,0.18)' : 'transparent',
+                fontSize: '11px',
+                padding: '3px 8px',
+                borderRadius: 4,
+                border: 'none',
+                cursor: 'pointer',
+                fontWeight: preset === value ? 500 : 400,
+                transition: 'color 0.15s, background 0.15s',
+                whiteSpace: 'nowrap',
+              }}
+            >
+              {btnLabel}
+            </button>
+          ))}
+        </div>
+        <span style={{ color: '#818cf8', fontSize: '10px', whiteSpace: 'nowrap', lineHeight: 1, minHeight: '10px' }}>
+          {label}
+        </span>
       </div>
-      {/* Date inputs in a relative wrapper so the label can sit below without affecting flow height */}
-      <div className="relative flex items-center gap-2">
-        <input
-          type="date"
-          aria-label="Start date"
-          value={start}
-          onChange={(e) => handleCustomChange('start', e.target.value)}
-          className="text-xs border border-gray-200 rounded px-2 py-1 w-32 focus:outline-none focus:ring-1 focus:ring-indigo-400"
-        />
-        <span className="text-xs text-gray-400" aria-hidden="true">–</span>
-        <input
-          type="date"
-          aria-label="End date"
-          value={end}
-          onChange={(e) => handleCustomChange('end', e.target.value)}
-          className="text-xs border border-gray-200 rounded px-2 py-1 w-32 focus:outline-none focus:ring-1 focus:ring-indigo-400"
-        />
-        {label && (
-          <span className="absolute top-full right-0 mt-0.5 text-xs text-indigo-600 font-medium whitespace-nowrap leading-none pointer-events-none">
-            {label}
-          </span>
-        )}
+
+      {/* Divider */}
+      <div
+        style={{
+          width: 1,
+          height: 32,
+          background: 'rgba(255,255,255,0.1)',
+          flexShrink: 0,
+        }}
+      />
+
+      {/* Group 2 — Date range */}
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 2 }}>
+        <span style={groupLabelStyle}>Filter by date range</span>
+        <div className="flex items-center gap-1">
+          <input
+            type="date"
+            aria-label="Start date"
+            value={start}
+            onChange={(e) => handleCustomChange('start', e.target.value)}
+            style={inputStyle}
+          />
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true" style={{ flexShrink: 0 }}>
+            <path d="M3 8h10M9 4l4 4-4 4" stroke="#c7d2fe" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
+          <input
+            type="date"
+            aria-label="End date"
+            value={end}
+            onChange={(e) => handleCustomChange('end', e.target.value)}
+            style={inputStyle}
+          />
+        </div>
       </div>
     </div>
   );

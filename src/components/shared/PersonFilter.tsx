@@ -15,17 +15,41 @@ export function PersonFilter({ allPeople }: PersonFilterProps) {
   }
 
   return (
-    <select
-      value={personFilter ?? ''}
-      onChange={handleChange}
-      className="text-xs border border-gray-200 rounded px-2 py-1 bg-white text-gray-700 focus:outline-none focus:ring-1 focus:ring-indigo-400"
-    >
-      <option value="">All</option>
-      {allPeople.map((person) => (
-        <option key={person.name} value={person.name}>
-          {person.status === 'inactive' ? `${person.name} (inactive)` : person.name}
-        </option>
-      ))}
-    </select>
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 2 }}>
+      <span
+        style={{
+          color: '#c7d2fe',
+          fontSize: '10px',
+          lineHeight: 1,
+          textTransform: 'uppercase',
+          letterSpacing: '0.07em',
+          whiteSpace: 'nowrap',
+        }}
+      >
+        Filter by person
+      </span>
+      <select
+        value={personFilter ?? ''}
+        onChange={handleChange}
+        style={{
+          fontSize: '11px',
+          background: '#1e1b4b',
+          border: '1px solid rgba(255,255,255,0.15)',
+          borderRadius: 4,
+          padding: '3px 6px',
+          color: 'white',
+          colorScheme: 'dark',
+          outline: 'none',
+          cursor: 'pointer',
+        }}
+      >
+        <option value="">All</option>
+        {allPeople.map((person) => (
+          <option key={person.name} value={person.name}>
+            {person.status === 'inactive' ? `${person.name} (inactive)` : person.name}
+          </option>
+        ))}
+      </select>
+    </div>
   );
 }

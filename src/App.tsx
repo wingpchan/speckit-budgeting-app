@@ -168,7 +168,7 @@ function AppContent() {
 
   if (!state.dirHandle) {
     return (
-      <Layout>
+      <Layout hasLedger={false}>
         {(_currentView, navigate) => (
           <ChooseFolder onSuccess={(view: ViewId) => navigate(view)} />
         )}

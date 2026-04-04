@@ -183,40 +183,229 @@ export function ChooseFolder({ onSuccess }: ChooseFolderProps) {
         </div>
       )}
 
-      <div className="flex flex-col items-center justify-center min-h-[60vh] gap-6">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold text-gray-800 mb-2">UK Bank CSV Budget Tracker</h1>
-          <p className="text-gray-600 max-w-md">
-            Choose a folder to store your budget ledger. All your financial data stays on your
-            device.
-          </p>
+      <div
+        style={{
+          position: 'fixed',
+          top: 64,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          overflowY: 'auto',
+          background: '#2d2b6b',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: '3rem 2rem',
+          textAlign: 'center',
+        }}
+      >
+        {/* Logo */}
+        <div
+          style={{
+            width: 56,
+            height: 56,
+            background: '#6366f1',
+            borderRadius: 14,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            marginBottom: '1.5rem',
+            flexShrink: 0,
+          }}
+        >
+          <svg width="28" height="28" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+            <rect x="1" y="1" width="6" height="6" rx="1" fill="white" />
+            <rect x="9" y="1" width="6" height="6" rx="1" fill="white" />
+            <rect x="1" y="9" width="6" height="6" rx="1" fill="white" />
+            <rect x="9" y="9" width="6" height="6" rx="1" fill="white" />
+          </svg>
         </div>
 
+        {/* Heading */}
+        <h1 style={{ color: 'white', fontSize: 28, fontWeight: 500, marginBottom: '0.75rem' }}>
+          Budget Tracker
+        </h1>
+
+        {/* Subtitle */}
+        <p
+          style={{
+            color: '#a5b4fc',
+            fontSize: 15,
+            maxWidth: 400,
+            lineHeight: 1.6,
+            marginBottom: '2rem',
+          }}
+        >
+          Import your UK bank statements, track spending by category, and visualise your finances —
+          all stored privately on your device.
+        </p>
+
         {migration.phase === 'declined' && (
-          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 max-w-md text-center">
-            <p className="text-yellow-800 font-medium">Migration required</p>
-            <p className="text-yellow-600 text-sm mt-1">
-              The ledger cannot be used until migration is performed.
-            </p>
+          <div
+            style={{
+              background: 'rgba(234,179,8,0.15)',
+              border: '1px solid rgba(234,179,8,0.3)',
+              borderRadius: 8,
+              padding: '12px 20px',
+              maxWidth: 400,
+              marginBottom: '1rem',
+              color: '#fde68a',
+              fontSize: 13,
+            }}
+          >
+            <p style={{ fontWeight: 500, marginBottom: 2 }}>Migration required</p>
+            <p style={{ opacity: 0.85 }}>The ledger cannot be used until migration is performed.</p>
           </div>
         )}
 
         {error && (
-          <div className="bg-red-50 border border-red-200 rounded-lg p-4 max-w-md text-center">
-            <p className="text-red-700">{error}</p>
+          <div
+            style={{
+              background: 'rgba(239,68,68,0.15)',
+              border: '1px solid rgba(239,68,68,0.3)',
+              borderRadius: 8,
+              padding: '12px 20px',
+              maxWidth: 400,
+              marginBottom: '1rem',
+              color: '#fca5a5',
+              fontSize: 13,
+            }}
+          >
+            {error}
           </div>
         )}
 
+        {/* CTA Button */}
         <button
           onClick={() => void handleChooseFolder()}
           disabled={isLoading}
-          className="px-6 py-3 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          style={{
+            background: '#6366f1',
+            color: 'white',
+            border: 'none',
+            borderRadius: 8,
+            padding: '12px 32px',
+            fontSize: 15,
+            fontWeight: 500,
+            cursor: isLoading ? 'not-allowed' : 'pointer',
+            opacity: isLoading ? 0.6 : 1,
+            marginBottom: '2.5rem',
+          }}
         >
-          {isLoading ? 'Opening…' : 'Choose Folder'}
+          {isLoading ? 'Opening…' : 'Choose Folder to Get Started'}
         </button>
 
-        <p className="text-xs text-gray-400">
-          Requires a Chromium-based browser (Chrome, Edge) for File System Access API support.
+        {/* Feature cards */}
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(3, 1fr)',
+            gap: 12,
+            maxWidth: 520,
+            width: '100%',
+          }}
+        >
+          {/* Card 1 — Import CSV */}
+          <div
+            style={{
+              background: 'rgba(255,255,255,0.06)',
+              border: '1px solid rgba(255,255,255,0.1)',
+              borderRadius: 10,
+              padding: '14px 12px',
+              textAlign: 'left',
+            }}
+          >
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 20 20"
+              fill="none"
+              aria-hidden="true"
+              style={{ color: '#a5b4fc', marginBottom: 6, display: 'block' }}
+            >
+              <path
+                d="M10 3v9m0 0l-3-3m3 3l3-3M4 14v1a2 2 0 002 2h8a2 2 0 002-2v-1"
+                stroke="#a5b4fc"
+                strokeWidth="1.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+            <p style={{ color: 'white', fontSize: 12, fontWeight: 500, marginBottom: 4 }}>
+              Import CSV
+            </p>
+            <p style={{ color: '#818cf8', fontSize: 11, lineHeight: 1.4 }}>
+              Nationwide, NewDay and more auto-detected
+            </p>
+          </div>
+
+          {/* Card 2 — Track Spending */}
+          <div
+            style={{
+              background: 'rgba(255,255,255,0.06)',
+              border: '1px solid rgba(255,255,255,0.1)',
+              borderRadius: 10,
+              padding: '14px 12px',
+              textAlign: 'left',
+            }}
+          >
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 20 20"
+              fill="none"
+              aria-hidden="true"
+              style={{ color: '#a5b4fc', marginBottom: 6, display: 'block' }}
+            >
+              <path
+                d="M3 14h2v3H3v-3zm4-4h2v7H7v-7zm4-3h2v10h-2V7zm4-4h2v14h-2V3z"
+                fill="#a5b4fc"
+              />
+            </svg>
+            <p style={{ color: 'white', fontSize: 12, fontWeight: 500, marginBottom: 4 }}>
+              Track Spending
+            </p>
+            <p style={{ color: '#818cf8', fontSize: 11, lineHeight: 1.4 }}>
+              Weekly, monthly and yearly summaries
+            </p>
+          </div>
+
+          {/* Card 3 — Private by Design */}
+          <div
+            style={{
+              background: 'rgba(255,255,255,0.06)',
+              border: '1px solid rgba(255,255,255,0.1)',
+              borderRadius: 10,
+              padding: '14px 12px',
+              textAlign: 'left',
+            }}
+          >
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 20 20"
+              fill="none"
+              aria-hidden="true"
+              style={{ color: '#a5b4fc', marginBottom: 6, display: 'block' }}
+            >
+              <path
+                d="M10 2a4 4 0 00-4 4v2H5a2 2 0 00-2 2v7a2 2 0 002 2h10a2 2 0 002-2v-7a2 2 0 00-2-2h-1V6a4 4 0 00-4-4zm2 6V6a2 2 0 10-4 0v2h4zm-2 3a1 1 0 011 1v2a1 1 0 11-2 0v-2a1 1 0 011-1z"
+                fill="#a5b4fc"
+              />
+            </svg>
+            <p style={{ color: 'white', fontSize: 12, fontWeight: 500, marginBottom: 4 }}>
+              Private by Design
+            </p>
+            <p style={{ color: '#818cf8', fontSize: 11, lineHeight: 1.4 }}>
+              Your data never leaves your device
+            </p>
+          </div>
+        </div>
+
+        {/* Footer note */}
+        <p style={{ color: '#818cf8', fontSize: 11, marginTop: '1.5rem' }}>
+          Requires Chrome or Edge — File System Access API
         </p>
       </div>
     </>
