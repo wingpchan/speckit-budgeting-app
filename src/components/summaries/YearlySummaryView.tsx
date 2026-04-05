@@ -65,7 +65,7 @@ export function YearlySummaryView({ transactions, budgetRecords }: YearlySummary
         <div className="flex items-center gap-3">
           <button
             onClick={() => navigateTo(getPrevYear(currentYear))}
-            className="px-3 py-1.5 rounded border border-gray-300 text-sm hover:bg-gray-100"
+            className="bg-indigo-500 hover:bg-indigo-600 text-white text-sm rounded-md px-3.5 py-1.5 border-none cursor-pointer"
           >
             ← Prev
           </button>
@@ -74,7 +74,7 @@ export function YearlySummaryView({ transactions, budgetRecords }: YearlySummary
           </span>
           <button
             onClick={() => navigateTo(getNextYear(currentYear))}
-            className="px-3 py-1.5 rounded border border-gray-300 text-sm hover:bg-gray-100"
+            className="bg-indigo-500 hover:bg-indigo-600 text-white text-sm rounded-md px-3.5 py-1.5 border-none cursor-pointer"
           >
             Next →
           </button>

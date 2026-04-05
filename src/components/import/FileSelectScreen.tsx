@@ -90,17 +90,9 @@ export function FileSelectScreen({ onFileSelected, isDetecting, error }: FileSel
         margin: '2rem auto',
       }}
     >
-      <h2
-        style={{
-          fontSize: 20,
-          fontWeight: 500,
-          color: 'var(--color-text-primary)',
-          marginBottom: '0.5rem',
-          textAlign: 'center',
-        }}
-      >
+      <h1 className="text-2xl font-semibold mb-2" style={{ textAlign: 'center' }}>
         Import Bank CSV
-      </h2>
+      </h1>
       <p
         style={{
           fontSize: 14,

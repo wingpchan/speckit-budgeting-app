@@ -24,7 +24,7 @@ export function ExportScreen({ transactions, budgetRecords }: ExportScreenProps)
 
   return (
     <div>
-      <h2 className="text-lg font-semibold text-gray-800 mb-4">Export</h2>
+      <h1 className="text-2xl font-semibold mb-4">Export</h1>
       <div className="bg-white border border-gray-200 rounded-lg p-6 max-w-md">
         <p className="text-sm text-gray-600 mb-4">
           {transactions.length} transaction{transactions.length !== 1 ? 's' : ''} in the current

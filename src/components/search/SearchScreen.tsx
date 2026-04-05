@@ -1,7 +1,46 @@
 import { useState } from 'react';
 import { TransactionList } from '../import/TransactionList';
 import { searchTransactions } from '../../services/search/search.service';
+import { useSession } from '../../store/SessionContext';
+import {
+  computeDateFilterLabel,
+  getMondayOfWeek,
+  getPrevWeek, getNextWeek,
+  getPrevMonth, getNextMonth,
+  getPrevYear, getNextYear,
+  toMonthLabel, toWeekLabel,
+} from '../../utils/dates';
 import type { CategoryRecord, TransactionRecord } from '../../models/index';
+
+const SEARCH_TABS: Array<{ id: 'weekly' | 'monthly' | 'yearly'; label: string }> = [
+  { id: 'weekly', label: 'Weekly' },
+  { id: 'monthly', label: 'Monthly' },
+  { id: 'yearly', label: 'Yearly' },
+];
+
+function getPresetRange(p: 'weekly' | 'monthly' | 'yearly'): { start: string; end: string } {
+  const now = new Date();
+  const year = now.getUTCFullYear();
+  const month = now.getUTCMonth();
+  const date = now.getUTCDate();
+  const day = now.getUTCDay();
+  switch (p) {
+    case 'weekly': {
+      const mondayOffset = day === 0 ? -6 : 1 - day;
+      return {
+        start: new Date(Date.UTC(year, month, date + mondayOffset)).toISOString().slice(0, 10),
+        end: new Date(Date.UTC(year, month, date + mondayOffset + 6)).toISOString().slice(0, 10),
+      };
+    }
+    case 'monthly':
+      return {
+        start: new Date(Date.UTC(year, month, 1)).toISOString().slice(0, 10),
+        end: new Date(Date.UTC(year, month + 1, 0)).toISOString().slice(0, 10),
+      };
+    case 'yearly':
+      return { start: `${year}-01-01`, end: `${year}-12-31` };
+  }
+}
 
 interface SearchScreenProps {
   transactions: TransactionRecord[];
@@ -10,12 +49,118 @@ interface SearchScreenProps {
 
 export function SearchScreen({ transactions, categories }: SearchScreenProps) {
   const [query, setQuery] = useState('');
+  const { state, dispatch } = useSession();
 
   const results = searchTransactions(query, transactions);
 
+  const activeTab: 'weekly' | 'monthly' | 'yearly' =
+    state.dateFilter.preset === 'weekly' || state.dateFilter.preset === 'yearly'
+      ? state.dateFilter.preset
+      : 'monthly';
+
+  const navPeriodLabel = (() => {
+    if (activeTab === 'weekly') return toWeekLabel(getMondayOfWeek(state.dateFilter.start || new Date().toISOString().slice(0, 10)));
+    if (activeTab === 'yearly') return state.dateFilter.start.slice(0, 4);
+    return toMonthLabel(state.dateFilter.start.slice(0, 7));
+  })();
+
+  const periodLabel = computeDateFilterLabel(state.dateFilter.preset, state.dateFilter.start, state.dateFilter.end);
+  const personLabel = state.personFilter ?? 'All';
+
+  function handleTabClick(tab: 'weekly' | 'monthly' | 'yearly') {
+    const range = getPresetRange(tab);
+    dispatch({ type: 'SET_VIEW_PRESET', preset: tab });
+    dispatch({ type: 'SET_DATE_FILTER', start: range.start, end: range.end });
+  }
+
+  function handleNavigate(dir: 'prev' | 'next') {
+    if (activeTab === 'monthly') {
+      const currentMonth = state.dateFilter.start.slice(0, 7);
+      const yyyyMm = dir === 'prev' ? getPrevMonth(currentMonth) : getNextMonth(currentMonth);
+      const [y, m] = yyyyMm.split('-').map(Number);
+      dispatch({ type: 'SET_DATE_FILTER', start: new Date(Date.UTC(y, m - 1, 1)).toISOString().slice(0, 10), end: new Date(Date.UTC(y, m, 0)).toISOString().slice(0, 10) });
+    } else if (activeTab === 'weekly') {
+      const monday = getMondayOfWeek(state.dateFilter.start);
+      const newMonday = dir === 'prev' ? getPrevWeek(monday) : getNextWeek(monday);
+      const [y, m, d] = newMonday.split('-').map(Number);
+      dispatch({ type: 'SET_DATE_FILTER', start: newMonday, end: new Date(Date.UTC(y, m - 1, d + 6)).toISOString().slice(0, 10) });
+    } else {
+      const currentYear = state.dateFilter.start.slice(0, 4);
+      const year = dir === 'prev' ? getPrevYear(currentYear) : getNextYear(currentYear);
+      const y = Number(year);
+      dispatch({ type: 'SET_DATE_FILTER', start: new Date(Date.UTC(y, 0, 1)).toISOString().slice(0, 10), end: new Date(Date.UTC(y, 11, 31)).toISOString().slice(0, 10) });
+    }
+  }
+
   return (
     <div>
-      <h2 className="text-lg font-semibold text-gray-800 mb-4">Search Transactions</h2>
+      <h1 className="text-2xl font-semibold mb-4">Search Transactions</h1>
+
+      {/* Tab switcher */}
+      <div className="flex mb-3" style={{ gap: 4 }}>
+        {SEARCH_TABS.map(({ id, label }) => (
+          <button
+            key={id}
+            onClick={() => handleTabClick(id)}
+            style={{
+              background: activeTab === id ? '#6366f1' : '#eef2ff',
+              color: activeTab === id ? 'white' : '#6366f1',
+              borderRadius: 6,
+              padding: '6px 16px',
+              fontWeight: activeTab === id ? 500 : 400,
+              border: 'none',
+              cursor: 'pointer',
+              fontSize: 14,
+            }}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
+
+      {/* Prev/Next navigator */}
+      <div className="flex items-center justify-between mb-3">
+        <h2 className="text-lg font-semibold text-gray-800">
+          {activeTab === 'weekly' ? 'Weekly Search' : activeTab === 'yearly' ? 'Yearly Search' : 'Monthly Search'}
+        </h2>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => handleNavigate('prev')}
+            className="bg-indigo-500 hover:bg-indigo-600 text-white text-sm rounded-md px-3.5 py-1.5 border-none cursor-pointer"
+          >
+            ← Prev
+          </button>
+          <span className="text-base font-medium w-48 text-center">{navPeriodLabel}</span>
+          <button
+            onClick={() => handleNavigate('next')}
+            className="bg-indigo-500 hover:bg-indigo-600 text-white text-sm rounded-md px-3.5 py-1.5 border-none cursor-pointer"
+          >
+            Next →
+          </button>
+        </div>
+      </div>
+
+      {/* Filter summary bar */}
+      <div style={{ display: 'inline-flex', gap: 16, alignItems: 'center', marginBottom: '1rem', fontSize: 13, color: 'var(--color-text-secondary)', background: '#eef2ff', border: '1px solid #c7d2fe', borderRadius: 8, padding: '8px 14px' }}>
+        <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+            <rect x="1" y="3" width="14" height="12" rx="2" stroke="currentColor" strokeWidth="1.5" />
+            <path d="M5 1v4M11 1v4M1 7h14" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+          </svg>
+          {periodLabel}
+        </span>
+        <span style={{ opacity: 0.4 }}>·</span>
+        <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+            <circle cx="8" cy="5" r="3" stroke="currentColor" strokeWidth="1.5" />
+            <path d="M2 14c0-3.314 2.686-5 6-5s6 1.686 6 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+          </svg>
+          {personLabel}
+        </span>
+        <span style={{ opacity: 0.4 }}>·</span>
+        <span>{results.length} results</span>
+      </div>
+
       <input
         type="text"
         autoFocus

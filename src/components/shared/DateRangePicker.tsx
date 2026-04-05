@@ -38,7 +38,7 @@ function getPresetRange(p: Preset): { start: string; end: string } {
 
 
 const inputStyle: React.CSSProperties = {
-  fontSize: '11px',
+  fontSize: '14px',
   background: 'rgba(255,255,255,0.08)',
   border: '1px solid rgba(255,255,255,0.15)',
   borderRadius: 4,
@@ -52,7 +52,7 @@ const inputStyle: React.CSSProperties = {
 const groupLabelStyle: React.CSSProperties = {
   color: '#c7d2fe',
   textAlign: 'left',
-  fontSize: '10px',
+  fontSize: '12px',
   lineHeight: 1,
   textTransform: 'uppercase',
   letterSpacing: '0.07em',
@@ -108,7 +108,7 @@ export function DateRangePicker() {
               style={{
                 color: preset === value ? 'white' : '#a5b4fc',
                 background: preset === value ? 'rgba(255,255,255,0.18)' : 'transparent',
-                fontSize: '11px',
+                fontSize: '14px',
                 padding: '3px 8px',
                 borderRadius: 4,
                 border: 'none',
@@ -122,7 +122,7 @@ export function DateRangePicker() {
             </button>
           ))}
         </div>
-        <span style={{ color: '#818cf8', fontSize: '10px', whiteSpace: 'nowrap', lineHeight: 1, minHeight: '10px' }}>
+        <span style={{ color: '#818cf8', fontSize: '12px', whiteSpace: 'nowrap', lineHeight: 1, minHeight: '12px' }}>
           {label}
         </span>
       </div>

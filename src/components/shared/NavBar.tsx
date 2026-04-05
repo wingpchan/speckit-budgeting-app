@@ -22,7 +22,10 @@ const NAV_LINKS: Array<{ id: ViewId; label: string }> = [
   { id: 'people', label: 'People' },
 ];
 
+const FILTER_VIEWS: ViewId[] = ['transactions', 'summaries', 'budgets', 'search'];
+
 export function NavBar({ currentView, onNavigate, allPeople, hasLedger = true }: NavBarProps) {
+  const showFilters = FILTER_VIEWS.includes(currentView);
   return (
     <nav style={{ background: '#1e1b4b', minHeight: '88px', paddingTop: 12, paddingBottom: 18, borderBottom: '1px solid rgba(255,255,255,0.1)', overflow: 'visible', position: 'relative', zIndex: 1 }} className="w-full flex items-center px-4">
       {/* Logo */}
@@ -38,7 +41,7 @@ export function NavBar({ currentView, onNavigate, allPeople, hasLedger = true }:
             <rect x="9" y="9" width="6" height="6" rx="1" fill="white" />
           </svg>
         </div>
-        <span style={{ color: 'white', fontWeight: 500, fontSize: '15px', whiteSpace: 'nowrap' }}>
+        <span style={{ color: 'white', fontWeight: 500, fontSize: '17px', whiteSpace: 'nowrap' }}>
           Budget Tracker
         </span>
       </div>
@@ -57,7 +60,7 @@ export function NavBar({ currentView, onNavigate, allPeople, hasLedger = true }:
                       color: 'rgba(255,255,255,0.25)',
                       background: 'transparent',
                       fontWeight: 400,
-                      fontSize: '12px',
+                      fontSize: '15px',
                       padding: '5px 8px',
                       borderRadius: '5px',
                       border: 'none',
@@ -76,7 +79,7 @@ export function NavBar({ currentView, onNavigate, allPeople, hasLedger = true }:
                     color: isActive ? 'white' : '#a5b4fc',
                     background: isActive ? 'rgba(255,255,255,0.12)' : 'transparent',
                     fontWeight: isActive ? 500 : 400,
-                    fontSize: '12px',
+                    fontSize: '15px',
                     padding: '5px 8px',
                     borderRadius: '5px',
                     border: 'none',
@@ -93,23 +96,11 @@ export function NavBar({ currentView, onNavigate, allPeople, hasLedger = true }:
         })}
       </ul>
 
-      {/* Divider between nav links and controls — Fix 4 */}
-      <div
-        style={{
-          width: 1,
-          height: 32,
-          background: 'rgba(255,255,255,0.2)',
-          alignSelf: 'center',
-          margin: '0 8px',
-          flexShrink: 0,
-        }}
-      />
-
-      {/* Controls — Fix 1: span wrapper gives tooltip on hover when disabled */}
-      {!hasLedger ? (
+      {/* Controls */}
+      {showFilters && (!hasLedger ? (
         <span
           title="Choose a folder first"
-          style={{ cursor: 'not-allowed', display: 'inline-flex', alignSelf: 'center', flexShrink: 0, opacity: 0.3, pointerEvents: 'auto' }}
+          style={{ cursor: 'not-allowed', display: 'inline-flex', alignSelf: 'center', flexShrink: 0, opacity: 0.3, pointerEvents: 'auto', marginLeft: 'auto' }}
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: 16, height: 56, pointerEvents: 'none' }}>
             <DateRangePicker />
@@ -118,12 +109,12 @@ export function NavBar({ currentView, onNavigate, allPeople, hasLedger = true }:
           </div>
         </span>
       ) : (
-        <div style={{ display: 'flex', alignItems: 'center', gap: 16, height: 56, flexShrink: 0 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 16, height: 56, flexShrink: 0, marginLeft: 'auto' }}>
           <DateRangePicker />
           <div style={{ width: 1, height: 32, background: 'rgba(255,255,255,0.1)', flexShrink: 0 }} />
           <PersonFilter allPeople={allPeople} />
         </div>
-      )}
+      ))}
     </nav>
   );
 }

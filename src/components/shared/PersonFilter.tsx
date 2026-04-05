@@ -19,7 +19,7 @@ export function PersonFilter({ allPeople }: PersonFilterProps) {
       <span
         style={{
           color: '#c7d2fe',
-          fontSize: '10px',
+          fontSize: '12px',
           lineHeight: 1,
           textTransform: 'uppercase',
           letterSpacing: '0.07em',
@@ -32,7 +32,7 @@ export function PersonFilter({ allPeople }: PersonFilterProps) {
         value={personFilter ?? ''}
         onChange={handleChange}
         style={{
-          fontSize: '11px',
+          fontSize: '14px',
           background: '#1e1b4b',
           border: '1px solid rgba(255,255,255,0.15)',
           borderRadius: 4,

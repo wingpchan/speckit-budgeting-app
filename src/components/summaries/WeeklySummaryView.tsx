@@ -49,7 +49,7 @@ export function WeeklySummaryView({ transactions }: WeeklySummaryViewProps) {
         <div className="flex items-center gap-3">
           <button
             onClick={() => navigateTo(getPrevWeek(monday))}
-            className="px-3 py-1.5 rounded border border-gray-300 text-sm hover:bg-gray-100"
+            className="bg-indigo-500 hover:bg-indigo-600 text-white text-sm rounded-md px-3.5 py-1.5 border-none cursor-pointer"
           >
             ← Prev
           </button>
@@ -58,7 +58,7 @@ export function WeeklySummaryView({ transactions }: WeeklySummaryViewProps) {
           </span>
           <button
             onClick={() => navigateTo(getNextWeek(monday))}
-            className="px-3 py-1.5 rounded border border-gray-300 text-sm hover:bg-gray-100"
+            className="bg-indigo-500 hover:bg-indigo-600 text-white text-sm rounded-md px-3.5 py-1.5 border-none cursor-pointer"
           >
             Next →
           </button>
