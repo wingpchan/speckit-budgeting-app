@@ -126,9 +126,9 @@ export function WeeklySummaryView({ transactions }: WeeklySummaryViewProps) {
           {categoryEntries.length > 0 && (
             <table className="w-full border-collapse text-sm">
               <thead>
-                <tr className="border-b border-gray-200 text-left text-xs text-gray-500">
-                  <th className="pb-2 font-medium">Category</th>
-                  <th className="pb-2 font-medium text-right">Spend</th>
+                <tr className="border-b-2 text-left bg-[#ede9fe] border-[#c4b5fd] text-[#4338ca]">
+                  <th className="pb-2 font-semibold text-[13px]">Category</th>
+                  <th className="pb-2 font-semibold text-[13px] text-right">Spend</th>
                 </tr>
               </thead>
               <tbody>

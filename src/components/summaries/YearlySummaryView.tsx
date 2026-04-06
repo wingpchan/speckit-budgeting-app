@@ -4,7 +4,7 @@ import {
 } from 'recharts';
 import { useSummaries } from '../../hooks/useSummaries';
 import { aggregateByPeriod } from '../../services/summaries/summary.service';
-import { getBudgetChanges } from '../../services/budget/budget.service';
+import { getBudgetChanges, resolveBudget } from '../../services/budget/budget.service';
 import { useSession } from '../../store/SessionContext';
 import { getPrevYear, getNextYear } from '../../utils/dates';
 import { BudgetChangeAnnotation } from './BudgetChangeAnnotation';
@@ -24,6 +24,9 @@ export function YearlySummaryView({ transactions, budgetRecords }: YearlySummary
   const { summaries } = useSummaries(transactions, 'yearly');
 
   const currentYear = state.dateFilter.start.slice(0, 4);
+  const todayYear = new Date().getUTCFullYear().toString();
+  const yearContext: 'past' | 'current' | 'future' =
+    currentYear < todayYear ? 'past' : currentYear === todayYear ? 'current' : 'future';
 
   function navigateTo(year: string) {
     const y = Number(year);
@@ -37,6 +40,26 @@ export function YearlySummaryView({ transactions, budgetRecords }: YearlySummary
     ? Object.entries(current.byCategory).sort(([, a], [, b]) => b - a)
     : [];
   const categoryBarData = categoryEntries.map(([name, value]) => ({ name, Spend: value }));
+
+  const months = Array.from({ length: 12 }, (_, i) =>
+    `${currentYear}-${String(i + 1).padStart(2, '0')}`,
+  );
+  const annualBudgetByCategory = Object.fromEntries(
+    categoryEntries.map(([name]) => [
+      name,
+      months.reduce((sum, m) => sum + resolveBudget(m, name, budgetRecords), 0),
+    ]),
+  );
+
+  const now = new Date();
+  const todayMonth = `${now.getUTCFullYear()}-${String(now.getUTCMonth() + 1).padStart(2, '0')}`;
+  const monthlyBudgetRefMonth = yearContext === 'past' ? `${currentYear}-12` : todayMonth;
+  const monthlyBudgetByCategory = Object.fromEntries(
+    categoryEntries.map(([name]) => [
+      name,
+      resolveBudget(monthlyBudgetRefMonth, name, budgetRecords),
+    ]),
+  );
   const txInYear = transactions.filter((t) => t.date.startsWith(currentYear));
   const monthSummaries = aggregateByPeriod(txInYear, 'monthly');
 
@@ -125,18 +148,48 @@ export function YearlySummaryView({ transactions, budgetRecords }: YearlySummary
           {categoryEntries.length > 0 && (
             <table className="w-full border-collapse text-sm">
               <thead>
-                <tr className="border-b border-gray-200 text-left text-xs text-gray-500">
-                  <th className="pb-2 font-medium">Category</th>
-                  <th className="pb-2 font-medium text-right">Annual spend</th>
+                <tr className="border-b-2 text-left bg-[#ede9fe] border-[#c4b5fd] text-[#4338ca]">
+                  <th className="pb-2 font-semibold text-[13px]">Category</th>
+                  <th className="pb-2 font-semibold text-[13px] text-right">Annual spend</th>
+                  <th className="pb-2 font-semibold text-[13px] text-right">Monthly budget</th>
+                  <th className="pb-2 font-semibold text-[13px] text-right">Annual budget</th>
+                  <th className="pb-2 font-semibold text-[13px] text-right">
+                    {yearContext === 'past' ? 'Over / Under' : 'Remaining'}
+                  </th>
                 </tr>
               </thead>
               <tbody>
-                {categoryEntries.map(([name, value]) => (
-                  <tr key={name} className="border-b border-gray-100">
-                    <td className="py-2 font-medium text-gray-800">{name}</td>
-                    <td className="py-2 text-right tabular-nums">{formatPence(value)}</td>
-                  </tr>
-                ))}
+                {categoryEntries.map(([name, value]) => {
+                  const budget = annualBudgetByCategory[name] ?? 0;
+                  const remaining = budget - value;
+                  const varianceCell = (() => {
+                    if (budget <= 0) return '—';
+                    if (yearContext === 'future') {
+                      return <span className="text-green-600">{formatPence(budget)} remaining</span>;
+                    }
+                    if (remaining > 0) {
+                      return <span className="text-green-600">{formatPence(remaining)} {yearContext === 'past' ? 'under' : 'remaining'}</span>;
+                    }
+                    if (remaining < 0) {
+                      return <span className="text-red-600">{formatPence(remaining)} over</span>;
+                    }
+                    return '—';
+                  })();
+                  const monthlyBudget = monthlyBudgetByCategory[name] ?? 0;
+                  return (
+                    <tr key={name} className="border-b border-gray-100">
+                      <td className="py-2 font-medium text-gray-800">{name}</td>
+                      <td className="py-2 text-right tabular-nums">{formatPence(value)}</td>
+                      <td className="py-2 text-right tabular-nums">
+                        {monthlyBudget > 0 ? formatPence(monthlyBudget) : '—'}
+                      </td>
+                      <td className="py-2 text-right tabular-nums">
+                        {budget > 0 ? formatPence(budget) : '—'}
+                      </td>
+                      <td className="py-2 text-right tabular-nums">{varianceCell}</td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           )}

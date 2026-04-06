@@ -99,11 +99,11 @@ export function CategoriesScreen({ categories, isLoading, onRefresh }: Categorie
       ) : (
         <table className="w-full border-collapse">
           <thead>
-            <tr className="border-b border-gray-200 text-left text-sm text-gray-500">
-              <th className="pb-2 font-medium">Name</th>
-              <th className="pb-2 font-medium">Type</th>
-              <th className="pb-2 font-medium">Status</th>
-              <th className="pb-2 font-medium">Actions</th>
+            <tr className="border-b-2 text-left bg-[#ede9fe] border-[#c4b5fd] text-[#4338ca]">
+              <th className="pb-2 font-semibold text-[13px]">Name</th>
+              <th className="pb-2 font-semibold text-[13px]">Type</th>
+              <th className="pb-2 font-semibold text-[13px]">Status</th>
+              <th className="pb-2 font-semibold text-[13px]">Actions</th>
             </tr>
           </thead>
           <tbody>

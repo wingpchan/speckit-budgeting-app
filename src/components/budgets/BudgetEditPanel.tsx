@@ -100,7 +100,7 @@ export function BudgetEditPanel({
       className="fixed inset-0 flex items-center justify-center bg-black/50 z-50"
     >
     <div ref={dialogRef} className="bg-white rounded-lg shadow-xl p-6 max-w-md w-full mx-4 space-y-4">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between pb-4 border-b border-gray-200">
         <h3 id="budget-edit-title" className="font-medium text-gray-800">
           Edit budget — {category}
         </h3>
@@ -114,9 +114,14 @@ export function BudgetEditPanel({
       </div>
 
       {isPast && (
-        <div className="p-3 bg-amber-50 border border-amber-200 rounded text-sm text-amber-800">
-          You are editing the budget for {monthLabel(month)}, not your current budget. This will
-          update the historical record for that period.
+        <div className="p-3 bg-amber-50 border border-amber-200 rounded text-sm text-amber-800 flex items-start gap-2">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" className="shrink-0 mt-0.5">
+            <path d="M8 1.5L14.5 13H1.5L8 1.5Z" stroke="#92400e" strokeWidth="1.4" strokeLinejoin="round"/>
+            <path d="M8 6V9" stroke="#92400e" strokeWidth="1.4" strokeLinecap="round"/>
+            <circle cx="8" cy="11" r="0.6" fill="#92400e"/>
+          </svg>
+          <span>You are editing the budget for {monthLabel(month)}, not your current budget. This will
+          update the historical record for that period.</span>
         </div>
       )}
 
@@ -132,7 +137,7 @@ export function BudgetEditPanel({
             value={amountStr}
             onChange={(e) => setAmountStr(e.target.value)}
             placeholder="0.00"
-            className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full px-3 py-2 border border-gray-300 rounded focus:outline focus:outline-2 focus:outline-indigo-500 focus:border-indigo-500"
           />
         </div>
 
@@ -145,7 +150,7 @@ export function BudgetEditPanel({
             onChange={(e) => setReason(e.target.value)}
             rows={3}
             placeholder={isPast ? 'Why are you editing a past budget?' : 'Optional note'}
-            className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+            className="w-full px-3 py-2 border border-gray-300 rounded focus:outline focus:outline-2 focus:outline-indigo-500 focus:border-indigo-500 resize-none"
           />
         </div>
       </div>
@@ -155,7 +160,7 @@ export function BudgetEditPanel({
       <div className="flex justify-end gap-2">
         <button
           onClick={onClose}
-          className="px-4 py-2 text-sm text-gray-600 hover:text-gray-800"
+          className="px-5 py-2 text-sm font-medium text-indigo-500 bg-transparent border border-indigo-500 rounded-md cursor-pointer hover:bg-indigo-50"
         >
           Cancel
         </button>

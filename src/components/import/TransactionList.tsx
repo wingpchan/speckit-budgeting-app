@@ -155,8 +155,12 @@ export function TransactionList({ transactions, categories, onRefresh }: Transac
       {pending && (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg shadow-xl p-6 max-w-md w-full mx-4">
-            <h3 className="text-base font-semibold text-gray-800 mb-2">Change Category</h3>
-            <p className="text-sm text-gray-600 mb-1 truncate">{pending.transaction.description}</p>
+            <h3 className="text-base font-semibold text-gray-800 pb-3 mb-3 border-b border-gray-200">Change Category</h3>
+            <p className="mb-3 truncate">
+              <span className="inline-block rounded px-2 py-0.5 font-medium" style={{ background: '#f5f4ff', color: '#4338ca', fontSize: 15 }}>
+                {pending.transaction.description}
+              </span>
+            </p>
             {!pending.confirmedCategory ? (
               <>
                 <p className="text-sm text-gray-500 mb-3">
@@ -165,7 +169,7 @@ export function TransactionList({ transactions, categories, onRefresh }: Transac
                 <select
                   value={pendingCategory}
                   onChange={(e) => setPendingCategory(e.target.value)}
-                  className="w-full text-sm text-gray-700 border border-gray-300 rounded px-2 py-1.5 bg-white focus:outline-none focus:ring-1 focus:ring-indigo-400 mb-4"
+                  className="w-full text-sm text-gray-700 border border-gray-300 rounded px-2 py-1.5 bg-white focus:outline focus:outline-2 focus:outline-indigo-500 focus:border-indigo-500 mb-4"
                 >
                   {!sortedActiveCategories.some((c) => c.name === pending.fromCategory) && (
                     <option value={pending.fromCategory}>{pending.fromCategory} (inactive)</option>
@@ -182,14 +186,14 @@ export function TransactionList({ transactions, categories, onRefresh }: Transac
                 <div className="flex gap-3 justify-end">
                   <button
                     onClick={handleCancelOverride}
-                    className="px-4 py-2 border border-gray-300 text-gray-700 text-sm font-medium rounded hover:bg-gray-50"
+                    className="px-5 py-2 text-sm font-medium text-indigo-500 bg-transparent border border-indigo-500 rounded-md cursor-pointer hover:bg-indigo-50"
                   >
                     Cancel
                   </button>
                   <button
                     onClick={handleConfirmOverride}
                     disabled={pendingCategory === pending.fromCategory}
-                    className="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="px-5 py-2 text-sm font-medium text-white bg-indigo-500 border-none rounded-md cursor-pointer hover:bg-indigo-600 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     Confirm
                   </button>
@@ -243,14 +247,14 @@ export function TransactionList({ transactions, categories, onRefresh }: Transac
             <button
               onClick={() => setPage((p) => Math.max(0, p - 1))}
               disabled={page === 0}
-              className="px-3 py-1 border border-gray-200 rounded hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed"
+              className="px-3.5 py-1.5 text-white bg-indigo-500 border-none rounded-md cursor-pointer hover:bg-indigo-600 disabled:bg-[#c7d2fe] disabled:cursor-not-allowed"
             >
               ← Prev
             </button>
             <button
               onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
               disabled={page >= totalPages - 1}
-              className="px-3 py-1 border border-gray-200 rounded hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed"
+              className="px-3.5 py-1.5 text-white bg-indigo-500 border-none rounded-md cursor-pointer hover:bg-indigo-600 disabled:bg-[#c7d2fe] disabled:cursor-not-allowed"
             >
               Next →
             </button>
@@ -261,20 +265,21 @@ export function TransactionList({ transactions, categories, onRefresh }: Transac
       {/* Transaction table */}
       <div className="overflow-auto rounded-lg border border-gray-200">
         <table className="w-full text-sm">
-          <thead className="bg-gray-50 border-b border-gray-200">
+          <thead className="bg-[#ede9fe] border-b-2 border-[#c4b5fd]">
             <tr>
-              <th className="text-left px-3 py-2 font-medium text-gray-600">Date</th>
-              <th className="text-left px-3 py-2 font-medium text-gray-600">Description</th>
-              <th className="text-right px-3 py-2 font-medium text-gray-600">Amount</th>
-              <th className="text-left px-3 py-2 font-medium text-gray-600">Category</th>
-              <th className="text-left px-3 py-2 font-medium text-gray-600">Account</th>
-              <th className="text-left px-3 py-2 font-medium text-gray-600">Person</th>
+              <th className="text-left px-3 py-2 font-semibold text-[#4338ca] text-[13px]">Date</th>
+              <th className="text-left px-3 py-2 font-semibold text-[#4338ca] text-[13px]">Description</th>
+              <th className="text-right px-3 py-2 font-semibold text-[#4338ca] text-[13px]">Amount</th>
+              <th className="text-left px-3 py-2 font-semibold text-[#4338ca] text-[13px]">Category</th>
+              <th className="text-left px-3 py-2 font-semibold text-[#4338ca] text-[13px]">Account</th>
+              <th className="text-left px-3 py-2 font-semibold text-[#4338ca] text-[13px]">Person</th>
+              <th className="px-3 py-2"></th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-100">
             {pageTransactions.length === 0 ? (
               <tr>
-                <td colSpan={6} className="px-3 py-6 text-center text-gray-400">
+                <td colSpan={7} className="px-3 py-6 text-center text-gray-400">
                   No transactions
                 </td>
               </tr>
@@ -294,21 +299,22 @@ export function TransactionList({ transactions, categories, onRefresh }: Transac
                       >
                         {formatPence(tx.amount)}
                       </td>
-                      <td className="px-3 py-2">
-                        <span className="text-sm text-gray-700">{tx.category}</span>
+                      <td className="px-3 py-2 text-sm text-gray-700">{tx.category}</td>
+                      <td className="px-3 py-2 text-gray-700 truncate max-w-[10rem]">{tx.account}</td>
+                      <td className="px-3 py-2 text-gray-700">{tx.personName}</td>
+                      <td className="px-3 py-2 text-right">
                         <button
                           onClick={() => handleEditTrigger(tx)}
-                          className="ml-2 text-xs text-indigo-600 border border-indigo-200 rounded px-1.5 py-0.5 hover:bg-indigo-50"
+                          title="Edit transaction category"
+                          className="text-xs text-white bg-indigo-500 border-none rounded-md px-2 py-0.5 cursor-pointer hover:bg-indigo-600"
                         >
                           Edit
                         </button>
                       </td>
-                      <td className="px-3 py-2 text-gray-700 truncate max-w-[10rem]">{tx.account}</td>
-                      <td className="px-3 py-2 text-gray-700">{tx.personName}</td>
                     </tr>
                     {isPromptRow && rulePromptFor && (
                       <tr>
-                        <td colSpan={6} className="p-0">
+                        <td colSpan={7} className="p-0">
                           <KeywordRulePrompt
                             transactionDescription={rulePromptFor.description}
                             category={rulePromptFor.category}
@@ -340,14 +346,14 @@ export function TransactionList({ transactions, categories, onRefresh }: Transac
             <button
               onClick={() => setPage((p) => Math.max(0, p - 1))}
               disabled={page === 0}
-              className="px-3 py-1 border border-gray-200 rounded hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed"
+              className="px-3.5 py-1.5 text-white bg-indigo-500 border-none rounded-md cursor-pointer hover:bg-indigo-600 disabled:bg-[#c7d2fe] disabled:cursor-not-allowed"
             >
               ← Prev
             </button>
             <button
               onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
               disabled={page >= totalPages - 1}
-              className="px-3 py-1 border border-gray-200 rounded hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed"
+              className="px-3.5 py-1.5 text-white bg-indigo-500 border-none rounded-md cursor-pointer hover:bg-indigo-600 disabled:bg-[#c7d2fe] disabled:cursor-not-allowed"
             >
               Next →
             </button>

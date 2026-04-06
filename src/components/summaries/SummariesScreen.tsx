@@ -47,15 +47,15 @@ export function SummariesScreen({
       <h1 className="text-2xl font-semibold">Summaries</h1>
 
       {/* Tab switcher */}
-      <div className="flex gap-1 border-b border-gray-200">
+      <div className="flex gap-1">
         {TABS.map(({ id, label }) => (
           <button
             key={id}
             onClick={() => setTab(id)}
-            className={`px-4 py-2 text-sm font-medium transition-colors border-b-2 -mb-px ${
+            className={`px-4 py-1.5 text-sm font-medium rounded-md border-none cursor-pointer ${
               tab === id
-                ? 'border-indigo-600 text-indigo-700'
-                : 'border-transparent text-gray-500 hover:text-gray-800'
+                ? 'bg-indigo-500 text-white'
+                : 'bg-indigo-50 text-indigo-500'
             }`}
           >
             {label}

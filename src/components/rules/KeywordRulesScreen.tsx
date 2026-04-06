@@ -28,12 +28,12 @@ export function KeywordRulesScreen({
       ) : (
         <table className="w-full border-collapse">
           <thead>
-            <tr className="border-b border-gray-200 text-left text-sm text-gray-500">
-              <th className="pb-2 font-medium">Pattern</th>
-              <th className="pb-2 font-medium">Category</th>
-              <th className="pb-2 font-medium">Created</th>
-              <th className="pb-2 font-medium">Status</th>
-              <th className="pb-2 font-medium">Action</th>
+            <tr className="border-b-2 text-left bg-[#ede9fe] border-[#c4b5fd] text-[#4338ca]">
+              <th className="pb-2 font-semibold text-[13px]">Pattern</th>
+              <th className="pb-2 font-semibold text-[13px]">Category</th>
+              <th className="pb-2 font-semibold text-[13px]">Created</th>
+              <th className="pb-2 font-semibold text-[13px]">Status</th>
+              <th className="pb-2 font-semibold text-[13px]">Action</th>
             </tr>
           </thead>
           <tbody>

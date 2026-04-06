@@ -132,12 +132,12 @@ export function BudgetScreen() {
       ) : (
         <table className="w-full border-collapse">
           <thead>
-            <tr className="border-b border-gray-200 text-left text-sm text-gray-500">
-              <th className="pb-2 font-medium">Category</th>
-              <th className="pb-2 font-medium text-right">Budget</th>
-              <th className="pb-2 font-medium text-right">Actual</th>
-              <th className="pb-2 pl-6 font-medium">Status</th>
-              <th className="pb-2 font-medium"></th>
+            <tr className="border-b-2 text-left bg-[#ede9fe] border-[#c4b5fd] text-[#4338ca]">
+              <th className="pb-2 font-semibold text-[13px]">Category</th>
+              <th className="pb-2 font-semibold text-[13px] text-right">Budget</th>
+              <th className="pb-2 font-semibold text-[13px] text-right">Actual</th>
+              <th className="pb-2 pl-6 font-semibold text-[13px]">Status</th>
+              <th className="pb-2 font-semibold text-[13px]"></th>
             </tr>
           </thead>
           <tbody>
@@ -162,7 +162,12 @@ export function BudgetScreen() {
                   )}
                 </td>
                 <td className="py-3 text-right">
-                  <span className="text-sm text-blue-600 hover:underline">Edit</span>
+                  <button className="inline-flex items-center gap-1 text-xs font-medium text-white bg-indigo-500 border-none rounded-md px-2 py-1 cursor-pointer hover:bg-indigo-600">
+                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M9.5 2.5L11.5 4.5M2 12H4L11 5L9 3L2 10V12Z" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                    Edit
+                  </button>
                 </td>
               </tr>
             ))}

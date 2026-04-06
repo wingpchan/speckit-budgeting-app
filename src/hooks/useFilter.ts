@@ -45,14 +45,20 @@ export function filterByDate<T extends { date: string }>(
 }
 
 /**
- * Derives { start, end } ISO date strings from the current session date filter preset.
- * For 'custom', returns the stored start/end from session state.
+ * Returns { start, end } ISO date strings for the current date filter.
+ *
+ * When start/end are stored in session state (always the case after any tab
+ * click or Prev/Next navigation), they are returned directly so that
+ * navigation changes are immediately reflected. When start/end are absent
+ * (e.g. unit-test stubs that only set a preset), the range is computed from
+ * the current date as a fallback.
  */
 export function useFilter(): { start: string; end: string } {
   const { state } = useSession();
   const { preset, start, end } = state.dateFilter;
 
   return useMemo(() => {
+    if (start && end) return { start, end };
     switch (preset) {
       case 'weekly':
         return getWeekRange();

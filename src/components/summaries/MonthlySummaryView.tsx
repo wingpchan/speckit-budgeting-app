@@ -154,11 +154,11 @@ export function MonthlySummaryView({ transactions, budgetRecords }: MonthlySumma
           {categoryRows.length > 0 && (
             <table className="w-full border-collapse text-sm">
               <thead>
-                <tr className="border-b border-gray-200 text-left text-xs text-gray-500">
-                  <th className="pb-2 font-medium">Category</th>
-                  <th className="pb-2 font-medium text-right">Actual</th>
-                  <th className="pb-2 font-medium text-right">Budget</th>
-                  <th className="pb-2 pl-4 font-medium">Status</th>
+                <tr className="border-b-2 text-left bg-[#ede9fe] border-[#c4b5fd] text-[#4338ca]">
+                  <th className="pb-2 font-semibold text-[13px]">Category</th>
+                  <th className="pb-2 font-semibold text-[13px] text-right">Actual</th>
+                  <th className="pb-2 font-semibold text-[13px] text-right">Budget</th>
+                  <th className="pb-2 pl-4 font-semibold text-[13px]">Status</th>
                 </tr>
               </thead>
               <tbody>

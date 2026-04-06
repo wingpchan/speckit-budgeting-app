@@ -158,18 +158,31 @@ export function SearchScreen({ transactions, categories }: SearchScreenProps) {
           {personLabel}
         </span>
         <span style={{ opacity: 0.4 }}>·</span>
-        <span>{results.length} results</span>
+        <span style={query ? { color: '#6366f1', fontWeight: 500 } : undefined}>{results.length} results</span>
       </div>
 
-      <input
-        type="text"
-        autoFocus
-        value={query}
-        onChange={(e) => setQuery(e.target.value)}
-        placeholder="Search by description…"
-        className="w-full text-sm text-gray-700 border border-gray-300 rounded px-3 py-2 mb-4 focus:outline-none focus:ring-2 focus:ring-indigo-400"
-      />
-      <TransactionList transactions={results} categories={categories} />
+      <div className="relative mb-4">
+        <svg
+          width="16" height="16" viewBox="0 0 16 16" fill="none"
+          className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none"
+          style={{ color: '#6366f1' }}
+          aria-hidden="true"
+        >
+          <circle cx="6.5" cy="6.5" r="4.5" stroke="currentColor" strokeWidth="1.5" />
+          <path d="M10 10L13.5 13.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+        </svg>
+        <input
+          type="text"
+          autoFocus
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder="Type to search your transactions..."
+          style={{ height: 44, paddingLeft: 40, borderRadius: 8, border: '1px solid #d1d5db' }}
+          className="w-full text-sm text-gray-700 focus:outline focus:outline-2 focus:outline-[#eef2ff] focus:border-indigo-500 px-3"
+        />
+      </div>
+
+      <TransactionList transactions={query ? results : transactions} categories={categories} />
     </div>
   );
 }
