@@ -1,12 +1,11 @@
 import { useState, useMemo } from 'react';
-import { useSession } from '../../store/SessionContext';
 import {
   getAllCategories,
   addCategory as addCategoryService,
   deactivateCategory as deactivateCategoryService,
   reactivateCategory as reactivateCategoryService,
 } from '../../services/categoriser/category.service';
-import { appendRecords as appendToLedger } from '../../services/ledger/ledger-writer';
+import { useLedger } from '../../hooks/useLedger';
 import type { CategoryRecord } from '../../models/index';
 
 interface CategoriesScreenProps {
@@ -15,8 +14,8 @@ interface CategoriesScreenProps {
   onRefresh: () => Promise<void>;
 }
 
-export function CategoriesScreen({ categories, isLoading, onRefresh }: CategoriesScreenProps) {
-  const { state } = useSession();
+export function CategoriesScreen({ categories, isLoading }: CategoriesScreenProps) {
+  const { appendRecords } = useLedger();
   const [newName, setNewName] = useState('');
   const [addError, setAddError] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
@@ -26,20 +25,12 @@ export function CategoriesScreen({ categories, isLoading, onRefresh }: Categorie
     [categories],
   );
 
-  function makeAppendRecords() {
-    return async (rows: string[]) => {
-      if (!state.dirHandle) throw new Error('No ledger directory selected');
-      await appendToLedger(state.dirHandle, rows);
-      await onRefresh();
-    };
-  }
-
   async function handleAdd() {
     const trimmed = newName.trim();
     if (!trimmed) return;
     setAddError(null);
     try {
-      await addCategoryService(trimmed, {} as FileSystemDirectoryHandle, categories, makeAppendRecords());
+      await addCategoryService(trimmed, {} as FileSystemDirectoryHandle, categories, appendRecords);
       setNewName('');
     } catch (err) {
       setAddError(err instanceof Error ? err.message : 'Failed to add category');
@@ -50,9 +41,9 @@ export function CategoriesScreen({ categories, isLoading, onRefresh }: Categorie
     setActionError(null);
     try {
       if (currentStatus === 'active') {
-        await deactivateCategoryService(name, {} as FileSystemDirectoryHandle, categories, makeAppendRecords());
+        await deactivateCategoryService(name, {} as FileSystemDirectoryHandle, categories, appendRecords);
       } else {
-        await reactivateCategoryService(name, {} as FileSystemDirectoryHandle, categories, makeAppendRecords());
+        await reactivateCategoryService(name, {} as FileSystemDirectoryHandle, categories, appendRecords);
       }
     } catch (err) {
       setActionError(err instanceof Error ? err.message : 'Failed to update category');
@@ -135,7 +126,17 @@ export function CategoriesScreen({ categories, isLoading, onRefresh }: Categorie
                 <td className="py-3">
                   <button
                     onClick={() => handleToggle(cat.name, cat.status)}
-                    className="text-sm text-blue-600 hover:underline"
+                    style={{
+                      background: cat.status === 'active' ? '#ef4444' : '#22c55e',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: 6,
+                      padding: '4px 10px',
+                      fontSize: 13,
+                      cursor: 'pointer',
+                    }}
+                    onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = cat.status === 'active' ? '#dc2626' : '#16a34a'; }}
+                    onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = cat.status === 'active' ? '#ef4444' : '#22c55e'; }}
                   >
                     {cat.status === 'active' ? 'Deactivate' : 'Reactivate'}
                   </button>

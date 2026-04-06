@@ -107,19 +107,36 @@ export function serialiseRecord(record: AllRecordTypes): string {
 }
 
 /**
- * Atomically appends rows to budget-ledger.csv in the given directory handle.
- * Uses createWritable({ keepExistingData: true }) + seek(file.size) for atomic append.
+ * Appends rows to budget-ledger.csv in the given directory handle.
+ * Re-requests write permission before every write to guard against the dirHandle
+ * losing its activation state between operations in the same session (Chrome bug).
+ * Uses keepExistingData: true with seek(0) + write + truncate for a reliable
+ * full-file overwrite that avoids the swap-file InvalidStateError.
  */
 export async function appendRecords(
   dirHandle: FileSystemDirectoryHandle,
   rows: string[],
 ): Promise<void> {
-  const fileHandle = await dirHandle.getFileHandle('budget-ledger.csv', { create: false });
-  const file = await fileHandle.getFile();
-  const writable = await fileHandle.createWritable({ keepExistingData: true });
-  await writable.seek(file.size);
-  for (const row of rows) {
-    await writable.write(row);
+  const permission = await dirHandle.requestPermission({ mode: 'readwrite' });
+  if (permission !== 'granted') {
+    throw new Error('Write permission denied');
   }
-  await writable.close();
+  const fileHandle = await dirHandle.getFileHandle('budget-ledger.csv', { create: false });
+  const existing = await (await fileHandle.getFile()).text();
+  const content = existing + rows.join('');
+  try {
+    const writable = await fileHandle.createWritable({ keepExistingData: true });
+    await writable.seek(0);
+    await writable.write(content);
+    await writable.truncate(content.length);
+    await writable.close();
+  } catch (err) {
+    const name = (err as DOMException).name;
+    if (name === 'InvalidStateError' || name === 'NotAllowedError') {
+      throw new Error(
+        'Cannot write to the ledger file. It may be open in another application (e.g. Excel, LibreOffice). Please close the file and try again.',
+      );
+    }
+    throw err;
+  }
 }

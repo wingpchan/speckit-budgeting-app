@@ -1,5 +1,9 @@
 # React + TypeScript + Vite
 
+## Notes
+
+- **Do not open `budget-ledger.csv` in a spreadsheet application (Excel, LibreOffice Calc, Google Sheets desktop sync, etc.) while the app is running.** These applications lock the file for exclusive access, which prevents the app from writing to it. If a write fails with the message "Cannot write to the ledger file. It may be open in another application", close the spreadsheet and try again.
+
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 
 Currently, two official plugins are available:

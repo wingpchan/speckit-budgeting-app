@@ -5,16 +5,24 @@ interface KeywordRulesScreenProps {
   categories: CategoryRecord[];
   isLoading: boolean;
   onToggleStatus: (pattern: string, newStatus: 'active' | 'inactive') => Promise<void>;
+  error?: string | null;
 }
 
 export function KeywordRulesScreen({
   rules,
   isLoading,
   onToggleStatus,
+  error,
 }: KeywordRulesScreenProps) {
   return (
     <div className="p-6 max-w-4xl mx-auto">
       <h1 className="text-2xl font-semibold mb-6">Keyword Rules</h1>
+
+      {error && (
+        <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded text-sm text-red-700">
+          {error}
+        </div>
+      )}
 
       {isLoading ? (
         <p className="text-gray-500">Loading…</p>
@@ -73,7 +81,17 @@ export function KeywordRulesScreen({
                         rule.status === 'active' ? 'inactive' : 'active',
                       )
                     }
-                    className="text-sm text-blue-600 hover:underline"
+                    style={{
+                      background: rule.status === 'active' ? '#ef4444' : '#22c55e',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: 6,
+                      padding: '4px 10px',
+                      fontSize: 13,
+                      cursor: 'pointer',
+                    }}
+                    onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = rule.status === 'active' ? '#dc2626' : '#16a34a'; }}
+                    onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = rule.status === 'active' ? '#ef4444' : '#22c55e'; }}
                   >
                     {rule.status === 'active' ? 'Deactivate' : 'Activate'}
                   </button>

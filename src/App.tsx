@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { SessionProvider, useSession } from './store/SessionContext';
 import { LedgerProvider } from './store/LedgerContext';
 import { Layout, type ViewId } from './components/shared/Layout';
@@ -233,6 +233,7 @@ function CategoriesPage() {
 function KeywordRulesPage() {
   const { state } = useSession();
   const { records, isLoading, refresh, appendRecords } = useLedger();
+  const [toggleError, setToggleError] = useState<string | null>(null);
 
   useEffect(() => {
     void refresh();
@@ -248,10 +249,16 @@ function KeywordRulesPage() {
   }));
 
   async function handleToggleStatus(pattern: string, newStatus: 'active' | 'inactive') {
-    const rule = rules.find((r) => r.pattern === pattern);
-    const category = rule?.category ?? '';
-    if (!state.dirHandle) throw new Error('No ledger directory selected');
-    await setKeywordRuleStatus(pattern, category, newStatus, state.dirHandle, appendRecords);
+    setToggleError(null);
+    try {
+      const rule = rules.find((r) => r.pattern === pattern);
+      const category = rule?.category ?? '';
+      if (!state.dirHandle) throw new Error('No ledger directory selected');
+      await setKeywordRuleStatus(pattern, category, newStatus, state.dirHandle, appendRecords);
+      await refresh();
+    } catch (err) {
+      setToggleError(err instanceof Error ? err.message : 'Failed to update rule status');
+    }
   }
 
   return (
@@ -260,6 +267,7 @@ function KeywordRulesPage() {
       categories={categories}
       isLoading={isLoading}
       onToggleStatus={handleToggleStatus}
+      error={toggleError}
     />
   );
 }

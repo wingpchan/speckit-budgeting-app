@@ -306,8 +306,11 @@ export function TransactionList({ transactions, categories, onRefresh }: Transac
                         <button
                           onClick={() => handleEditTrigger(tx)}
                           title="Edit transaction category"
-                          className="text-xs text-white bg-indigo-500 border-none rounded-md px-2 py-0.5 cursor-pointer hover:bg-indigo-600"
+                          className="inline-flex items-center gap-1 text-xs font-medium text-white bg-indigo-500 border-none rounded-md px-2 py-1 cursor-pointer hover:bg-indigo-600"
                         >
+                          <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M9.5 2.5L11.5 4.5M2 12H4L11 5L9 3L2 10V12Z" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
+                          </svg>
                           Edit
                         </button>
                       </td>
