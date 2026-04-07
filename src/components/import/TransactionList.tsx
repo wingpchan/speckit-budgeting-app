@@ -169,7 +169,7 @@ export function TransactionList({ transactions, categories, onRefresh }: Transac
                 <select
                   value={pendingCategory}
                   onChange={(e) => setPendingCategory(e.target.value)}
-                  className="w-full text-sm text-gray-700 border border-gray-300 rounded px-2 py-1.5 bg-white focus:outline focus:outline-2 focus:outline-indigo-500 focus:border-indigo-500 mb-4"
+                  className="w-full text-sm text-gray-700 border border-gray-300 rounded px-2 py-1.5 bg-white focus:outline focus:outline-2 focus:outline-indigo-500 focus:border-indigo-500 mb-1"
                 >
                   {!sortedActiveCategories.some((c) => c.name === pending.fromCategory) && (
                     <option value={pending.fromCategory}>{pending.fromCategory} (inactive)</option>
@@ -180,6 +180,9 @@ export function TransactionList({ transactions, categories, onRefresh }: Transac
                     </option>
                   ))}
                 </select>
+                <p style={{ color: '#9ca3af', fontSize: 12, marginTop: 4, marginBottom: 12 }}>
+                  Only active categories are shown. Manage categories in the Categories screen.
+                </p>
                 {overrideError && (
                   <p className="text-sm text-red-600 mb-3">{overrideError}</p>
                 )}
