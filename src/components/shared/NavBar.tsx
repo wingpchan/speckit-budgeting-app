@@ -16,7 +16,6 @@ const NAV_LINKS: Array<{ id: ViewId; label: string }> = [
   { id: 'summaries', label: 'Summaries' },
   { id: 'budgets', label: 'Budgets' },
   { id: 'search', label: 'Search' },
-  { id: 'export', label: 'Export' },
   { id: 'categories', label: 'Categories' },
   { id: 'rules', label: 'Rules' },
   { id: 'people', label: 'People' },

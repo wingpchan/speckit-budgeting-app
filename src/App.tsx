@@ -12,7 +12,6 @@ import { KeywordRulesScreen } from './components/rules/KeywordRulesScreen';
 import { BudgetScreen } from './components/budgets/BudgetScreen';
 import { SummariesScreen } from './components/summaries/SummariesScreen';
 import { SearchScreen } from './components/search/SearchScreen';
-import { ExportScreen } from './components/export/ExportScreen';
 import { useLedger } from './hooks/useLedger';
 import { usePersonFilter, filterByPerson } from './hooks/usePersonFilter';
 import { useFilter, filterByDate } from './hooks/useFilter';
@@ -24,6 +23,7 @@ import {
   getPrevYear, getNextYear,
   toMonthLabel, toWeekLabel,
 } from './utils/dates';
+import { buildExportCsv } from './services/export/export.service';
 import { resolveKeywordRules, setKeywordRuleStatus } from './services/categoriser/keyword-rules.service';
 import { getActiveCategories } from './services/categoriser/category.service';
 import { getActivePeople } from './services/people/people.service';
@@ -71,10 +71,13 @@ function TransactionsScreen() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  const [personBreakdown, setPersonBreakdown] = useState(false);
+
   const allTransactions = records.filter((r): r is TransactionRecord => r.type === 'transaction');
   const dateFiltered = filterByDate(allTransactions, start, end);
   const transactions = filterByPerson(dateFiltered, personFilter);
   const categories = records.filter((r): r is CategoryRecord => r.type === 'category');
+  const budgetRecords = records.filter((r): r is BudgetRecord => r.type === 'budget');
 
   const periodLabel = computeDateFilterLabel(state.dateFilter.preset, state.dateFilter.start, state.dateFilter.end);
   const personLabel = personFilter ?? 'All';
@@ -114,6 +117,17 @@ function TransactionsScreen() {
       const y = Number(year);
       dispatch({ type: 'SET_DATE_FILTER', start: new Date(Date.UTC(y, 0, 1)).toISOString().slice(0, 10), end: new Date(Date.UTC(y, 11, 31)).toISOString().slice(0, 10) });
     }
+  }
+
+  function handleExport() {
+    const csv = buildExportCsv(transactions, budgetRecords, { personBreakdown });
+    const date = new Date().toISOString().slice(0, 10);
+    const a = document.createElement('a');
+    a.href = `data:text/csv;charset=utf-8,${encodeURIComponent(csv)}`;
+    a.download = `budget-export-${date}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
   }
 
   function handleClearFilters() {
@@ -175,25 +189,47 @@ function TransactionsScreen() {
         </div>
       </div>
 
-      {/* Filter summary bar */}
-      <div style={{ display: 'inline-flex', gap: 16, alignItems: 'center', marginBottom: '1rem', fontSize: 13, color: 'var(--color-text-secondary)', background: '#eef2ff', border: '1px solid #c7d2fe', borderRadius: 8, padding: '8px 14px' }}>
-        <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-            <rect x="1" y="3" width="14" height="12" rx="2" stroke="currentColor" strokeWidth="1.5" />
-            <path d="M5 1v4M11 1v4M1 7h14" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-          </svg>
-          {periodLabel}
-        </span>
-        <span style={{ opacity: 0.4 }}>·</span>
-        <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-            <circle cx="8" cy="5" r="3" stroke="currentColor" strokeWidth="1.5" />
-            <path d="M2 14c0-3.314 2.686-5 6-5s6 1.686 6 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-          </svg>
-          {personLabel}
-        </span>
-        <span style={{ opacity: 0.4 }}>·</span>
-        <span>{transactions.length} transactions</span>
+      {/* Filter summary bar + export controls */}
+      <div style={{ display: 'flex', alignItems: 'center', position: 'relative', marginBottom: '1rem' }}>
+        <div style={{ display: 'inline-flex', gap: 16, alignItems: 'center', fontSize: 13, color: 'var(--color-text-secondary)', background: '#eef2ff', border: '1px solid #c7d2fe', borderRadius: 8, padding: '8px 14px' }}>
+          <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+              <rect x="1" y="3" width="14" height="12" rx="2" stroke="currentColor" strokeWidth="1.5" />
+              <path d="M5 1v4M11 1v4M1 7h14" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+            </svg>
+            {periodLabel}
+          </span>
+          <span style={{ opacity: 0.4 }}>·</span>
+          <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+              <circle cx="8" cy="5" r="3" stroke="currentColor" strokeWidth="1.5" />
+              <path d="M2 14c0-3.314 2.686-5 6-5s6 1.686 6 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+            </svg>
+            {personLabel}
+          </span>
+          <span style={{ opacity: 0.4 }}>·</span>
+          <span>{transactions.length} transactions</span>
+        </div>
+
+        <div style={{ display: 'inline-flex', gap: 16, alignItems: 'center', fontSize: 13, color: 'var(--color-text-secondary)', background: '#eef2ff', border: '1px solid #c7d2fe', borderRadius: 8, padding: '8px 14px', position: 'absolute', left: '50%', transform: 'translateX(-50%)' }}>
+          <button
+            onClick={handleExport}
+            disabled={transactions.length === 0}
+            style={{ background: '#6366f1', color: 'white', border: 'none', borderRadius: 6, padding: '4px 12px', fontSize: 13, fontWeight: 500, cursor: transactions.length === 0 ? 'not-allowed' : 'pointer', opacity: transactions.length === 0 ? 0.5 : 1 }}
+          >
+            Export Transactions
+          </button>
+          <div style={{ width: 1, height: 16, background: '#c7d2fe', margin: '0 8px' }} />
+          <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, color: '#4338ca', cursor: 'pointer' }}>
+            <input
+              type="checkbox"
+              checked={personBreakdown}
+              onChange={(e) => setPersonBreakdown(e.target.checked)}
+              style={{ width: 14, height: 14 }}
+            />
+            Person Breakdown
+          </label>
+        </div>
       </div>
 
       {transactions.length === 0 && (
@@ -315,26 +351,6 @@ function SearchPage() {
   return <SearchScreen transactions={transactions} categories={categories} />;
 }
 
-function ExportPage() {
-  const { records, refresh } = useLedger();
-  const { start, end } = useFilter();
-  const personFilter = usePersonFilter();
-
-  useEffect(() => {
-    void refresh();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  const allTransactions = records.filter((r): r is TransactionRecord => r.type === 'transaction');
-  const dateFiltered = filterByDate(allTransactions, start, end);
-  const transactions = filterByPerson(dateFiltered, personFilter);
-  const budgetRecords = records.filter((r): r is BudgetRecord => r.type === 'budget');
-  const categories = getActiveCategories(records.filter((r): r is CategoryRecord => r.type === 'category'));
-
-  return <ExportScreen transactions={transactions} budgetRecords={budgetRecords} categories={categories} />;
-}
-
-
 function AppContent() {
   const { state, dispatch } = useSession();
   const { records, isLoading, refresh } = useLedger();
@@ -384,8 +400,6 @@ function AppContent() {
                 return <TransactionsScreen />;
               case 'search':
                 return <SearchPage />;
-              case 'export':
-                return <ExportPage />;
             }
           })()}
         </LedgerErrorBoundary>

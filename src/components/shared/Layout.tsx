@@ -10,8 +10,7 @@ export type ViewId =
   | 'people'
   | 'transactions'
   | 'rules'
-  | 'search'
-  | 'export';
+  | 'search';
 
 interface LayoutProps {
   children: (currentView: ViewId, navigate: (view: ViewId) => void) => ReactNode;
