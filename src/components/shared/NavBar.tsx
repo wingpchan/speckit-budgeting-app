@@ -8,6 +8,7 @@ interface NavBarProps {
   onNavigate: (view: ViewId) => void;
   allPeople: PersonRecord[];
   hasLedger?: boolean;
+  onHelpOpen: () => void;
 }
 
 const NAV_LINKS: Array<{ id: ViewId; label: string }> = [
@@ -23,7 +24,7 @@ const NAV_LINKS: Array<{ id: ViewId; label: string }> = [
 
 const FILTER_VIEWS: ViewId[] = ['transactions', 'summaries', 'budgets', 'search'];
 
-export function NavBar({ currentView, onNavigate, allPeople, hasLedger = true }: NavBarProps) {
+export function NavBar({ currentView, onNavigate, allPeople, hasLedger = true, onHelpOpen }: NavBarProps) {
   const showFilters = FILTER_VIEWS.includes(currentView);
   return (
     <nav style={{ background: '#1e1b4b', minHeight: '88px', paddingTop: 12, paddingBottom: 18, borderBottom: '1px solid rgba(255,255,255,0.1)', overflow: 'visible', position: 'relative', zIndex: 1 }} className="w-full flex items-center px-4">
@@ -114,6 +115,33 @@ export function NavBar({ currentView, onNavigate, allPeople, hasLedger = true }:
           <PersonFilter allPeople={allPeople} />
         </div>
       ))}
+
+      {/* Help button */}
+      <button
+        onClick={onHelpOpen}
+        title="User Guide"
+        style={{
+          width: 28,
+          height: 28,
+          borderRadius: '50%',
+          background: 'rgba(255,255,255,0.1)',
+          color: 'white',
+          border: '1px solid rgba(255,255,255,0.3)',
+          fontSize: 14,
+          fontWeight: 500,
+          cursor: 'pointer',
+          flexShrink: 0,
+          marginLeft: showFilters ? 16 : 'auto',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          lineHeight: 1,
+        }}
+        onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = 'rgba(255,255,255,0.2)'; }}
+        onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = 'rgba(255,255,255,0.1)'; }}
+      >
+        ?
+      </button>
     </nav>
   );
 }

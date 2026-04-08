@@ -293,19 +293,19 @@ export function TransactionList({ transactions, categories, onRefresh }: Transac
                 return (
                   <Fragment key={key}>
                     <tr className="hover:bg-gray-50">
-                      <td className="px-3 py-2 text-gray-700 whitespace-nowrap">{tx.date}</td>
-                      <td className="px-3 py-2 text-gray-700 max-w-xs truncate">{tx.description}</td>
+                      <td className="px-3 py-3 text-sm text-gray-800 whitespace-nowrap">{tx.date}</td>
+                      <td className="px-3 py-3 font-medium text-gray-800 max-w-xs truncate">{tx.description}</td>
                       <td
-                        className={`px-3 py-2 text-right font-mono whitespace-nowrap ${
+                        className={`px-3 py-3 text-right whitespace-nowrap ${
                           tx.amount < 0 ? 'text-red-600' : 'text-green-600'
                         }`}
                       >
                         {formatPence(tx.amount)}
                       </td>
-                      <td className="px-3 py-2 text-sm text-gray-700">{tx.category}</td>
-                      <td className="px-3 py-2 text-gray-700 truncate max-w-[10rem]">{tx.account}</td>
-                      <td className="px-3 py-2 text-gray-700">{tx.personName}</td>
-                      <td className="px-3 py-2 text-right">
+                      <td className="px-3 py-3 text-gray-800">{tx.category}</td>
+                      <td className="px-3 py-3 text-sm text-gray-800 truncate max-w-[10rem]">{tx.account}</td>
+                      <td className="px-3 py-3 text-gray-800">{tx.personName}</td>
+                      <td className="px-3 py-3 text-right">
                         <button
                           onClick={() => handleEditTrigger(tx)}
                           title="Edit transaction category"

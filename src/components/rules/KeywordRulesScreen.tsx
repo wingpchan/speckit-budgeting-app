@@ -198,8 +198,8 @@ export function KeywordRulesScreen({
                 key={rule.pattern}
                 className={`border-b border-gray-100 ${rule.categoryIsInactive ? 'opacity-60' : ''}`}
               >
-                <td className="py-3 font-mono text-sm">{rule.pattern}</td>
-                <td className="py-3">
+                <td className="py-3 font-medium text-gray-800">{rule.pattern}</td>
+                <td className="py-3 text-gray-800">
                   <span className={rule.categoryIsInactive ? 'text-gray-400' : ''}>
                     {rule.category}
                   </span>
@@ -207,7 +207,7 @@ export function KeywordRulesScreen({
                     <span className="ml-2 text-xs text-amber-600">(category inactive)</span>
                   )}
                 </td>
-                <td className="py-3 text-sm text-gray-600">
+                <td className="py-3 text-sm text-gray-800">
                   {rule.createdDate.slice(0, 16).replace('T', ' ')}
                 </td>
                 <td className="py-3">

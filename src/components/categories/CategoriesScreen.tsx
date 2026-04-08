@@ -100,7 +100,7 @@ export function CategoriesScreen({ categories, isLoading }: CategoriesScreenProp
           <tbody>
             {allCategories.map((cat) => (
               <tr key={cat.name} className="border-b border-gray-100">
-                <td className="py-3 font-medium">{cat.name}</td>
+                <td className="py-3 font-medium text-gray-800">{cat.name}</td>
                 <td className="py-3">
                   <span
                     className={`text-xs font-medium px-2 py-0.5 rounded-full ${

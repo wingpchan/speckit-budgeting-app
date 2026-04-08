@@ -1,5 +1,6 @@
 import { useState, type ReactNode } from 'react';
 import { NavBar } from './NavBar';
+import { HelpPanel } from './HelpPanel';
 import type { PersonRecord } from '../../models/index';
 
 export type ViewId =
@@ -21,6 +22,7 @@ interface LayoutProps {
 
 export function Layout({ children, defaultView = 'import', allPeople = [], hasLedger = true }: LayoutProps) {
   const [currentView, setCurrentView] = useState<ViewId>(defaultView);
+  const [helpOpen, setHelpOpen] = useState(false);
 
   return (
     <div className="min-h-screen" style={{ background: '#f5f4ff' }}>
@@ -29,7 +31,9 @@ export function Layout({ children, defaultView = 'import', allPeople = [], hasLe
         onNavigate={setCurrentView}
         allPeople={allPeople}
         hasLedger={hasLedger}
+        onHelpOpen={() => setHelpOpen(true)}
       />
+      <HelpPanel isOpen={helpOpen} onClose={() => setHelpOpen(false)} />
       {!hasLedger && (
         <div
           style={{

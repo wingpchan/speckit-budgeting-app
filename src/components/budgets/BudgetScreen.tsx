@@ -148,10 +148,10 @@ export function BudgetScreen() {
                 onClick={() => setEditingCategory(row.name === editingCategory ? null : row.name)}
               >
                 <td className="py-3 font-medium text-gray-800">{row.name}</td>
-                <td className="py-3 text-right text-gray-700 tabular-nums">
+                <td className="py-3 text-right text-gray-800 tabular-nums">
                   {row.budget > 0 ? `£${(row.budget / 100).toFixed(2)}` : <span className="text-gray-400">—</span>}
                 </td>
-                <td className="py-3 text-right text-gray-700 tabular-nums">
+                <td className="py-3 text-right text-gray-800 tabular-nums">
                   {row.actual > 0 ? `£${(row.actual / 100).toFixed(2)}` : <span className="text-gray-400">—</span>}
                 </td>
                 <td className="py-3 pl-6">

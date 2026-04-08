@@ -106,13 +106,13 @@ export function PeopleScreen({ personRecords, isLoading, onRefresh }: PeopleScre
           <tbody>
             {allPeople.map((person) => (
               <tr key={person.name} className="border-b border-gray-100 py-2">
-                <td className="py-3 font-medium">
+                <td className="py-3 font-medium text-gray-800">
                   {person.name}
                   {person.isDefault && (
                     <span className="ml-2 text-xs text-gray-400">(default)</span>
                   )}
                 </td>
-                <td className="py-3 text-sm text-gray-600">{person.createdDate.slice(0, 16).replace('T', ' ')}</td>
+                <td className="py-3 text-sm text-gray-800">{person.createdDate.slice(0, 16).replace('T', ' ')}</td>
                 <td className="py-3">
                   <span
                     className={`text-xs font-medium px-2 py-0.5 rounded-full ${

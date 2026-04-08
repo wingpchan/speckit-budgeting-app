@@ -36,7 +36,7 @@ export function WeeklySummaryView({ transactions }: WeeklySummaryViewProps) {
   const categoryEntries = current
     ? Object.entries(current.byCategory)
         .filter(([, value]) => value > 0)
-        .sort(([, a], [, b]) => b - a)
+        .sort(([a], [b]) => a.localeCompare(b))
     : [];
   const pieData = categoryEntries.map(([name, value]) => ({ name, value }));
   const barData = categoryEntries.map(([name, value]) => ({ name, Spend: value }));
@@ -124,7 +124,7 @@ export function WeeklySummaryView({ transactions }: WeeklySummaryViewProps) {
           )}
 
           {categoryEntries.length > 0 && (
-            <table className="w-full border-collapse text-sm">
+            <table className="w-full border-collapse">
               <thead>
                 <tr className="border-b-2 text-left bg-[#ede9fe] border-[#c4b5fd] text-[#4338ca]">
                   <th className="pb-2 font-semibold text-[13px]">Category</th>
@@ -134,8 +134,8 @@ export function WeeklySummaryView({ transactions }: WeeklySummaryViewProps) {
               <tbody>
                 {categoryEntries.map(([name, value]) => (
                   <tr key={name} className="border-b border-gray-100">
-                    <td className="py-2 font-medium text-gray-800">{name}</td>
-                    <td className="py-2 text-right tabular-nums">{formatPence(value)}</td>
+                    <td className="py-3 font-medium text-gray-800">{name}</td>
+                    <td className="py-3 text-right tabular-nums">{formatPence(value)}</td>
                   </tr>
                 ))}
               </tbody>

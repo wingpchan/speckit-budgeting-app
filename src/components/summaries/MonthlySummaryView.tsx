@@ -42,7 +42,7 @@ export function MonthlySummaryView({ transactions, budgetRecords }: MonthlySumma
         const budget = resolveBudget(currentMonth, name, budgetRecords);
         const state: 'over' | 'under' | 'exact' = budget > 0 ? getBudgetState(actual, budget) : 'under';
         return { name, actual, budget, state };
-      })
+      }).sort((a, b) => a.name.localeCompare(b.name))
     : [];
 
   // Bar chart data: category spend
@@ -152,7 +152,7 @@ export function MonthlySummaryView({ transactions, budgetRecords }: MonthlySumma
           )}
 
           {categoryRows.length > 0 && (
-            <table className="w-full border-collapse text-sm">
+            <table className="w-full border-collapse">
               <thead>
                 <tr className="border-b-2 text-left bg-[#ede9fe] border-[#c4b5fd] text-[#4338ca]">
                   <th className="pb-2 font-semibold text-[13px]">Category</th>
@@ -164,12 +164,12 @@ export function MonthlySummaryView({ transactions, budgetRecords }: MonthlySumma
               <tbody>
                 {categoryRows.map((row) => (
                   <tr key={row.name} className="border-b border-gray-100">
-                    <td className="py-2 font-medium text-gray-800">{row.name}</td>
-                    <td className="py-2 text-right tabular-nums">{formatPence(row.actual)}</td>
-                    <td className="py-2 text-right tabular-nums">
+                    <td className="py-3 font-medium text-gray-800">{row.name}</td>
+                    <td className="py-3 text-right tabular-nums">{formatPence(row.actual)}</td>
+                    <td className="py-3 text-right tabular-nums">
                       {row.budget > 0 ? formatPence(row.budget) : <span className="text-gray-400">—</span>}
                     </td>
-                    <td className="py-2 pl-4">
+                    <td className="py-3 pl-4">
                       {row.budget > 0 ? (
                         <BudgetStateIndicator state={row.state} actual={row.actual} budget={row.budget} />
                       ) : (

@@ -37,7 +37,7 @@ export function YearlySummaryView({ transactions, budgetRecords }: YearlySummary
 
   const current = summaries.find(s => s.periodKey === currentYear) ?? null;
   const categoryEntries = current
-    ? Object.entries(current.byCategory).sort(([, a], [, b]) => b - a)
+    ? Object.entries(current.byCategory).sort(([a], [b]) => a.localeCompare(b))
     : [];
   const categoryBarData = categoryEntries.map(([name, value]) => ({ name, Spend: value }));
 
@@ -146,7 +146,7 @@ export function YearlySummaryView({ transactions, budgetRecords }: YearlySummary
           )}
 
           {categoryEntries.length > 0 && (
-            <table className="w-full border-collapse text-sm">
+            <table className="w-full border-collapse">
               <thead>
                 <tr className="border-b-2 text-left bg-[#ede9fe] border-[#c4b5fd] text-[#4338ca]">
                   <th className="pb-2 font-semibold text-[13px]">Category</th>
@@ -178,15 +178,15 @@ export function YearlySummaryView({ transactions, budgetRecords }: YearlySummary
                   const monthlyBudget = monthlyBudgetByCategory[name] ?? 0;
                   return (
                     <tr key={name} className="border-b border-gray-100">
-                      <td className="py-2 font-medium text-gray-800">{name}</td>
-                      <td className="py-2 text-right tabular-nums">{formatPence(value)}</td>
-                      <td className="py-2 text-right tabular-nums">
+                      <td className="py-3 font-medium text-gray-800">{name}</td>
+                      <td className="py-3 text-right tabular-nums">{formatPence(value)}</td>
+                      <td className="py-3 text-right tabular-nums">
                         {monthlyBudget > 0 ? formatPence(monthlyBudget) : '—'}
                       </td>
-                      <td className="py-2 text-right tabular-nums">
+                      <td className="py-3 text-right tabular-nums">
                         {budget > 0 ? formatPence(budget) : '—'}
                       </td>
-                      <td className="py-2 text-right tabular-nums">{varianceCell}</td>
+                      <td className="py-3 text-right tabular-nums">{varianceCell}</td>
                     </tr>
                   );
                 })}
