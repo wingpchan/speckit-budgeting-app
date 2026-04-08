@@ -77,7 +77,7 @@ function ExactDuplicateContent({ priorImportDate, onOverride, onCancel }: ExactD
       <h2 id="duplicate-modal-title" className="text-lg font-semibold text-red-700 mb-2">
         Duplicate File Detected
       </h2>
-      <p className="text-sm text-gray-700 mb-4">
+      <p className="text-gray-700 mb-4">
         This exact file was already imported on{' '}
         <span className="font-medium">{priorImportDate}</span>. Importing again will create
         duplicate transactions in your ledger. Only proceed if you have deliberately deleted those
@@ -107,7 +107,7 @@ function DateRangeOverlapContent({ overlapRange, onProceed, onCancel }: DateRang
       <h2 id="duplicate-modal-title" className="text-lg font-semibold text-yellow-700 mb-2">
         Date Range Overlap Detected
       </h2>
-      <p className="text-sm text-gray-700 mb-4">
+      <p className="text-gray-700 mb-4">
         This file contains transactions that overlap with previously imported data for this
         account. Overlapping date range:{' '}
         <span className="font-medium">

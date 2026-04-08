@@ -1,13 +1,12 @@
 import {
   LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
-  Legend, ResponsiveContainer, ReferenceLine,
+  Legend, ResponsiveContainer,
 } from 'recharts';
 import { useSummaries } from '../../hooks/useSummaries';
 import { aggregateByPeriod } from '../../services/summaries/summary.service';
-import { getBudgetChanges, resolveBudget } from '../../services/budget/budget.service';
+import { resolveBudget } from '../../services/budget/budget.service';
 import { useSession } from '../../store/SessionContext';
 import { getPrevYear, getNextYear } from '../../utils/dates';
-import { BudgetChangeAnnotation } from './BudgetChangeAnnotation';
 import type { TransactionRecord, BudgetRecord } from '../../models/index';
 
 function formatPence(pence: number): string {
@@ -69,16 +68,6 @@ export function YearlySummaryView({ transactions, budgetRecords }: YearlySummary
     Expenses: Math.abs(m.totalExpenses),
     Net: m.netPosition,
   }));
-
-  // Budget change annotations per month
-  const allCategories = [...new Set(transactions.map((t) => t.category))];
-  const budgetChanges = allCategories.flatMap((cat) =>
-    getBudgetChanges(cat, budgetRecords).filter(
-      (c) => c.month.startsWith(currentYear) && c.reason,
-    ),
-  );
-  // Map to month label for x-axis reference
-  const monthKeyToLabel = new Map(monthSummaries.map((m) => [m.periodKey, m.periodLabel]));
 
   return (
     <div className="space-y-6">
@@ -203,44 +192,10 @@ export function YearlySummaryView({ transactions, budgetRecords }: YearlySummary
                   <XAxis dataKey="month" angle={-45} textAnchor="end" interval={0} tick={{ fontSize: 11 }} />
                   <YAxis tickFormatter={(v: number) => `£${(v / 100).toFixed(0)}`} />
                   <Tooltip formatter={(v) => (typeof v === 'number' ? formatPence(v) : String(v))} />
-                  <Legend
-                    verticalAlign="top"
-                    content={(props) => {
-                      const payload = (props as { payload?: Array<{ value: string; color: string }> }).payload ?? [];
-                      return (
-                        <div className="flex justify-center gap-4 text-xs mb-2">
-                          {payload.map((item, i) => (
-                            <span key={i} className="flex items-center gap-1">
-                              <svg width="16" height="6"><line x1="0" y1="3" x2="16" y2="3" stroke={item.color} strokeWidth="2" /></svg>
-                              {item.value}
-                            </span>
-                          ))}
-                          {budgetChanges.length > 0 && (
-                            <span className="flex items-center gap-1">
-                              <svg width="16" height="6"><line x1="0" y1="3" x2="16" y2="3" stroke="#6366f1" strokeDasharray="4 2" strokeWidth="2" /></svg>
-                              Budget change
-                            </span>
-                          )}
-                        </div>
-                      );
-                    }}
-                  />
+                  <Legend verticalAlign="top" />
                   <Line type="monotone" dataKey="Income" stroke="#22c55e" dot={false} />
                   <Line type="monotone" dataKey="Expenses" stroke="#ef4444" dot={false} />
-                  <Line type="monotone" dataKey="Net" stroke="#6366f1" strokeDasharray="4 2" dot={false} />
-                  {budgetChanges.map((c, i) => {
-                    const label = monthKeyToLabel.get(c.month);
-                    if (!label) return null;
-                    return (
-                      <ReferenceLine
-                        key={i}
-                        x={label}
-                        strokeDasharray="4 2"
-                        stroke="#6366f1"
-                        label={<BudgetChangeAnnotation reason={c.reason} />}
-                      />
-                    );
-                  })}
+                  <Line type="monotone" dataKey="Net" stroke="#6366f1" dot={false} />
                 </LineChart>
               </ResponsiveContainer>
             </div>

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { TransactionList } from '../import/TransactionList';
 import { searchTransactions } from '../../services/search/search.service';
+import { buildExportCsv } from '../../services/export/export.service';
 import { useSession } from '../../store/SessionContext';
 import {
   computeDateFilterLabel,
@@ -10,7 +11,7 @@ import {
   getPrevYear, getNextYear,
   toMonthLabel, toWeekLabel,
 } from '../../utils/dates';
-import type { CategoryRecord, TransactionRecord } from '../../models/index';
+import type { CategoryRecord, TransactionRecord, BudgetRecord } from '../../models/index';
 
 const SEARCH_TABS: Array<{ id: 'weekly' | 'monthly' | 'yearly'; label: string }> = [
   { id: 'weekly', label: 'Weekly' },
@@ -45,13 +46,29 @@ function getPresetRange(p: 'weekly' | 'monthly' | 'yearly'): { start: string; en
 interface SearchScreenProps {
   transactions: TransactionRecord[];
   categories: CategoryRecord[];
+  budgetRecords: BudgetRecord[];
 }
 
-export function SearchScreen({ transactions, categories }: SearchScreenProps) {
+export function SearchScreen({ transactions, categories, budgetRecords }: SearchScreenProps) {
   const [query, setQuery] = useState('');
+  const [personBreakdown, setPersonBreakdown] = useState(false);
   const { state, dispatch } = useSession();
 
   const results = searchTransactions(query, transactions);
+  const exportTransactions = (query ? results : transactions).filter(
+    (tx) => tx.date >= state.dateFilter.start && tx.date <= state.dateFilter.end,
+  );
+
+  function handleExport() {
+    const csv = buildExportCsv(exportTransactions, budgetRecords, { personBreakdown });
+    const date = new Date().toISOString().slice(0, 10);
+    const a = document.createElement('a');
+    a.href = `data:text/csv;charset=utf-8,${encodeURIComponent(csv)}`;
+    a.download = `budget-export-${date}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  }
 
   const activeTab: 'weekly' | 'monthly' | 'yearly' =
     state.dateFilter.preset === 'weekly' || state.dateFilter.preset === 'yearly'
@@ -140,25 +157,46 @@ export function SearchScreen({ transactions, categories }: SearchScreenProps) {
         </div>
       </div>
 
-      {/* Filter summary bar */}
-      <div style={{ display: 'inline-flex', gap: 16, alignItems: 'center', marginBottom: '1rem', fontSize: 13, color: 'var(--color-text-secondary)', background: '#eef2ff', border: '1px solid #c7d2fe', borderRadius: 8, padding: '8px 14px' }}>
-        <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-            <rect x="1" y="3" width="14" height="12" rx="2" stroke="currentColor" strokeWidth="1.5" />
-            <path d="M5 1v4M11 1v4M1 7h14" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-          </svg>
-          {periodLabel}
-        </span>
-        <span style={{ opacity: 0.4 }}>·</span>
-        <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-            <circle cx="8" cy="5" r="3" stroke="currentColor" strokeWidth="1.5" />
-            <path d="M2 14c0-3.314 2.686-5 6-5s6 1.686 6 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-          </svg>
-          {personLabel}
-        </span>
-        <span style={{ opacity: 0.4 }}>·</span>
-        <span style={query ? { color: '#6366f1', fontWeight: 500 } : undefined}>{results.length} results</span>
+      {/* Filter summary bar + export controls */}
+      <div style={{ display: 'flex', alignItems: 'center', position: 'relative', marginBottom: '1rem' }}>
+        <div style={{ display: 'inline-flex', gap: 16, alignItems: 'center', fontSize: 13, color: 'var(--color-text-secondary)', background: '#eef2ff', border: '1px solid #c7d2fe', borderRadius: 8, padding: '8px 14px' }}>
+          <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+              <rect x="1" y="3" width="14" height="12" rx="2" stroke="currentColor" strokeWidth="1.5" />
+              <path d="M5 1v4M11 1v4M1 7h14" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+            </svg>
+            {periodLabel}
+          </span>
+          <span style={{ opacity: 0.4 }}>·</span>
+          <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+              <circle cx="8" cy="5" r="3" stroke="currentColor" strokeWidth="1.5" />
+              <path d="M2 14c0-3.314 2.686-5 6-5s6 1.686 6 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+            </svg>
+            {personLabel}
+          </span>
+          <span style={{ opacity: 0.4 }}>·</span>
+          <span style={query ? { color: '#6366f1', fontWeight: 500 } : undefined}>{results.length} results</span>
+        </div>
+        <div style={{ display: 'inline-flex', gap: 16, alignItems: 'center', fontSize: 13, color: 'var(--color-text-secondary)', background: '#eef2ff', border: '1px solid #c7d2fe', borderRadius: 8, padding: '8px 14px', position: 'absolute', left: '50%', transform: 'translateX(-50%)' }}>
+          <button
+            onClick={handleExport}
+            disabled={exportTransactions.length === 0}
+            style={{ background: '#6366f1', color: 'white', border: 'none', borderRadius: 6, padding: '4px 12px', fontSize: 13, fontWeight: 500, cursor: exportTransactions.length === 0 ? 'not-allowed' : 'pointer', opacity: exportTransactions.length === 0 ? 0.5 : 1 }}
+          >
+            Export Transactions
+          </button>
+          <div style={{ width: 1, height: 16, background: '#c7d2fe', margin: '0 8px' }} />
+          <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, color: '#4338ca', cursor: 'pointer' }}>
+            <input
+              type="checkbox"
+              checked={personBreakdown}
+              onChange={(e) => setPersonBreakdown(e.target.checked)}
+              style={{ width: 14, height: 14 }}
+            />
+            Person Breakdown
+          </label>
+        </div>
       </div>
 
       <div className="relative mb-4">

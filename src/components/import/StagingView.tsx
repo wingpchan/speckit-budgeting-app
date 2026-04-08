@@ -163,13 +163,6 @@ export function StagingView({
   }
 
   function handleRuleDismiss() {
-    if (rulePromptFor) {
-      setCategoryOverrides((prev) => {
-        const next = { ...prev };
-        delete next[rulePromptFor.rowIndex];
-        return next;
-      });
-    }
     setRulePromptFor(null);
     setRuleSaveWarning('');
     setRuleConflictWarned(false);
@@ -180,7 +173,7 @@ export function StagingView({
       <div className="flex items-center justify-between mb-4">
         <div>
           <h2 className="text-lg font-semibold text-gray-800">Review Transactions</h2>
-          <p className="text-sm text-gray-500">
+          <p className="text-gray-500">
             {rows.length} transaction{rows.length !== 1 ? 's' : ''} from{' '}
             <strong>{account}</strong>
             {detectedProfile && (
@@ -194,7 +187,7 @@ export function StagingView({
       </div>
 
       <div className="overflow-auto rounded-lg border border-gray-200 mb-4">
-        <table className="w-full text-sm">
+        <table className="w-full">
           <thead className="bg-gray-50 border-b border-gray-200">
             <tr>
               <th className="text-left px-3 py-2 font-medium text-gray-600">Date</th>
@@ -210,7 +203,7 @@ export function StagingView({
                   <td className="px-3 py-2 text-gray-700 whitespace-nowrap">{row.date}</td>
                   <td className="px-3 py-2 text-gray-700 max-w-xs truncate">{row.description}</td>
                   <td
-                    className={`px-3 py-2 text-right font-mono whitespace-nowrap ${
+                    className={`px-3 py-2 text-right whitespace-nowrap ${
                       row.amount < 0 ? 'text-red-600' : 'text-green-600'
                     }`}
                   >
@@ -220,7 +213,7 @@ export function StagingView({
                     <select
                       value={categoryOverrides[i] ?? row.category}
                       onChange={(e) => handleCategoryChange(i, e.target.value, row.category)}
-                      className="text-sm text-gray-700 border border-gray-200 rounded px-1 py-0.5 bg-white focus:outline-none focus:ring-1 focus:ring-indigo-400"
+                      className="text-gray-700 border border-gray-200 rounded px-1 py-0.5 bg-white focus:outline-none focus:ring-1 focus:ring-indigo-400"
                     >
                       {activeCategories.map((cat) => (
                         <option key={cat.name} value={cat.name}>
@@ -233,7 +226,7 @@ export function StagingView({
                 {scopeTarget?.rowIndex === i && (
                   <tr>
                     <td colSpan={4} className="bg-indigo-50 border-t border-indigo-100 px-3 py-3">
-                      <p className="text-sm text-gray-700 mb-3">
+                      <p className="text-gray-700 mb-3">
                         Update just this transaction, or all matching transactions in this import?
                       </p>
                       <div className="flex gap-2">

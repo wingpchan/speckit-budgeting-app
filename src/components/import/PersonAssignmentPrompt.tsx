@@ -43,7 +43,7 @@ export function PersonAssignmentPrompt({
   return (
     <div className="max-w-md mx-auto">
       <h2 className="text-lg font-semibold text-gray-800 mb-2">Assign Account to Person</h2>
-      <p className="text-sm text-gray-500 mb-4">
+      <p className="text-gray-500 mb-4">
         Transactions from <strong>{account}</strong> have no person assignment. Choose who this
         account belongs to.
       </p>

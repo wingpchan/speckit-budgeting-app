@@ -122,7 +122,7 @@ export function ManualColumnMappingUI({
     <div className="max-w-2xl mx-auto">
       <div className="mb-4">
         <h2 className="text-lg font-semibold text-gray-800">Map Column Headers</h2>
-        <p className="text-sm text-gray-500 mt-1">
+        <p className="text-gray-500 mt-1">
           Assign each CSV column to the correct field. Required:{' '}
           <strong>Date</strong>, <strong>Description</strong>, and at least one amount column.
         </p>
@@ -190,14 +190,14 @@ export function ManualColumnMappingUI({
       </div>
 
       {hasMissingRequired && (
-        <p className="text-red-600 text-sm mb-3">
+        <p className="text-red-600 mb-3">
           Please map Date, Description, and at least one amount field (amount, paidOut, or paidIn).
         </p>
       )}
 
       {/* Save as profile */}
       <div className="mb-4">
-        <label className="flex items-center gap-2 text-sm text-gray-700">
+        <label className="flex items-center gap-2 text-gray-700">
           <input
             type="checkbox"
             checked={saveAsProfile}

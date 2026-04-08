@@ -193,7 +193,7 @@ export function KeywordRulesScreen({
             </tr>
           </thead>
           <tbody>
-            {rules.map((rule) => (
+            {[...rules].sort((a, b) => a.pattern.localeCompare(b.pattern)).map((rule) => (
               <tr
                 key={rule.pattern}
                 className={`border-b border-gray-100 ${rule.categoryIsInactive ? 'opacity-60' : ''}`}

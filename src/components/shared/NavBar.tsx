@@ -22,7 +22,7 @@ const NAV_LINKS: Array<{ id: ViewId; label: string }> = [
   { id: 'people', label: 'People' },
 ];
 
-const FILTER_VIEWS: ViewId[] = ['transactions', 'summaries', 'budgets', 'search'];
+const FILTER_VIEWS: ViewId[] = ['transactions', 'summaries', 'search'];
 
 export function NavBar({ currentView, onNavigate, allPeople, hasLedger = true, onHelpOpen }: NavBarProps) {
   const showFilters = FILTER_VIEWS.includes(currentView);

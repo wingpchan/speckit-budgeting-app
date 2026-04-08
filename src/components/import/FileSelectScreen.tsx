@@ -95,7 +95,7 @@ export function FileSelectScreen({ onFileSelected, isDetecting, error }: FileSel
       </h1>
       <p
         style={{
-          fontSize: 14,
+          fontSize: 16,
           color: 'var(--color-text-secondary)',
           lineHeight: 1.5,
           marginBottom: '1.5rem',

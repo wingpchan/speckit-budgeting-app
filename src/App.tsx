@@ -347,8 +347,9 @@ function SearchPage() {
   const dateFiltered = filterByDate(allTransactions, start, end);
   const transactions = filterByPerson(dateFiltered, personFilter);
   const categories = records.filter((r): r is CategoryRecord => r.type === 'category');
+  const budgetRecords = records.filter((r): r is BudgetRecord => r.type === 'budget');
 
-  return <SearchScreen transactions={transactions} categories={categories} />;
+  return <SearchScreen transactions={transactions} categories={categories} budgetRecords={budgetRecords} />;
 }
 
 function AppContent() {

@@ -77,7 +77,7 @@ export function MigrationPromptModal({ onMigrate, onDecline }: MigrationPromptMo
         <h2 id="migration-title" className="text-lg font-semibold text-gray-800 mb-3">
           Ledger Migration Required
         </h2>
-        <p id="migration-desc" className="text-sm text-gray-600 mb-4">
+        <p id="migration-desc" className="text-gray-600 mb-4">
           Your ledger file was created with an older version of this app. Before making any
           changes, <strong>your original file will be backed up</strong> to a file named{' '}
           <code className="bg-gray-100 px-1 rounded text-xs">

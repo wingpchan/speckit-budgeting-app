@@ -61,7 +61,7 @@
 
 ## Phase 4: Polish & Cross-Cutting Concerns
 
-- [ ] T015 [P] Run all quickstart.md scenarios manually: Scenarios 1–8 against the running app in `specs/004-staging-rule-prompt/quickstart.md`
+- [x] T015 [P] Run all quickstart.md scenarios manually: Scenarios 1–8 against the running app in `specs/004-staging-rule-prompt/quickstart.md`
 - [x] T016 [P] Run `npm test && npm run lint` and confirm zero failures and zero lint errors
 
 ---

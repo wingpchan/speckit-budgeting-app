@@ -128,7 +128,17 @@ export function PeopleScreen({ personRecords, isLoading, onRefresh }: PeopleScre
                   {!person.isDefault && (
                     <button
                       onClick={() => handleToggle(person.name, person.status)}
-                      className="text-sm text-blue-600 hover:underline"
+                      style={{
+                        background: person.status === 'active' ? '#ef4444' : '#22c55e',
+                        color: 'white',
+                        border: 'none',
+                        borderRadius: 6,
+                        padding: '4px 10px',
+                        fontSize: 13,
+                        cursor: 'pointer',
+                      }}
+                      onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = person.status === 'active' ? '#dc2626' : '#16a34a'; }}
+                      onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = person.status === 'active' ? '#ef4444' : '#22c55e'; }}
                     >
                       {person.status === 'active' ? 'Deactivate' : 'Reactivate'}
                     </button>
