@@ -14,12 +14,6 @@ Built as a portfolio project to demonstrate **Spec-Driven Development (Speckit)*
 
 ---
 
-## Screenshots
-
-> _Add screenshots here once deployed to GitHub Pages_
-
----
-
 ## Features
 
 - **CSV Import** — Auto-detects Nationwide Current Account, Nationwide Credit Card and NewDay Credit Card formats. Unknown formats can be mapped manually and saved as reusable profiles.
@@ -31,6 +25,22 @@ Built as a portfolio project to demonstrate **Spec-Driven Development (Speckit)*
 - **Export** — Export filtered transactions to CSV with optional per-person breakdown.
 - **Ledger Migration** — Automatic version detection and migration with full rollback on failure.
 - **Privacy by Design** — All data stored in a local CSV file on your filesystem via the File System Access API. Nothing leaves your device.
+
+---
+
+## Screenshots
+
+<img width="1894" height="1055" alt="image" src="https://github.com/user-attachments/assets/2853f0ec-0dd1-475a-a965-d3add093b1d9" />
+
+<img width="1625" height="976" alt="image" src="https://github.com/user-attachments/assets/438ab08b-9278-4351-934c-c26206fda41f" />
+
+<img width="1885" height="1062" alt="image" src="https://github.com/user-attachments/assets/637cb25e-59c7-4cb2-b181-08a493a5babd" />
+
+<img width="1616" height="929" alt="image" src="https://github.com/user-attachments/assets/6f70e192-3eca-4356-a982-3643ee9f9a72" />
+
+<img width="1618" height="821" alt="image" src="https://github.com/user-attachments/assets/6d2c0aaf-94a0-4a18-93de-e4c73dd660ff" />
+
+<img width="1885" height="1046" alt="image" src="https://github.com/user-attachments/assets/5de7c48f-6c4f-4df1-99f9-a6c0f5406bed" />
 
 ---
 
