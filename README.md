@@ -95,6 +95,8 @@ A `samples/` folder contains synthetic CSV files in each supported format for te
 - `sample-nationwide-current.csv`
 - `sample-nationwide-credit.csv`
 - `sample-newday-credit.csv`
+- `CommonUK-CCMarch.csv`
+- `SampleCC-March2026_test.csv`
 
 ---
 
