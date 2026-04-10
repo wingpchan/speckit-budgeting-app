@@ -98,20 +98,20 @@ export function YearlySummaryView({ transactions, budgetRecords }: YearlySummary
       ) : (
         <>
           <div className="grid grid-cols-3 gap-4">
-            <div className="p-4 bg-green-50 rounded-lg">
-              <p className="text-xs text-gray-500 uppercase tracking-wide">Income</p>
+            <div className="p-4 bg-green-100 rounded-lg">
+              <p className="text-sm text-gray-600 font-semibold uppercase tracking-wide">Income</p>
               <p className="text-xl font-semibold text-green-700 mt-1">
                 {formatPence(current.totalIncome)}
               </p>
             </div>
-            <div className="p-4 bg-red-50 rounded-lg">
-              <p className="text-xs text-gray-500 uppercase tracking-wide">Expenses</p>
+            <div className="p-4 bg-red-100 rounded-lg">
+              <p className="text-sm text-gray-600 font-semibold uppercase tracking-wide">Expenses</p>
               <p className="text-xl font-semibold text-red-700 mt-1">
                 {formatPence(current.totalExpenses)}
               </p>
             </div>
-            <div className={`p-4 rounded-lg ${current.netPosition >= 0 ? 'bg-blue-50' : 'bg-amber-50'}`}>
-              <p className="text-xs text-gray-500 uppercase tracking-wide">Net</p>
+            <div className={`p-4 rounded-lg ${current.netPosition >= 0 ? 'bg-blue-100' : 'bg-amber-100'}`}>
+              <p className="text-sm text-gray-600 font-semibold uppercase tracking-wide">Net</p>
               <p className={`text-xl font-semibold mt-1 ${current.netPosition >= 0 ? 'text-blue-700' : 'text-amber-700'}`}>
                 {current.netPosition >= 0 ? '' : '-'}{formatPence(current.netPosition)}
               </p>
@@ -120,11 +120,11 @@ export function YearlySummaryView({ transactions, budgetRecords }: YearlySummary
 
           {categoryBarData.length > 0 && (
             <div>
-              <h3 className="text-sm font-medium text-gray-700 mb-2">Category spend</h3>
+              <h3 className="text-base font-medium text-gray-700 mb-2">Category spend</h3>
               <ResponsiveContainer width="100%" height={300}>
                 <BarChart data={categoryBarData} margin={{ top: 8, right: 8, left: 8, bottom: 80 }}>
                   <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="name" angle={-45} textAnchor="end" interval={0} tick={{ fontSize: 11 }} height={80} />
+                  <XAxis dataKey="name" angle={-45} textAnchor="end" interval={0} tick={{ fontSize: 13 }} height={80} />
                   <YAxis tickFormatter={(v: number) => `£${(v / 100).toFixed(0)}`} />
                   <Tooltip formatter={(v) => (typeof v === 'number' ? formatPence(v) : String(v))} />
                   <Legend verticalAlign="top" />
@@ -185,11 +185,11 @@ export function YearlySummaryView({ transactions, budgetRecords }: YearlySummary
 
           {lineData.length > 0 && (
             <div>
-              <h3 className="text-sm font-medium text-gray-700 mb-2">Month-by-month trend</h3>
+              <h3 className="text-base font-medium text-gray-700 mb-2">Month-by-month trend</h3>
               <ResponsiveContainer width="100%" height={300}>
                 <LineChart data={lineData} margin={{ top: 8, right: 8, left: 8, bottom: 60 }}>
                   <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="month" angle={-45} textAnchor="end" interval={0} tick={{ fontSize: 11 }} />
+                  <XAxis dataKey="month" angle={-45} textAnchor="end" interval={0} tick={{ fontSize: 13 }} />
                   <YAxis tickFormatter={(v: number) => `£${(v / 100).toFixed(0)}`} />
                   <Tooltip formatter={(v) => (typeof v === 'number' ? formatPence(v) : String(v))} />
                   <Legend verticalAlign="top" />
