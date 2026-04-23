@@ -12,6 +12,8 @@ Budget Tracker imports UK bank statement CSV files, automatically categorises tr
 
 Built as a portfolio project to demonstrate **Spec-Driven Development (Speckit)** methodology, modern React/TypeScript patterns, and Test-Driven Development.
 
+Live application: https://wingpchan.github.io/speckit-budgeting-app/
+
 ---
 
 ## Features
